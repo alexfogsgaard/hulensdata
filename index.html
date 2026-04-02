@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Løvens Hule — Investeringsoversigt</title>
+<title>Hulens Data — Løvens Hule Investeringer</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -362,6 +362,13 @@
   /* ── LANDING PAGE ────────────────────────────────────── */
 
   #page-landing {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* Full-screen hero wrapper */
+  .landing-screen {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -370,7 +377,7 @@
   }
 
   /* Animated background grid */
-  #page-landing::before {
+  .landing-screen::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -511,45 +518,121 @@
     transform: translateX(4px);
   }
 
-  /* Feature cards */
-  .landing-features {
+  /* ── STATS SECTION ── */
+  .landing-stats {
     display: flex;
-    gap: 1px;
     border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
     position: relative;
     z-index: 2;
   }
 
-  .landing-feature {
+  .stat-block {
     flex: 1;
-    padding: 28px 32px;
+    padding: 56px 40px;
+    text-align: center;
     border-right: 1px solid var(--border);
-    opacity: 0;
-    animation: fadeUp 0.7s ease forwards;
   }
 
-  .landing-feature:last-child { border-right: none; }
-  .landing-feature:nth-child(1) { animation-delay: 0.65s; }
-  .landing-feature:nth-child(2) { animation-delay: 0.75s; }
-  .landing-feature:nth-child(3) { animation-delay: 0.85s; }
+  .stat-block:last-child { border-right: none; }
 
-  .landing-feature .feat-icon {
-    font-size: 1.4rem;
-    margin-bottom: 10px;
-  }
-
-  .landing-feature .feat-title {
+  .stat-number {
     font-family: 'Playfair Display', serif;
-    font-size: 0.95rem;
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+    letter-spacing: -2px;
+    display: block;
+  }
+
+  .stat-suffix {
+    font-family: 'DM Sans', sans-serif;
+    font-size: clamp(0.9rem, 2vw, 1.2rem);
+    font-weight: 300;
+    color: var(--muted);
+    display: block;
+    margin-top: 6px;
+    letter-spacing: 0;
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin-top: 16px;
+  }
+
+  /* ── NAV CARDS ── */
+  .landing-nav-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    z-index: 2;
+  }
+
+  .landing-nav-card {
+    padding: 44px 36px;
+    border-right: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .landing-nav-card:last-child { border-right: none; }
+  .landing-nav-card:hover { background: var(--surface2); }
+
+  .landing-nav-card .card-icon {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+  }
+
+  .landing-nav-card .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
     font-weight: 700;
-    margin-bottom: 6px;
+    margin-bottom: 10px;
     color: var(--text);
   }
 
-  .landing-feature .feat-desc {
-    font-size: 0.78rem;
+  .landing-nav-card .card-desc {
+    font-size: 0.8rem;
     color: var(--muted);
-    line-height: 1.6;
+    line-height: 1.65;
+    flex: 1;
+  }
+
+  .landing-nav-card .card-arrow {
+    margin-top: 24px;
+    color: var(--gold);
+    font-size: 1.1rem;
+    display: inline-block;
+    transition: transform 0.2s;
+  }
+
+  .landing-nav-card:hover .card-arrow { transform: translateX(6px); }
+
+  /* Scroll hint */
+  .scroll-hint {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--border);
+    animation: hintBounce 2.2s ease infinite;
+    pointer-events: none;
+  }
+
+  @keyframes hintBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.5; }
+    50% { transform: translateX(-50%) translateY(7px); opacity: 1; }
   }
 
   /* Ticker strip */
@@ -592,9 +675,12 @@
   #page-app { display: none; }
 
   @media (max-width: 700px) {
-    .landing-features { flex-direction: column; }
-    .landing-feature { border-right: none; border-bottom: 1px solid var(--border); }
-    .landing-feature:last-child { border-bottom: none; }
+    .landing-stats { flex-direction: column; }
+    .stat-block { border-right: none; border-bottom: 1px solid var(--border); padding: 40px 24px; }
+    .stat-block:last-child { border-bottom: none; }
+    .landing-nav-cards { grid-template-columns: 1fr 1fr; }
+    .landing-nav-card:nth-child(2) { border-right: none; }
+    .landing-nav-card:nth-child(3) { border-right: 1px solid var(--border); }
     .landing-nav { padding: 24px 20px; }
     .landing-hero { padding: 40px 20px; }
   }
@@ -688,26 +774,66 @@
     letter-spacing: 0.04em;
   }
 
-  .dash-header-row {
-    display: flex;
-    align-items: center;
-    gap: 24px;
+  /* ── Hero Banner ── */
+  .dash-hero-banner {
+    position: relative;
+    overflow: hidden;
+    min-height: 240px;
+    border-radius: var(--radius);
+    background: linear-gradient(110deg, #100f09 0%, #181612 45%, #141414 100%);
+    border: 1px solid var(--border);
     margin-bottom: 28px;
+    display: flex;
+    align-items: flex-end;
   }
-
-  .dash-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    object-fit: cover;
-    object-position: top center;
-    border: 2px solid var(--gold);
-    flex-shrink: 0;
+  /* Gold radial glow bottom-left */
+  .dash-hero-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 10% 110%, rgba(201,168,76,0.18) 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
   }
-
-  .dash-avatar-placeholder {
-    width: 80px;
-    height: 80px;
+  /* Thin gold accent line along the bottom */
+  .dash-hero-banner::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(to right, var(--gold) 0%, rgba(201,168,76,0.25) 55%, transparent 85%);
+    z-index: 3;
+  }
+  .dash-hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 40px 44px 34px;
+    max-width: 60%;
+  }
+  .dash-hero-img {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    height: 115%;
+    max-height: 400px;
+    width: auto;
+    object-fit: contain;
+    object-position: bottom center;
+    z-index: 1;
+    /* Fade left & right edges into the dark bg */
+    -webkit-mask-image: linear-gradient(to left, transparent 0%, black 18%),
+                        linear-gradient(to top, black 80%, transparent 100%);
+    mask-image: linear-gradient(to left, transparent 0%, black 18%),
+                linear-gradient(to top, black 80%, transparent 100%);
+    -webkit-mask-composite: destination-in;
+    mask-composite: intersect;
+  }
+  .dash-hero-placeholder {
+    position: absolute;
+    right: 60px;
+    bottom: 30px;
+    width: 150px;
+    height: 150px;
     border-radius: 50%;
     background: var(--surface2);
     border: 2px solid var(--border);
@@ -715,13 +841,11 @@
     align-items: center;
     justify-content: center;
     font-family: 'Playfair Display', serif;
-    font-size: 1.8rem;
+    font-size: 4rem;
     font-weight: 700;
     color: var(--gold);
-    flex-shrink: 0;
+    z-index: 2;
   }
-
-  .dash-header-text { flex: 1; min-width: 0; }
 
   .dash-bio {
     background: var(--surface);
@@ -1291,53 +1415,85 @@
 
 <!-- ═══════════════════════════════════════════════════ LANDING PAGE -->
 <div id="page-landing">
-  <div class="landing-glow"></div>
 
-  <nav class="landing-nav">
-    <div class="wordmark">Løvens <span>Hule</span></div>
-    <div class="season-pill">Sæson 1 – 9</div>
-  </nav>
+  <!-- ── Full-screen hero ── -->
+  <div class="landing-screen">
+    <div class="landing-glow"></div>
 
-  <div class="landing-hero">
-    <div class="landing-eyebrow">Danmarks bedste investorer · Data & analyse</div>
-    <h1 class="landing-headline">Ind i<br><em>hulen.</em></h1>
-    <p class="landing-sub">
-      Et uofficielt datasæt over alle deals fra Løvens Hule. Hvem investerede mest? Hvilke virksomheder fik mest ud af mødet? Find svarene her.
-    </p>
-    <button class="landing-cta" onclick="enterApp()">
-      Se data <span class="arrow">→</span>
-    </button>
-  </div>
+    <nav class="landing-nav">
+      <div class="wordmark" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="cursor:pointer">Hulens <span>Data</span></div>
+      <div class="season-pill">Sæson 1 – 9</div>
+    </nav>
 
-  <div class="landing-features">
-    <div class="landing-feature">
-      <div class="feat-icon">📋</div>
-      <div class="feat-title">Alle deals</div>
-      <div class="feat-desc">Sortérbar og filtrerbar oversigt over alle investeringer — beløb, andele og investorer.</div>
-    </div>
-    <div class="landing-feature">
-      <div class="feat-icon">🦁</div>
-      <div class="feat-title">Investorprofiler</div>
-      <div class="feat-desc">Hvem er mest aktiv i hulen? Se hvilke løver der har bidt flest gange.</div>
-    </div>
-    <div class="landing-feature">
-      <div class="feat-icon">📈</div>
-      <div class="feat-title">Grafer & analyser</div>
-      <div class="feat-desc">Visuelle sammenligniger på tværs af sæsoner, kategorier og beløb.</div>
+    <div class="landing-hero">
+      <div class="landing-eyebrow">DR's Løvens Hule · Uofficiel database · Sæson 1–9</div>
+      <h1 class="landing-headline">9 sæsoner.<br><em>57 deals.</em><br>Én database.</h1>
+      <p class="landing-sub">Et uofficielt datasæt over alle investeringer i DR's Løvens Hule</p>
+      <button class="landing-cta" onclick="enterApp()">
+        Udforsk data <span class="arrow">→</span>
+      </button>
+      <div class="scroll-hint">↓ scroll</div>
     </div>
   </div>
 
+  <!-- ── Nøgletal ── -->
+  <div class="landing-stats" id="landing-stats">
+    <div class="stat-block">
+      <span class="stat-number" id="stat-deals">—</span>
+      <div class="stat-label">Deals i alt</div>
+    </div>
+    <div class="stat-block">
+      <span class="stat-number" id="stat-amount">—</span>
+      <span class="stat-suffix" id="stat-amount-suffix"></span>
+      <div class="stat-label">Samlet investeret</div>
+    </div>
+    <div class="stat-block">
+      <span class="stat-number" id="stat-investors">—</span>
+      <div class="stat-label">Unikke investorer</div>
+    </div>
+  </div>
+
+  <!-- ── Nav-kort ── -->
+  <div class="landing-nav-cards">
+    <div class="landing-nav-card" onclick="enterApp('deals')">
+      <div class="card-icon">📋</div>
+      <div class="card-title">Alle deals</div>
+      <div class="card-desc">Sortérbar og filtrerbar oversigt over alle investeringer — beløb, andele og investorer.</div>
+      <span class="card-arrow">→</span>
+    </div>
+    <div class="landing-nav-card" onclick="enterApp('investors')">
+      <div class="card-icon">🦁</div>
+      <div class="card-title">Investorer</div>
+      <div class="card-desc">Hvem er mest aktiv i hulen? Løveprofiler med statistik og tendenser.</div>
+      <span class="card-arrow">→</span>
+    </div>
+    <div class="landing-nav-card" onclick="enterApp('companies')">
+      <div class="card-icon">🏢</div>
+      <div class="card-title">Virksomheder</div>
+      <div class="card-desc">Alle selskaber der har stillet op i hulen — status, kategori og deal-detaljer.</div>
+      <span class="card-arrow">→</span>
+    </div>
+    <div class="landing-nav-card" onclick="enterApp('charts')">
+      <div class="card-icon">📈</div>
+      <div class="card-title">Grafer</div>
+      <div class="card-desc">Visuelle sammenligninger på tværs af sæsoner, kategorier og beløbsstørrelser.</div>
+      <span class="card-arrow">→</span>
+    </div>
+  </div>
+
+  <!-- ── Ticker ── -->
   <div class="landing-ticker">
     <div class="ticker-track" id="ticker-track"></div>
   </div>
+
 </div>
 
 <!-- ═══════════════════════════════════════════════════ APP -->
 <div id="page-app" style="display:none">
 
 <header>
-  <div class="logo-area">
-    <h1>Løvens <span>Hule</span></h1>
+  <div class="logo-area" onclick="goToLanding()" style="cursor:pointer" title="Tilbage til forsiden">
+    <h1>Hulens <span>Data</span></h1>
     <p>Investeringsoversigt · Sæson 1–9</p>
   </div>
   <div class="header-stats" id="header-stats"></div>
@@ -1967,13 +2123,13 @@ function buildDashboard(name) {
   const lastName = name.split(' ').slice(1).join(' ');
 
   body.innerHTML = `
-    <div class="dash-header-row">
-      ${profile?.img ? `<img class="dash-avatar" src="${profile.img}" alt="${name}">` : `<div class="dash-avatar-placeholder">${firstName[0]}</div>`}
-      <div class="dash-header-text">
+    <div class="dash-hero-banner">
+      <div class="dash-hero-content">
         <div class="dash-name">${firstName} <span>${lastName}</span></div>
         <div class="dash-sub">${deals.length} deals · Sæson ${[...new Set(deals.map(d=>d.season))].sort().join(', ')}</div>
-        ${profile?.proff ? `<a class="co-action-btn" href="${profile.proff}" target="_blank" style="margin-top:10px;display:inline-flex;align-items:center;gap:7px"><img src="${PROFF_LOGO}" style="width:16px;height:16px;object-fit:contain"> Se på Proff.dk</a>` : ''}
+        ${profile?.proff ? `<a class="co-action-btn" href="${profile.proff}" target="_blank" style="margin-top:14px;display:inline-flex;align-items:center;gap:7px"><img src="${PROFF_LOGO}" style="width:16px;height:16px;object-fit:contain"> Se på Proff.dk</a>` : ''}
       </div>
+      ${profile?.img ? `<img class="dash-hero-img" src="${profile.img}" alt="${name}">` : `<div class="dash-hero-placeholder">${firstName[0]}</div>`}
     </div>
 
     ${profile?.bio ? `<div class="dash-bio">${profile.bio.split('\n\n').map(p => `<p>${p}</p>`).join('')}</div>` : ''}
@@ -2244,7 +2400,7 @@ function buildTicker() {
 }
 
 // ─── LANDING: ENTER APP ───────────────────────────────────────────────────────
-function enterApp() {
+function enterApp(tab) {
   const landing = document.getElementById('page-landing');
   const app = document.getElementById('page-app');
 
@@ -2254,13 +2410,102 @@ function enterApp() {
 
   setTimeout(() => {
     landing.style.display = 'none';
+    landing.style.opacity = '';
+    landing.style.transform = '';
+    landing.style.transition = '';
     app.style.display = 'block';
     app.style.opacity = '0';
     app.style.transition = 'opacity 0.4s ease';
+    window.scrollTo(0, 0);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => { app.style.opacity = '1'; });
     });
+    // Navigate to specific tab if requested
+    if (tab && tab !== 'deals') {
+      const tabs = ['deals', 'investors', 'companies', 'charts'];
+      const idx = tabs.indexOf(tab);
+      if (idx >= 0) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        document.querySelectorAll('nav button')[idx].classList.add('active');
+        if (tab === 'charts' && !chartsRendered) { chartsRendered = true; setTimeout(renderCharts, 50); }
+        if (tab === 'companies' && !companiesRendered) { companiesRendered = true; setTimeout(renderCompanies, 50); }
+      }
+    }
   }, 450);
+}
+
+function goToLanding() {
+  const landing = document.getElementById('page-landing');
+  const app = document.getElementById('page-app');
+
+  app.style.transition = 'opacity 0.35s ease';
+  app.style.opacity = '0';
+
+  setTimeout(() => {
+    app.style.display = 'none';
+    app.style.opacity = '';
+    app.style.transition = '';
+    landing.style.display = 'flex';
+    landing.style.flexDirection = 'column';
+    landing.style.opacity = '0';
+    landing.style.transform = 'translateY(12px)';
+    window.scrollTo(0, 0);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        landing.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        landing.style.opacity = '1';
+        landing.style.transform = 'translateY(0)';
+      });
+    });
+  }, 320);
+}
+
+// ─── LANDING STATS COUNT-UP ──────────────────────────────────────────────────
+function countUp(el, target, duration, format) {
+  const startTime = performance.now();
+  function tick(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    const value = Math.round(target * eased);
+    el.textContent = format(value);
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function initLandingStats() {
+  const totalDeals = raw.length;
+  const totalMio = raw.reduce((s, d) => s + d.received, 0) / 1000000;
+  const mioRounded = Math.round(totalMio * 10) / 10; // one decimal
+  const uniqueInvestors = new Set(
+    raw.flatMap(d => d.investorList)
+       .filter(i => i !== 'Alle investorer')
+       .map(i => canonName ? canonName(i) : i)
+  ).size;
+
+  const dealsEl = document.getElementById('stat-deals');
+  const amountEl = document.getElementById('stat-amount');
+  const suffixEl = document.getElementById('stat-amount-suffix');
+  const investorsEl = document.getElementById('stat-investors');
+
+  if (!dealsEl) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    if (!entries[0].isIntersecting) return;
+    observer.disconnect();
+
+    countUp(dealsEl, totalDeals, 1100, v => v.toLocaleString('da-DK'));
+    countUp(amountEl, Math.round(mioRounded * 10), 1400, v => {
+      const n = v / 10;
+      return n.toLocaleString('da-DK', {minimumFractionDigits: 1, maximumFractionDigits: 1});
+    });
+    if (suffixEl) suffixEl.textContent = 'mio. kr';
+    countUp(investorsEl, uniqueInvestors, 900, v => v.toLocaleString('da-DK'));
+  }, { threshold: 0.4 });
+
+  observer.observe(document.getElementById('landing-stats'));
 }
 
 function goToCompany(name) {
@@ -2591,6 +2836,7 @@ function buildCompanyDetail(name) {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 let companiesRendered = false;
 buildTicker();
+initLandingStats();
 populateFilters();
 populateCompanyFilters();
 renderHeaderStats();
