@@ -2798,7 +2798,7 @@ function buildCompanyDetail(name) {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 let companiesRendered = false;
 
-(async () => {
+async function init() {
   const fetched = await loadData();
   fetched.forEach(d => raw.push(d));
   buildTicker();
@@ -2808,4 +2808,5 @@ let companiesRendered = false;
   renderHeaderStats();
   renderTable();
   renderInvestors();
-})();
+}
+init();
