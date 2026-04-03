@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grafer — Hulens Data</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="wordmark" href="index.html">Hulens <span>Data</span></a>
+  <nav class="site-nav">
+    <a href="deals.html">Deals</a>
+    <a href="investors.html">Investorer</a>
+    <a href="companies.html">Virksomheder</a>
+    <a href="charts.html" class="active">Grafer</a>
+  </nav>
+  <div class="header-stats" id="header-stats"></div>
+</header>
+
+<main class="page-main">
+  <h1 class="page-title">Grafer <span>&</span> analyser</h1>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Deals pr. <span>sæson</span></h3>
+      <div class="chart-container"><canvas id="chart-seasons"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Investorer — <span>antal deals</span></h3>
+      <div class="chart-container"><canvas id="chart-investors"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Beløb søgt vs. <span>modtaget</span></h3>
+      <div class="chart-container"><canvas id="chart-amounts"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Deal-rate pr. <span>sæson</span></h3>
+      <div class="chart-container"><canvas id="chart-dealrate"></canvas></div>
+    </div>
+  </div>
+</main>
+
+<script src="js/helpers.js"></script>
+<script src="js/supabase.js"></script>
+<script>
+const CHART_DEFAULTS = {
+  color: 'rgba(201,168,76,0.85)',
+  colorLight: 'rgba(201,168,76,0.2)',
+  grid: 'rgba(255,255,255,0.05)',
+  text: '#888',
+  font: 'DM Sans',
+};
+
+function chartOptions(extra = {}) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1f1f1f',
+        titleColor: '#f0ece3',
+        bodyColor: '#888',
+        borderColor: '#2a2a2a',
+        borderWidth: 1,
+      }
+    },
+    scales: {
+      x: { ticks: { color: CHART_DEFAULTS.text, font: { family: CHART_DEFAULTS.font } }, grid: { color: CHART_DEFAULTS.grid } },
+      y: { ticks: { color: CHART_DEFAULTS.text, font: { family: CHART_DEFAULTS.font } }, grid: { color: CHART_DEFAULTS.grid } },
+    },
+    ...extra,
+  };
+}
+
+function renderCharts(deals) {
+  const seasons = [...new Set(deals.map(d => d.season))].sort((a,b) => a-b);
+
+  // 1. Deals pr. sæson
+  const dealsBySeason = seasons.map(s => deals.filter(d => d.season === s && d.received).length);
+  new Chart(document.getElementById('chart-seasons'), {
+    type: 'bar',
+    data: {
+      labels: seasons.map(s => 'S' + s),
+      datasets: [{ data: dealsBySeason, backgroundColor: CHART_DEFAULTS.color, borderRadius: 4 }]
+    },
+    options: chartOptions(),
+  });
+
+  // 2. Investorer — antal deals
+  const invMap = {};
+  deals.forEach(d => {
+    d.investorList.forEach(inv => {
+      if (inv === 'Alle investorer') return;
+      invMap[inv] = (invMap[inv] || 0) + (d.received ? 1 : 0);
+    });
+  });
+  const topInv = Object.entries(invMap).sort((a,b) => b[1]-a[1]).slice(0, 12);
+  new Chart(document.getElementById('chart-investors'), {
+    type: 'bar',
+    data: {
+      labels: topInv.map(([name]) => name.split(' ')[0]),
+      datasets: [{ data: topInv.map(([,n]) => n), backgroundColor: CHART_DEFAULTS.color, borderRadius: 4 }]
+    },
+    options: chartOptions(),
+  });
+
+  // 3. Søgt vs modtaget pr. sæson
+  const asked   = seasons.map(s => deals.filter(d => d.season === s).reduce((a,d) => a + (d.asked || 0), 0) / 1000000);
+  const received = seasons.map(s => deals.filter(d => d.season === s).reduce((a,d) => a + (d.received || 0), 0) / 1000000);
+  new Chart(document.getElementById('chart-amounts'), {
+    type: 'bar',
+    data: {
+      labels: seasons.map(s => 'S' + s),
+      datasets: [
+        { label: 'Søgt (mio.)',     data: asked,    backgroundColor: 'rgba(201,168,76,0.3)', borderRadius: 4 },
+        { label: 'Modtaget (mio.)', data: received, backgroundColor: CHART_DEFAULTS.color,   borderRadius: 4 },
+      ]
+    },
+    options: {
+      ...chartOptions(),
+      plugins: {
+        ...chartOptions().plugins,
+        legend: {
+          display: true,
+          labels: { color: '#888', font: { family: 'DM Sans' } }
+        }
+      }
+    },
+  });
+
+  // 4. Deal-rate pr. sæson (% der får deal)
+  const rates = seasons.map(s => {
+    const all = deals.filter(d => d.season === s);
+    const withDeal = all.filter(d => d.received);
+    return all.length ? Math.round((withDeal.length / all.length) * 100) : 0;
+  });
+  new Chart(document.getElementById('chart-dealrate'), {
+    type: 'line',
+    data: {
+      labels: seasons.map(s => 'S' + s),
+      datasets: [{
+        data: rates,
+        borderColor: CHART_DEFAULTS.color,
+        backgroundColor: CHART_DEFAULTS.colorLight,
+        fill: true,
+        tension: 0.3,
+        pointBackgroundColor: CHART_DEFAULTS.color,
+      }]
+    },
+    options: chartOptions(),
+  });
+}
+
+async function init() {
+  const deals = await loadDeals();
+  renderHeaderStats(deals);
+  renderCharts(deals);
+}
+
+init();
+</script>
+</body>
+</html>

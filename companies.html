@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virksomheder — Hulens Data</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .co-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .co-detail-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+  .co-detail-card h4 { font-family: 'Playfair Display', serif; font-size: 0.9rem; font-weight: 700; margin-bottom: 16px; }
+  .co-detail-card h4 span { color: var(--gold); }
+  .co-info-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; gap: 12px; }
+  .co-info-row:last-child { border-bottom: none; }
+  .co-info-row .ci-label { color: var(--muted); flex-shrink: 0; }
+  .co-info-row .ci-val { font-weight: 500; text-align: right; }
+  .co-detail-name { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; letter-spacing: -1px; line-height: 1; margin-bottom: 6px; }
+  .co-detail-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 28px; }
+  @media (max-width: 700px) { .co-detail-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="wordmark" href="index.html">Hulens <span>Data</span></a>
+  <nav class="site-nav">
+    <a href="deals.html">Deals</a>
+    <a href="investors.html">Investorer</a>
+    <a href="companies.html" class="active">Virksomheder</a>
+    <a href="charts.html">Grafer</a>
+  </nav>
+  <div class="header-stats" id="header-stats"></div>
+</header>
+
+<main class="page-main">
+
+  <!-- Grid view -->
+  <div id="grid-view">
+    <h1 class="page-title">Virksomheder <span>·</span> alle sæsoner</h1>
+
+    <div class="filters">
+      <label>Sæson</label>
+      <select id="filter-season" onchange="renderGrid()">
+        <option value="">Alle</option>
+      </select>
+      <label>Status</label>
+      <select id="filter-status" onchange="renderGrid()">
+        <option value="">Alle</option>
+        <option value="Aktiv">Aktiv</option>
+        <option value="Inaktiv">Inaktiv</option>
+        <option value="Ukendt">Ukendt</option>
+      </select>
+      <input type="text" id="filter-search" placeholder="Søg virksomhed…" oninput="renderGrid()" style="min-width:160px">
+    </div>
+
+    <div class="co-grid" id="co-grid"></div>
+    <p class="table-count" id="co-count"></p>
+  </div>
+
+  <!-- Detail view -->
+  <div id="detail-view" style="display:none">
+    <a class="back-btn" href="#" onclick="showGrid(); return false;">← Alle virksomheder</a>
+    <div id="detail-body"></div>
+  </div>
+
+</main>
+
+<script src="js/helpers.js"></script>
+<script src="js/supabase.js"></script>
+<script>
+let allDeals = [];
+
+function populateFilters() {
+  const seasons = [...new Set(allDeals.map(d => d.season))].sort((a,b) => a-b);
+  const sel = document.getElementById('filter-season');
+  seasons.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = 'Sæson ' + s;
+    sel.appendChild(opt);
+  });
+}
+
+function getFilteredCompanies() {
+  const season = document.getElementById('filter-season').value;
+  const status = document.getElementById('filter-status').value;
+  const search = document.getElementById('filter-search').value.toLowerCase();
+
+  const byName = {};
+  allDeals.forEach(d => {
+    if (!byName[d.name]) byName[d.name] = [];
+    byName[d.name].push(d);
+  });
+
+  return Object.entries(byName).filter(([name, deals]) => {
+    if (season && !deals.some(d => d.season == season)) return false;
+    if (status && !deals.some(d => (d.status || '').toLowerCase() === status.toLowerCase())) return false;
+    if (search && !name.toLowerCase().includes(search)) return false;
+    return true;
+  });
+}
+
+function renderGrid() {
+  const companies = getFilteredCompanies();
+  const grid = document.getElementById('co-grid');
+  grid.innerHTML = '';
+
+  companies.forEach(([name, deals]) => {
+    const latestDeal = deals[deals.length - 1];
+    const hasDeal = deals.some(d => d.received);
+    const statusRaw = (latestDeal.status || '').toLowerCase();
+
+    const card = document.createElement('div');
+    card.className = 'co-card';
+    card.onclick = () => showDetail(name);
+    card.innerHTML = `
+      <div class="co-card-top">
+        <div class="co-status-dot ${statusRaw || 'ukendt'}"></div>
+        <div class="co-name">${name}</div>
+      </div>
+      <div class="co-meta">
+        <span class="co-badge">${[...new Set(deals.map(d => 'S' + d.season))].join(', ')}</span>
+        ${hasDeal ? `<span class="co-badge gold">Deal ✓</span>` : ''}
+        ${latestDeal.category ? `<span class="co-badge">${latestDeal.category}</span>` : ''}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('co-count').textContent = `Viser ${companies.length} virksomheder`;
+}
+
+function showDetail(name) {
+  const deals = allDeals.filter(d => d.name === name);
+  const d = deals[0];
+
+  document.getElementById('grid-view').style.display = 'none';
+  document.getElementById('detail-view').style.display = 'block';
+
+  const body = document.getElementById('detail-body');
+  body.innerHTML = `
+    <div class="co-detail-name">${name}</div>
+    <div class="co-detail-sub">Sæson ${[...new Set(deals.map(d => d.season))].join(', ')} · ${d.status || 'Ukendt status'}</div>
+    <div class="co-detail-grid">
+      <div class="co-detail-card">
+        <h4>Deal <span>·</span> tal</h4>
+        <div class="co-info-row"><span class="ci-label">Søgte</span><span class="ci-val">${fmt(d.asked)}</span></div>
+        <div class="co-info-row"><span class="ci-label">Tilbudt andel</span><span class="ci-val">${pct(d.shareOffered)}</span></div>
+        <div class="co-info-row"><span class="ci-label">Valuation før</span><span class="ci-val">${fmt(d.valBefore)}</span></div>
+        <div class="co-info-row"><span class="ci-label">Modtaget</span><span class="ci-val">${fmt(d.received)}</span></div>
+        <div class="co-info-row"><span class="ci-label">Solgt andel</span><span class="ci-val">${pct(d.shareSold)}</span></div>
+        <div class="co-info-row"><span class="ci-label">Valuation efter</span><span class="ci-val">${fmt(d.valAfter)}</span></div>
+      </div>
+      <div class="co-detail-card">
+        <h4>Om <span>·</span> virksomheden</h4>
+        <div class="co-info-row"><span class="ci-label">Kategori</span><span class="ci-val">${d.category || '—'}</span></div>
+        <div class="co-info-row"><span class="ci-label">Status</span><span class="ci-val">${d.status || '—'}</span></div>
+        <div class="co-info-row"><span class="ci-label">Investor(er)</span><span class="ci-val">${d.investorList.join(', ') || '—'}</span></div>
+        <div class="co-info-row"><span class="ci-label">Afsnit</span><span class="ci-val">S${d.season}E${d.episode}</span></div>
+      </div>
+    </div>
+  `;
+
+  window.history.pushState({}, '', '?name=' + encodeURIComponent(name));
+}
+
+function showGrid() {
+  document.getElementById('grid-view').style.display = 'block';
+  document.getElementById('detail-view').style.display = 'none';
+  window.history.pushState({}, '', 'companies.html');
+}
+
+async function init() {
+  allDeals = await loadDeals();
+  renderHeaderStats(allDeals);
+  populateFilters();
+  renderGrid();
+
+  // Åbn direkte hvis URL har ?name=
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('name')) {
+    showDetail(decodeURIComponent(params.get('name')));
+  }
+}
+
+init();
+</script>
+</body>
+</html>

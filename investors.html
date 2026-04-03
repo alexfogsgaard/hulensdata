@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investorer — Hulens Data</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a class="wordmark" href="index.html">Hulens <span>Data</span></a>
+  <nav class="site-nav">
+    <a href="deals.html">Deals</a>
+    <a href="investors.html" class="active">Investorer</a>
+    <a href="companies.html">Virksomheder</a>
+    <a href="charts.html">Grafer</a>
+  </nav>
+  <div class="header-stats" id="header-stats"></div>
+</header>
+
+<main class="page-main">
+
+  <!-- Grid view -->
+  <div id="grid-view">
+    <h1 class="page-title">Investorer <span>·</span> klik for profil</h1>
+    <div id="investor-grid"></div>
+  </div>
+
+  <!-- Detail view -->
+  <div id="detail-view" style="display:none">
+    <a class="back-btn" href="#" onclick="showGrid(); return false;">← Alle investorer</a>
+    <div id="detail-body"></div>
+  </div>
+
+</main>
+
+<script src="js/helpers.js"></script>
+<script src="js/supabase.js"></script>
+<script>
+let allDeals = [];
+
+function getInvestorDeals(name) {
+  return allDeals.filter(d => d.investorList.some(inv => inv === name));
+}
+
+function renderGrid() {
+  const map = {};
+  allDeals.forEach(d => {
+    d.investorList.forEach(inv => {
+      if (inv === 'Alle investorer') return;
+      if (!map[inv]) map[inv] = { deals: 0, received: 0, seasons: new Set() };
+      map[inv].deals++;
+      map[inv].received += (d.received || 0);
+      map[inv].seasons.add(d.season);
+    });
+  });
+
+  const sorted = Object.entries(map).sort((a, b) => {
+    const aA = ACTIVE_LIONS.has(a[0]) ? 1 : 0;
+    const bA = ACTIVE_LIONS.has(b[0]) ? 1 : 0;
+    if (aA !== bA) return bA - aA;
+    return b[1].deals - a[1].deals;
+  });
+
+  const grid = document.getElementById('investor-grid');
+  grid.innerHTML = '';
+
+  const active = sorted.filter(([name]) => ACTIVE_LIONS.has(name));
+  const former = sorted.filter(([name]) => !ACTIVE_LIONS.has(name));
+
+  function makeCard([name, stats]) {
+    const deals = getInvestorDeals(name);
+    const avgShare = avg(deals.map(d => d.shareSold));
+    const isActive = ACTIVE_LIONS.has(name);
+
+    const card = document.createElement('div');
+    card.className = 'investor-card' + (isActive ? ' investor-card--active' : '');
+    card.onclick = () => showDetail(name);
+    card.innerHTML = `
+      ${isActive ? '<div class="active-lion-badge">● Aktiv løve</div>' : ''}
+      <div class="inv-name">${name}</div>
+      <div class="inv-stat"><span class="k">Antal deals</span><span class="v">${stats.deals}</span></div>
+      <div class="inv-stat"><span class="k">Sæsoner aktiv</span><span class="v">${[...stats.seasons].sort().map(s => 'S'+s).join(', ')}</span></div>
+      <div class="inv-stat"><span class="k">Gns. andel solgt</span><span class="v">${avgShare ? avgShare.toFixed(1)+'%' : '—'}</span></div>
+      <div class="inv-stat"><span class="k">Samlet investeret</span><span class="v">kr ${(stats.received/1000000).toFixed(1)}M</span></div>
+    `;
+    return card;
+  }
+
+  // Aktive løver
+  if (active.length > 0) {
+    const h = document.createElement('div');
+    h.className = 'investor-section-header';
+    h.innerHTML = `<span>🦁</span> Aktive løver <span class="inv-section-count">${active.length}</span>`;
+    grid.appendChild(h);
+
+    const subgrid = document.createElement('div');
+    subgrid.className = 'investor-subgrid';
+    active.forEach(entry => subgrid.appendChild(makeCard(entry)));
+    grid.appendChild(subgrid);
+  }
+
+  // Tidligere løver
+  if (former.length > 0) {
+    const h = document.createElement('div');
+    h.className = 'investor-section-header';
+    h.style.color = 'var(--muted)';
+    h.style.marginTop = '36px';
+    h.innerHTML = `Tidligere løver <span class="inv-section-count" style="background:var(--surface2);border-color:var(--border);color:var(--muted)">${former.length}</span>`;
+    grid.appendChild(h);
+
+    const subgrid = document.createElement('div');
+    subgrid.className = 'investor-subgrid';
+    former.forEach(entry => subgrid.appendChild(makeCard(entry)));
+    grid.appendChild(subgrid);
+  }
+}
+
+function showDetail(name) {
+  const deals = getInvestorDeals(name);
+  const totalReceived = deals.reduce((s, d) => s + (d.received || 0), 0);
+  const avgShare = avg(deals.map(d => d.shareSold));
+  const seasons = [...new Set(deals.map(d => d.season))].sort();
+
+  document.getElementById('grid-view').style.display = 'none';
+  document.getElementById('detail-view').style.display = 'block';
+
+  const body = document.getElementById('detail-body');
+  body.innerHTML = `
+    <h1 style="font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3rem);font-weight:900;letter-spacing:-1px;margin-bottom:4px">${name}</h1>
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:28px">Sæson ${seasons.join(', ')} · ${deals.length} deals</p>
+
+    <div class="kpi-row">
+      <div class="kpi-card"><div class="kpi-label">Antal deals</div><div class="kpi-val">${deals.length}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Samlet investeret</div><div class="kpi-val" style="font-size:1.2rem">kr ${(totalReceived/1000000).toFixed(1)}M</div></div>
+      <div class="kpi-card"><div class="kpi-label">Gns. andel solgt</div><div class="kpi-val">${avgShare ? avgShare.toFixed(1)+'%' : '—'}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Sæsoner aktiv</div><div class="kpi-val">${seasons.length}</div></div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Virksomhed</th>
+            <th>Sæson</th>
+            <th>Søgte</th>
+            <th>Modtaget</th>
+            <th>Solgt andel</th>
+            <th>Val. før</th>
+            <th>Val. efter</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${deals.map(d => `
+            <tr>
+              <td style="font-weight:500">${d.name}</td>
+              <td><span class="season-badge">S${d.season}E${d.episode}</span></td>
+              <td>${fmt(d.asked)}</td>
+              <td>${fmt(d.received)}</td>
+              <td>${pct(d.shareSold)}</td>
+              <td>${fmt(d.valBefore)}</td>
+              <td>${fmt(d.valAfter)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function showGrid() {
+  document.getElementById('grid-view').style.display = 'block';
+  document.getElementById('detail-view').style.display = 'none';
+}
+
+async function init() {
+  allDeals = await loadDeals();
+  renderHeaderStats(allDeals);
+  renderGrid();
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deals — Hulens Data</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .investors-cell { max-width: 220px; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: 0.8rem; }
+  .company-name { font-weight: 500; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border); }
+  .company-name:hover { color: var(--gold); text-decoration-color: var(--gold); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="wordmark" href="index.html">Hulens <span>Data</span></a>
+  <nav class="site-nav">
+    <a href="deals.html" class="active">Deals</a>
+    <a href="investors.html">Investorer</a>
+    <a href="companies.html">Virksomheder</a>
+    <a href="charts.html">Grafer</a>
+  </nav>
+  <div class="header-stats" id="header-stats"></div>
+</header>
+
+<main class="page-main">
+  <h1 class="page-title">Alle <span>deals</span></h1>
+
+  <div class="filters">
+    <label>Sæson</label>
+    <select id="filter-season" onchange="renderTable()">
+      <option value="">Alle</option>
+    </select>
+    <label>Investor</label>
+    <select id="filter-investor" onchange="renderTable()">
+      <option value="">Alle</option>
+    </select>
+    <input type="text" id="filter-search" placeholder="Søg virksomhed…" oninput="renderTable()" style="min-width:160px">
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortBy('name')">Virksomhed <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy('season')">Sæson <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy('asked')">Søger <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy('shareOffered')">Tilbudt andel <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy('valBefore')">Val. før <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy('received')">Modtaget <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy('shareSold')">Solgt andel <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy('valAfter')">Val. efter <span class="sort-icon">↕</span></th>
+          <th>Ændring</th>
+          <th>Investorer</th>
+        </tr>
+      </thead>
+      <tbody id="deals-tbody"></tbody>
+    </table>
+  </div>
+  <p class="table-count" id="table-count"></p>
+</main>
+
+<script src="js/helpers.js"></script>
+<script src="js/supabase.js"></script>
+<script>
+let allDeals = [];
+let sortKey = 'season';
+let sortDir = 1;
+
+function populateFilters() {
+  const seasons = [...new Set(allDeals.map(d => d.season))].sort((a,b) => a-b);
+  const sel = document.getElementById('filter-season');
+  seasons.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = 'Sæson ' + s;
+    sel.appendChild(opt);
+  });
+
+  const investors = [...new Set(allDeals.flatMap(d => d.investorList).filter(i => i !== 'Alle investorer'))].sort();
+  const isel = document.getElementById('filter-investor');
+  investors.forEach(inv => {
+    const opt = document.createElement('option');
+    opt.value = inv; opt.textContent = inv;
+    isel.appendChild(opt);
+  });
+}
+
+function getFiltered() {
+  const season   = document.getElementById('filter-season').value;
+  const investor = document.getElementById('filter-investor').value;
+  const search   = document.getElementById('filter-search').value.toLowerCase();
+
+  return allDeals.filter(d => {
+    if (season   && d.season != season) return false;
+    if (investor && !d.investorList.includes(investor)) return false;
+    if (search   && !d.name.toLowerCase().includes(search)) return false;
+    return true;
+  });
+}
+
+function sortBy(key) {
+  if (sortKey === key) sortDir *= -1;
+  else { sortKey = key; sortDir = 1; }
+  renderTable();
+}
+
+function renderTable() {
+  const data = getFiltered().sort((a, b) => {
+    let av = a[sortKey], bv = b[sortKey];
+    if (av == null) av = -Infinity;
+    if (bv == null) bv = -Infinity;
+    if (typeof av === 'string') return av.localeCompare(bv) * sortDir;
+    return (av - bv) * sortDir;
+  });
+
+  const tbody = document.getElementById('deals-tbody');
+  tbody.innerHTML = '';
+
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty">Ingen deals matcher filteret</td></tr>';
+  } else {
+    data.forEach(d => {
+      const change = (d.valBefore && d.valAfter) ? d.valAfter - d.valBefore : null;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="company-name" onclick="window.location='companies.html?name=${encodeURIComponent(d.name)}'">${d.name}</span></td>
+        <td><span class="season-badge">S${d.season}E${d.episode}</span></td>
+        <td>${fmt(d.asked)}</td>
+        <td>${pct(d.shareOffered)}</td>
+        <td>${fmt(d.valBefore)}</td>
+        <td>${fmt(d.received)}</td>
+        <td>${pct(d.shareSold)}</td>
+        <td>${fmt(d.valAfter)}</td>
+        <td class="${change == null ? '' : change >= 0 ? 'val-up' : 'val-down'}">${change == null ? '—' : (change >= 0 ? '+' : '') + fmt(change)}</td>
+        <td class="investors-cell" title="${d.investors}">${d.investorList.slice(0,2).join(', ')}${d.investorList.length > 2 ? ' +' + (d.investorList.length - 2) : ''}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  document.getElementById('table-count').textContent = `Viser ${data.length} af ${allDeals.length} deals`;
+}
+
+async function init() {
+  allDeals = await loadDeals();
+  renderHeaderStats(allDeals);
+  populateFilters();
+  renderTable();
+}
+
+init();
+</script>
+</body>
+</html>
