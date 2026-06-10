@@ -115,13 +115,13 @@ function renderGrid() {
     card.onclick = () => showDetail(name);
     card.innerHTML = `
       <div class="co-card-top">
-        <div class="co-status-dot ${statusRaw || 'ukendt'}"></div>
-        <div class="co-name">${name}</div>
+        <div class="co-status-dot ${esc(statusRaw) || 'ukendt'}"></div>
+        <div class="co-name">${esc(name)}</div>
       </div>
       <div class="co-meta">
         <span class="co-badge">${[...new Set(deals.map(d => 'S' + d.season))].join(', ')}</span>
         ${hasDeal ? `<span class="co-badge gold">Deal ✓</span>` : ''}
-        ${latestDeal.category ? `<span class="co-badge">${latestDeal.category}</span>` : ''}
+        ${latestDeal.category ? `<span class="co-badge">${esc(latestDeal.category)}</span>` : ''}
       </div>
     `;
     grid.appendChild(card);
@@ -130,45 +130,60 @@ function renderGrid() {
   document.getElementById('co-count').textContent = `Viser ${companies.length} virksomheder`;
 }
 
-function showDetail(name) {
+function showDetail(name, push = true) {
   const deals = allDeals.filter(d => d.name === name);
-  const d = deals[0];
+  if (deals.length === 0) { showGrid(push); return; }
+
+  // Seneste deal bestemmer status/kategori; investorer samles på tværs af alle deals
+  const latest = deals[deals.length - 1];
+  const allInvestors = [...new Set(deals.flatMap(d => d.investorList))];
 
   document.getElementById('grid-view').style.display = 'none';
   document.getElementById('detail-view').style.display = 'block';
 
+  const dealCards = deals.map(d => `
+    <div class="co-detail-card">
+      <h4>Deal <span>·</span> ${deals.length > 1 ? `S${d.season}E${d.episode}` : 'tal'}</h4>
+      <div class="co-info-row"><span class="ci-label">Søgte</span><span class="ci-val">${fmt(d.asked)}</span></div>
+      <div class="co-info-row"><span class="ci-label">Tilbudt andel</span><span class="ci-val">${pct(d.shareOffered)}</span></div>
+      <div class="co-info-row"><span class="ci-label">Valuation før</span><span class="ci-val">${fmt(d.valBefore)}</span></div>
+      <div class="co-info-row"><span class="ci-label">Modtaget</span><span class="ci-val">${fmt(d.received)}</span></div>
+      <div class="co-info-row"><span class="ci-label">Solgt andel</span><span class="ci-val">${pct(d.shareSold)}</span></div>
+      <div class="co-info-row"><span class="ci-label">Valuation efter</span><span class="ci-val">${fmt(d.valAfter)}</span></div>
+    </div>
+  `).join('');
+
   const body = document.getElementById('detail-body');
   body.innerHTML = `
-    <div class="co-detail-name">${name}</div>
-    <div class="co-detail-sub">Sæson ${[...new Set(deals.map(d => d.season))].join(', ')} · ${d.status || 'Ukendt status'}</div>
+    <div class="co-detail-name">${esc(name)}</div>
+    <div class="co-detail-sub">Sæson ${[...new Set(deals.map(d => d.season))].join(', ')} · ${esc(latest.status) || 'Ukendt status'}</div>
     <div class="co-detail-grid">
-      <div class="co-detail-card">
-        <h4>Deal <span>·</span> tal</h4>
-        <div class="co-info-row"><span class="ci-label">Søgte</span><span class="ci-val">${fmt(d.asked)}</span></div>
-        <div class="co-info-row"><span class="ci-label">Tilbudt andel</span><span class="ci-val">${pct(d.shareOffered)}</span></div>
-        <div class="co-info-row"><span class="ci-label">Valuation før</span><span class="ci-val">${fmt(d.valBefore)}</span></div>
-        <div class="co-info-row"><span class="ci-label">Modtaget</span><span class="ci-val">${fmt(d.received)}</span></div>
-        <div class="co-info-row"><span class="ci-label">Solgt andel</span><span class="ci-val">${pct(d.shareSold)}</span></div>
-        <div class="co-info-row"><span class="ci-label">Valuation efter</span><span class="ci-val">${fmt(d.valAfter)}</span></div>
-      </div>
+      ${dealCards}
       <div class="co-detail-card">
         <h4>Om <span>·</span> virksomheden</h4>
-        <div class="co-info-row"><span class="ci-label">Kategori</span><span class="ci-val">${d.category || '—'}</span></div>
-        <div class="co-info-row"><span class="ci-label">Status</span><span class="ci-val">${d.status || '—'}</span></div>
-        <div class="co-info-row"><span class="ci-label">Investor(er)</span><span class="ci-val">${d.investorList.join(', ') || '—'}</span></div>
-        <div class="co-info-row"><span class="ci-label">Afsnit</span><span class="ci-val">S${d.season}E${d.episode}</span></div>
+        <div class="co-info-row"><span class="ci-label">Kategori</span><span class="ci-val">${esc(latest.category) || '—'}</span></div>
+        <div class="co-info-row"><span class="ci-label">Status</span><span class="ci-val">${esc(latest.status) || '—'}</span></div>
+        <div class="co-info-row"><span class="ci-label">Investor(er)</span><span class="ci-val">${esc(allInvestors.join(', ')) || '—'}</span></div>
+        <div class="co-info-row"><span class="ci-label">Afsnit</span><span class="ci-val">${deals.map(d => `S${d.season}E${d.episode}`).join(', ')}</span></div>
       </div>
     </div>
   `;
 
-  window.history.pushState({}, '', '?name=' + encodeURIComponent(name));
+  if (push) window.history.pushState({}, '', '?name=' + encodeURIComponent(name));
 }
 
-function showGrid() {
+function showGrid(push = true) {
   document.getElementById('grid-view').style.display = 'block';
   document.getElementById('detail-view').style.display = 'none';
-  window.history.pushState({}, '', 'companies.html');
+  if (push) window.history.pushState({}, '', 'companies.html');
 }
+
+// Tilbage/frem-knapper: vis den visning URL'en peger på, uden at skubbe ny historik
+window.addEventListener('popstate', () => {
+  const name = new URLSearchParams(window.location.search).get('name');
+  if (name) showDetail(name, false);
+  else showGrid(false);
+});
 
 async function init() {
   allDeals = await loadDeals();
@@ -176,14 +191,14 @@ async function init() {
   populateFilters();
   renderGrid();
 
-  // Åbn direkte hvis URL har ?name=
+  // Åbn direkte hvis URL har ?name= (params.get dekoder selv — ingen ekstra decode)
   const params = new URLSearchParams(window.location.search);
   if (params.get('name')) {
-    showDetail(decodeURIComponent(params.get('name')));
+    showDetail(params.get('name'), false);
   }
 }
 
-init();
+init().catch(err => { console.error(err); showLoadError(); });
 </script>
 </body>
 </html>

@@ -217,6 +217,19 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
 
 .back-btn:hover { border-color: var(--gold); color: var(--gold); }
 
+/* LOAD ERROR */
+.load-error {
+  background: rgba(224,82,82,0.08);
+  border: 1px solid rgba(224,82,82,0.4);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 28px;
+  font-size: 0.85rem;
+}
+
+.load-error strong { color: var(--red); font-weight: 500; }
+
 /* â”€â”€ EMPTY STATE â”€â”€ */
 .empty {
   text-align: center;

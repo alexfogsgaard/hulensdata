@@ -80,7 +80,7 @@ function renderGrid() {
     card.onclick = () => showDetail(name);
     card.innerHTML = `
       ${isActive ? '<div class="active-lion-badge">● Aktiv løve</div>' : ''}
-      <div class="inv-name">${name}</div>
+      <div class="inv-name">${esc(name)}</div>
       <div class="inv-stat"><span class="k">Antal deals</span><span class="v">${stats.deals}</span></div>
       <div class="inv-stat"><span class="k">Sæsoner aktiv</span><span class="v">${[...stats.seasons].sort().map(s => 'S'+s).join(', ')}</span></div>
       <div class="inv-stat"><span class="k">Gns. andel solgt</span><span class="v">${avgShare ? avgShare.toFixed(1)+'%' : '—'}</span></div>
@@ -129,7 +129,7 @@ function showDetail(name) {
 
   const body = document.getElementById('detail-body');
   body.innerHTML = `
-    <h1 style="font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3rem);font-weight:900;letter-spacing:-1px;margin-bottom:4px">${name}</h1>
+    <h1 style="font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3rem);font-weight:900;letter-spacing:-1px;margin-bottom:4px">${esc(name)}</h1>
     <p style="font-size:0.8rem;color:var(--muted);margin-bottom:28px">Sæson ${seasons.join(', ')} · ${deals.length} deals</p>
 
     <div class="kpi-row">
@@ -155,7 +155,7 @@ function showDetail(name) {
         <tbody>
           ${deals.map(d => `
             <tr>
-              <td style="font-weight:500">${d.name}</td>
+              <td style="font-weight:500">${esc(d.name)}</td>
               <td><span class="season-badge">S${d.season}E${d.episode}</span></td>
               <td>${fmt(d.asked)}</td>
               <td>${fmt(d.received)}</td>
@@ -181,7 +181,7 @@ async function init() {
   renderGrid();
 }
 
-init();
+init().catch(err => { console.error(err); showLoadError(); });
 </script>
 </body>
 </html>

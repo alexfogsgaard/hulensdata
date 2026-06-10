@@ -125,7 +125,7 @@ function renderTable() {
       const change = (d.valBefore && d.valAfter) ? d.valAfter - d.valBefore : null;
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><span class="company-name" onclick="window.location='companies.html?name=${encodeURIComponent(d.name)}'">${d.name}</span></td>
+        <td><span class="company-name" onclick="window.location='companies.html?name=${esc(encodeURIComponent(d.name).replace(/'/g, '%27'))}'">${esc(d.name)}</span></td>
         <td><span class="season-badge">S${d.season}E${d.episode}</span></td>
         <td>${fmt(d.asked)}</td>
         <td>${pct(d.shareOffered)}</td>
@@ -134,7 +134,7 @@ function renderTable() {
         <td>${pct(d.shareSold)}</td>
         <td>${fmt(d.valAfter)}</td>
         <td class="${change == null ? '' : change >= 0 ? 'val-up' : 'val-down'}">${change == null ? '—' : (change >= 0 ? '+' : '') + fmt(change)}</td>
-        <td class="investors-cell" title="${d.investors}">${d.investorList.slice(0,2).join(', ')}${d.investorList.length > 2 ? ' +' + (d.investorList.length - 2) : ''}</td>
+        <td class="investors-cell" title="${esc(d.investors)}">${esc(d.investorList.slice(0,2).join(', '))}${d.investorList.length > 2 ? ' +' + (d.investorList.length - 2) : ''}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -150,7 +150,7 @@ async function init() {
   renderTable();
 }
 
-init();
+init().catch(err => { console.error(err); showLoadError(); });
 </script>
 </body>
 </html>

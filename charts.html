@@ -162,7 +162,7 @@ async function init() {
   renderCharts(deals);
 }
 
-init();
+init().catch(err => { console.error(err); showLoadError(); });
 </script>
 </body>
 </html>

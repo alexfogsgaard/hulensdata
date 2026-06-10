@@ -2,6 +2,16 @@
    js/helpers.js — Delte hjælpefunktioner brugt på tværs af sider
    ═══════════════════════════════════════════════════════════════ */
 
+// Escape HTML-specialtegn — brug ved al interpolation af DB-data i innerHTML
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Formatér tal til dansk valuta
 const fmt = n => n == null ? '—' : 'kr ' + n.toLocaleString('da-DK');
 
@@ -103,13 +113,11 @@ function renderHeaderStats(deals) {
   `).join('');
 }
 
-// Highlight aktiv nav-link baseret på nuværende side
-function setActiveNav() {
-  const path = window.location.pathname.split('/').pop() || 'index.html';
-  document.querySelectorAll('.site-nav a').forEach(a => {
-    const href = a.getAttribute('href');
-    if (href === path || (path === 'index.html' && href === 'index.html')) {
-      a.classList.add('active');
-    }
-  });
+// Vis synlig fejlbesked når data ikke kan hentes
+function showLoadError() {
+  const host = document.querySelector('.page-main') || document.body;
+  const div = document.createElement('div');
+  div.className = 'load-error';
+  div.innerHTML = `<strong>Data kunne ikke hentes.</strong> Prøv at genindlæse siden — fortsætter problemet, er databasen midlertidigt utilgængelig.`;
+  host.prepend(div);
 }

@@ -20,7 +20,7 @@ async function loadDeals() {
 
   if (!res.ok) {
     console.error('Supabase fejl:', res.status, await res.text());
-    return [];
+    throw new Error('Supabase svarede med status ' + res.status);
   }
 
   const data = await res.json();
