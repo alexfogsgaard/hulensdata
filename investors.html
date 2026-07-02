@@ -46,83 +46,67 @@ function getInvestorDeals(name) {
 }
 
 function renderGrid() {
-  const map = {};
-  allDeals.forEach(d => {
-    d.investorList.forEach(inv => {
-      if (inv === 'Alle investorer') return;
-      if (!map[inv]) map[inv] = { deals: 0, received: 0, seasons: new Set() };
-      map[inv].deals++;
-      map[inv].received += (d.received || 0);
-      map[inv].seasons.add(d.season);
-    });
-  });
+  // Status (aktiv/gæst/tidligere) udledes af deals-data — se buildInvestorIndex i helpers.js
+  const { investors, latestSeason } = buildInvestorIndex(allDeals);
+  const byDeals = (a, b) => b.deals - a.deals;
 
-  const sorted = Object.entries(map).sort((a, b) => {
-    const aA = ACTIVE_LIONS.has(a[0]) ? 1 : 0;
-    const bA = ACTIVE_LIONS.has(b[0]) ? 1 : 0;
-    if (aA !== bA) return bA - aA;
-    return b[1].deals - a[1].deals;
-  });
+  const groups = [
+    { title: '<span>🦁</span> Aktive løver', items: investors.filter(m => m.status === 'aktiv').sort(byDeals), muted: false },
+    { title: 'Gæsteløver',                   items: investors.filter(m => m.status === 'gaest').sort(byDeals), muted: true },
+    { title: 'Tidligere løver',              items: investors.filter(m => m.status === 'tidligere').sort(byDeals), muted: true },
+  ];
 
   const grid = document.getElementById('investor-grid');
   grid.innerHTML = '';
 
-  const active = sorted.filter(([name]) => ACTIVE_LIONS.has(name));
-  const former = sorted.filter(([name]) => !ACTIVE_LIONS.has(name));
-
-  function makeCard([name, stats]) {
-    const deals = getInvestorDeals(name);
+  function makeCard(m) {
+    const deals = getInvestorDeals(m.name);
     const avgShare = avg(deals.map(d => d.shareSold));
-    const isActive = ACTIVE_LIONS.has(name);
+    const isActive = m.status === 'aktiv';
+
+    const badge = isActive
+      ? '<div class="active-lion-badge">● Aktiv løve</div>'
+      : m.status === 'gaest' ? '<div class="active-lion-badge guest">Gæsteløve</div>' : '';
+
+    const latestRow = isActive
+      ? `<div class="inv-stat"><span class="k">Sæson ${latestSeason}</span><span class="v">${m.latestSeasonDeals} deal${m.latestSeasonDeals === 1 ? '' : 's'} · kr ${(m.latestSeasonReceived/1000000).toFixed(1)}M</span></div>`
+      : '';
 
     const card = document.createElement('div');
     card.className = 'investor-card' + (isActive ? ' investor-card--active' : '');
-    card.onclick = () => showDetail(name);
+    card.onclick = () => showDetail(m.name);
     card.innerHTML = `
-      ${isActive ? '<div class="active-lion-badge">● Aktiv løve</div>' : ''}
-      <div class="inv-name">${esc(name)}</div>
-      <div class="inv-stat"><span class="k">Antal deals</span><span class="v">${stats.deals}</span></div>
-      <div class="inv-stat"><span class="k">Sæsoner aktiv</span><span class="v">${[...stats.seasons].sort().map(s => 'S'+s).join(', ')}</span></div>
+      ${badge}
+      <div class="inv-name">${esc(m.name)}</div>
+      ${latestRow}
+      <div class="inv-stat"><span class="k">Antal deals</span><span class="v">${m.deals}</span></div>
+      <div class="inv-stat"><span class="k">Sæsoner aktiv</span><span class="v">${[...m.seasons].sort((a,b) => a-b).map(s => 'S'+s).join(', ')}</span></div>
       <div class="inv-stat"><span class="k">Gns. andel solgt</span><span class="v">${avgShare ? avgShare.toFixed(1)+'%' : '—'}</span></div>
-      <div class="inv-stat"><span class="k">Samlet investeret</span><span class="v">kr ${(stats.received/1000000).toFixed(1)}M</span></div>
+      <div class="inv-stat"><span class="k">Samlet investeret</span><span class="v">kr ${(m.received/1000000).toFixed(1)}M</span></div>
     `;
     return card;
   }
 
-  // Aktive løver
-  if (active.length > 0) {
+  groups.forEach(g => {
+    if (g.items.length === 0) return;
     const h = document.createElement('div');
     h.className = 'investor-section-header';
-    h.innerHTML = `<span>🦁</span> Aktive løver <span class="inv-section-count">${active.length}</span>`;
+    if (g.muted) { h.style.color = 'var(--muted)'; h.style.marginTop = '36px'; }
+    h.innerHTML = `${g.title} <span class="inv-section-count"${g.muted ? ' style="background:var(--surface2);border-color:var(--border);color:var(--muted)"' : ''}>${g.items.length}</span>`;
     grid.appendChild(h);
 
     const subgrid = document.createElement('div');
     subgrid.className = 'investor-subgrid';
-    active.forEach(entry => subgrid.appendChild(makeCard(entry)));
+    g.items.forEach(m => subgrid.appendChild(makeCard(m)));
     grid.appendChild(subgrid);
-  }
-
-  // Tidligere løver
-  if (former.length > 0) {
-    const h = document.createElement('div');
-    h.className = 'investor-section-header';
-    h.style.color = 'var(--muted)';
-    h.style.marginTop = '36px';
-    h.innerHTML = `Tidligere løver <span class="inv-section-count" style="background:var(--surface2);border-color:var(--border);color:var(--muted)">${former.length}</span>`;
-    grid.appendChild(h);
-
-    const subgrid = document.createElement('div');
-    subgrid.className = 'investor-subgrid';
-    former.forEach(entry => subgrid.appendChild(makeCard(entry)));
-    grid.appendChild(subgrid);
-  }
+  });
 }
 
 function showDetail(name) {
   const deals = getInvestorDeals(name);
   const totalReceived = deals.reduce((s, d) => s + (d.received || 0), 0);
   const avgShare = avg(deals.map(d => d.shareSold));
-  const seasons = [...new Set(deals.map(d => d.season))].sort();
+  const seasons = [...new Set(deals.map(d => d.season))].sort((a, b) => a - b);
 
   document.getElementById('grid-view').style.display = 'none';
   document.getElementById('detail-view').style.display = 'block';

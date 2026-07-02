@@ -300,6 +300,8 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
   font-weight: 500;
 }
 
+.active-lion-badge.guest { color: var(--muted); }
+
 .inv-name {
   font-family: 'Playfair Display', serif;
   font-size: 1.1rem;

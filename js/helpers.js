@@ -73,20 +73,46 @@ function parseInvestors(str) {
   return [...new Set(result)];
 }
 
-// Aktive løver (nuværende panel)
-const ACTIVE_LIONS = new Set([
-  'Jesper Buch',
-  'Birgit Aaby',
-  'Nikolaj Nyholm',
-  'Tahir Siddique',
-  'Anne Stampe Olesen',
-  'Lis Beck',
-  'Louise Herping Ellegaard',
-  'Morten Larsen',
-  'Christian Stadil',
-  'Thomas Visti',
-  'Rasmus Kolbe',
+// Gæsteløver — deltog enkelte afsnit uden at være fast panel-medlem.
+// Kan ikke udledes af deals-data; flyttes til investors-tabellen i Supabase (Fase 3).
+const GUEST_LIONS = new Set([
+  'Thomas Visti',   // gæst i S9
+  'Rasmus Kolbe',   // gæst i S10 (jubilæumssæsonen)
 ]);
+
+// Byg investor-indeks fra deals-data — status udledes, ikke hardcodes:
+//   aktiv     = har deal(s) i seneste sæson i datasættet
+//   gaest     = på GUEST_LIONS-listen
+//   tidligere = alle andre
+// Returnerer { investors: [...], latestSeason }
+function buildInvestorIndex(deals) {
+  const latestSeason = Math.max(...deals.map(d => d.season));
+  const map = {};
+  deals.forEach(d => {
+    d.investorList.forEach(inv => {
+      if (inv === 'Alle investorer') return;
+      if (!map[inv]) map[inv] = {
+        name: inv, deals: 0, received: 0, seasons: new Set(),
+        latestSeasonDeals: 0, latestSeasonReceived: 0,
+      };
+      const m = map[inv];
+      m.deals++;
+      m.received += d.received || 0;
+      m.seasons.add(d.season);
+      if (d.season === latestSeason) {
+        m.latestSeasonDeals++;
+        m.latestSeasonReceived += d.received || 0;
+      }
+    });
+  });
+  const investors = Object.values(map);
+  investors.forEach(m => {
+    m.status = GUEST_LIONS.has(m.name) ? 'gaest'
+             : m.seasons.has(latestSeason) ? 'aktiv'
+             : 'tidligere';
+  });
+  return { investors, latestSeason };
+}
 
 // Gennemsnit af array (ignorerer null)
 function avg(arr) {
