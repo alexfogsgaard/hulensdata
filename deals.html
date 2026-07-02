@@ -6,6 +6,7 @@
 <title>Deals — Hulens Data</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<script src="js/layout.js"></script>
 <style>
   .investors-cell { max-width: 220px; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: 0.8rem; }
   .company-name { font-weight: 500; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border); }
@@ -14,16 +15,8 @@
 </head>
 <body>
 
-<header class="site-header">
-  <a class="wordmark" href="index.html">Hulens <span>Data</span></a>
-  <nav class="site-nav">
-    <a href="deals.html" class="active">Deals</a>
-    <a href="investors.html">Investorer</a>
-    <a href="companies.html">Virksomheder</a>
-    <a href="charts.html">Grafer</a>
-  </nav>
-  <div class="header-stats" id="header-stats"></div>
-</header>
+<header class="site-header"></header>
+<script>renderSiteHeader('deals');</script>
 
 <main class="page-main">
   <h1 class="page-title">Alle <span>deals</span></h1>
