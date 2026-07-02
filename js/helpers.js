@@ -64,6 +64,9 @@ function parseInvestors(str) {
   const result = [];
   parts.forEach(name => {
     const lc = name.toLowerCase().trim();
+    // Ikke-navne må aldrig blive til investorer (fx gammel S5-7-konvention
+    // hvor "Ingen aftale" stod i investor-feltet — jf. K2 i vaulten)
+    if (lc === 'ingen aftale' || lc === 'ingen investor' || lc === 'ingen') return;
     if (lc.includes('alle')) { result.push('Alle investorer'); return; }
     result.push(canonName(name));
   });
