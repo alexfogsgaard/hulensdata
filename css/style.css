@@ -450,11 +450,21 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
 }
 
 /* â”€â”€ RESPONSIVE â”€â”€ */
+@media (max-width: 900px) {
+  /* Header: wordmark + nav på første linje, stats som kompakt række nedenunder */
+  .site-header { flex-wrap: wrap; row-gap: 12px; }
+  .header-stats { order: 3; width: 100%; gap: 12px 24px; justify-content: flex-start; }
+  .stat-pill { text-align: left; }
+  .stat-pill .val { font-size: 1.05rem; }
+  .stat-pill .lbl { font-size: 0.58rem; }
+}
+
 @media (max-width: 700px) {
   .site-header { padding: 16px 20px; }
   .page-main { padding: 24px 20px; }
   .chart-grid { grid-template-columns: 1fr; }
-  .site-nav a { padding: 8px 10px; font-size: 0.72rem; }
+  .site-nav { overflow-x: auto; }
+  .site-nav a { padding: 8px 10px; font-size: 0.72rem; white-space: nowrap; }
 }
 
 /* LANDING (index) — flyttet fra index.html */
