@@ -679,3 +679,21 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
 .skeleton-line { height: 14px; border-radius: 4px; }
 .skeleton-row td { padding: 14px 16px; }
 @media (prefers-reduced-motion: reduce) { .skeleton::after { animation: none; } }
+
+/* DEALS-TABEL som data-panel */
+.table-wrap { max-height: 72vh; overflow: auto; }
+thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 2;
+}
+th.num, td.num { text-align: right; }
+td.dim { color: var(--muted); }
+td.received { color: var(--gold-light); font-weight: 500; }
+tbody tr:not(.skeleton-row) td:first-child { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+
+@media (max-width: 860px) {
+  .col-secondary { display: none; }
+  .table-wrap { max-height: none; }
+}

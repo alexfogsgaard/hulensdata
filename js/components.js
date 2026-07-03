@@ -14,13 +14,13 @@ function renderDealRow(d) {
     <tr>
       <td><span class="company-name" data-company="${esc(d.name)}">${esc(d.name)}</span></td>
       <td><span class="season-badge">S${d.season}E${d.episode}</span></td>
-      <td>${fmt(d.asked)}</td>
-      <td>${pct(d.shareOffered)}</td>
-      <td>${fmt(d.valBefore)}</td>
-      <td>${fmt(d.received)}</td>
-      <td>${pct(d.shareSold)}</td>
-      <td>${fmt(d.valAfter)}</td>
-      <td class="${change == null ? '' : change >= 0 ? 'val-up' : 'val-down'}">${change == null ? '—' : (change >= 0 ? '+' : '') + fmt(change)}</td>
+      <td class="num">${fmt(d.asked)}</td>
+      <td class="num dim col-secondary">${pct(d.shareOffered)}</td>
+      <td class="num dim col-secondary">${fmt(d.valBefore)}</td>
+      <td class="num${d.received ? ' received' : ''}">${fmt(d.received)}</td>
+      <td class="num dim col-secondary">${pct(d.shareSold)}</td>
+      <td class="num dim col-secondary">${fmt(d.valAfter)}</td>
+      <td class="num col-secondary ${change == null ? '' : change >= 0 ? 'val-up' : 'val-down'}">${change == null ? '—' : (change >= 0 ? '+' : '') + fmt(change)}</td>
       <td class="investors-cell" title="${esc(d.investors)}">${esc(d.investorList.slice(0,2).join(', '))}${d.investorList.length > 2 ? ' +' + (d.investorList.length - 2) : ''}</td>
     </tr>`;
 }
