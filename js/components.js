@@ -25,13 +25,16 @@ function renderDealRow(d) {
     </tr>`;
 }
 
-// Virksomhedskort (companies-gridet) — deals er virksomhedens deals, kronologisk
+// Virksomhedskort (companies-gridet) — deals er virksomhedens deals, kronologisk.
+// Kompakt: status + navn + badges. Hover/fokus: deal-tal, investorer, afsnit.
 function renderCompanyCard(name, deals) {
   const latest = deals[deals.length - 1];
   const hasDeal = deals.some(d => d.received);
+  const totalReceived = deals.reduce((s, d) => s + (d.received || 0), 0);
+  const investors = [...new Set(deals.flatMap(d => d.investorList).filter(i => i !== 'Alle investorer'))];
   const statusRaw = (latest.status || '').toLowerCase();
   return `
-    <div class="co-card" data-name="${esc(name)}">
+    <div class="co-card" data-name="${esc(name)}" tabindex="0" role="link" aria-label="${esc(name)} — åbn virksomhed">
       <div class="co-card-top">
         <div class="co-status-dot ${esc(statusRaw) || 'ukendt'}"></div>
         <div class="co-name">${esc(name)}</div>
@@ -40,6 +43,14 @@ function renderCompanyCard(name, deals) {
         <span class="co-badge">${[...new Set(deals.map(d => 'S' + d.season))].join(', ')}</span>
         ${hasDeal ? '<span class="co-badge gold">Deal ✓</span>' : ''}
         ${latest.category ? `<span class="co-badge">${esc(latest.category)}</span>` : ''}
+      </div>
+      <div class="co-details">
+        <div class="co-details-inner">
+          <div class="co-detail-row"><span class="k">${hasDeal ? 'Modtaget' : 'Søgte'}</span><span class="v num${hasDeal ? ' gold' : ''}">${fmt(hasDeal ? totalReceived : latest.asked)}</span></div>
+          ${investors.length ? `<div class="co-detail-row"><span class="k">Investor${investors.length > 1 ? 'er' : ''}</span><span class="v">${esc(investors.slice(0, 2).join(', '))}${investors.length > 2 ? ' +' + (investors.length - 2) : ''}</span></div>` : ''}
+          <div class="co-detail-row"><span class="k">Afsnit</span><span class="v">${deals.map(d => `S${d.season}E${d.episode}`).join(', ')}</span></div>
+          <div class="co-cta">Se virksomhed →</div>
+        </div>
       </div>
     </div>`;
 }

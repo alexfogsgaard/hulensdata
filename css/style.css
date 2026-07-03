@@ -697,3 +697,44 @@ tbody tr:not(.skeleton-row) td:first-child { max-width: 220px; overflow: hidden;
   .col-secondary { display: none; }
   .table-wrap { max-height: none; }
 }
+
+/* COMPANY CARDS v2 — progressive disclosure (samme mønster som investor-kort) */
+.co-grid { align-items: start; }
+
+.co-details {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  margin-top: 0;
+  transition: grid-template-rows 0.28s ease, opacity 0.22s ease, margin-top 0.28s ease;
+}
+.co-details-inner { overflow: hidden; min-height: 0; }
+
+@media (hover: hover) {
+  .co-card:hover .co-details { grid-template-rows: 1fr; opacity: 1; margin-top: 10px; }
+}
+.co-card:focus .co-details,
+.co-card:focus-visible .co-details { grid-template-rows: 1fr; opacity: 1; margin-top: 10px; }
+.co-card:focus { outline: none; }
+.co-card:focus-visible { outline: 1px solid rgba(201,168,76,0.55); outline-offset: 3px; }
+
+.co-details-inner > .co-detail-row:first-child { border-top: 1px solid var(--border); padding-top: 10px; }
+.co-detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: var(--text-sm);
+}
+.co-detail-row .k { color: var(--muted); flex-shrink: 0; }
+.co-detail-row .v { text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.co-detail-row .v.gold { color: var(--gold-light); font-weight: 500; }
+.co-cta {
+  margin-top: 8px;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  opacity: 0.9;
+}
+@media (prefers-reduced-motion: reduce) { .co-details { transition: none; } }
