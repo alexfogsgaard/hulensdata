@@ -40,11 +40,18 @@
 <script src="js/helpers.js"></script>
 <script src="js/supabase.js"></script>
 <script>
+// Farver læses fra design-tokens i style.css — ét sted at ændre ved redesign.
+// Hex-alpha-suffiks: d9 ≈ 85 %, 4d ≈ 30 %, 33 ≈ 20 %.
+const TOKEN = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const CHART_DEFAULTS = {
-  color: 'rgba(201,168,76,0.85)',
-  colorLight: 'rgba(201,168,76,0.2)',
+  color: TOKEN('--gold') + 'd9',
+  colorMedium: TOKEN('--gold') + '4d',
+  colorLight: TOKEN('--gold') + '33',
   grid: 'rgba(255,255,255,0.05)',
-  text: '#888',
+  text: TOKEN('--muted'),
+  surface: TOKEN('--surface2'),
+  border: TOKEN('--border'),
+  textStrong: TOKEN('--text'),
   font: 'DM Sans',
 };
 
@@ -55,10 +62,10 @@ function chartOptions(extra = {}) {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#1f1f1f',
-        titleColor: '#f0ece3',
-        bodyColor: '#888',
-        borderColor: '#2a2a2a',
+        backgroundColor: CHART_DEFAULTS.surface,
+        titleColor: CHART_DEFAULTS.textStrong,
+        bodyColor: CHART_DEFAULTS.text,
+        borderColor: CHART_DEFAULTS.border,
         borderWidth: 1,
       }
     },
@@ -110,7 +117,7 @@ function renderCharts(deals) {
     data: {
       labels: seasons.map(s => 'S' + s),
       datasets: [
-        { label: 'Søgt (mio.)',     data: asked,    backgroundColor: 'rgba(201,168,76,0.3)', borderRadius: 4 },
+        { label: 'Søgt (mio.)',     data: asked,    backgroundColor: CHART_DEFAULTS.colorMedium, borderRadius: 4 },
         { label: 'Modtaget (mio.)', data: received, backgroundColor: CHART_DEFAULTS.color,   borderRadius: 4 },
       ]
     },
@@ -120,7 +127,7 @@ function renderCharts(deals) {
         ...chartOptions().plugins,
         legend: {
           display: true,
-          labels: { color: '#888', font: { family: 'DM Sans' } }
+          labels: { color: CHART_DEFAULTS.text, font: { family: CHART_DEFAULTS.font } }
         }
       }
     },
