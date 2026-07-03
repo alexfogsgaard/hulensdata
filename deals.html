@@ -131,6 +131,7 @@ document.getElementById('deals-tbody').addEventListener('click', e => {
 });
 
 async function init() {
+  document.getElementById('deals-tbody').innerHTML = renderSkeletonRows(8, 10);
   allDeals = await loadDeals();
   renderHeaderStats(allDeals);
   populateFilters();

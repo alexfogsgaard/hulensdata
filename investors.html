@@ -146,6 +146,8 @@ document.getElementById('back-btn').addEventListener('click', e => {
 });
 
 async function init() {
+  document.getElementById('investor-grid').innerHTML =
+    '<div class="investor-subgrid">' + renderSkeletonCards(8) + '</div>';
   allDeals = await loadDeals();
   renderHeaderStats(allDeals);
   renderGrid();

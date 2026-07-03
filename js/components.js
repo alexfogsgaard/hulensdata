@@ -44,6 +44,15 @@ function renderCompanyCard(name, deals) {
     </div>`;
 }
 
+// Skeleton-placeholders — vises mens data hentes (styles i style.css §SKELETON)
+function renderSkeletonCards(count) {
+  return Array.from({ length: count }, () => '<div class="skeleton skeleton-card"></div>').join('');
+}
+function renderSkeletonRows(count, cols) {
+  return Array.from({ length: count }, () =>
+    `<tr class="skeleton-row"><td colspan="${cols}"><div class="skeleton skeleton-line"></div></td></tr>`).join('');
+}
+
 // Sparkline: deals pr. sæson som mini-søjler (inline SVG — ingen Chart.js pr. kort)
 function renderSeasonSparkline(m, latestSeason) {
   const max = Math.max(...Object.values(m.bySeason).map(b => b.deals));

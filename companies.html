@@ -160,6 +160,7 @@ window.addEventListener('popstate', () => {
 });
 
 async function init() {
+  document.getElementById('co-grid').innerHTML = renderSkeletonCards(12);
   allDeals = await loadDeals();
   renderHeaderStats(allDeals);
   populateFilters();
