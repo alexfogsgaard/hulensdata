@@ -44,26 +44,64 @@ function renderCompanyCard(name, deals) {
     </div>`;
 }
 
-// Investorkort — m er et element fra buildInvestorIndex().investors
+// Sparkline: deals pr. sæson som mini-søjler (inline SVG — ingen Chart.js pr. kort)
+function renderSeasonSparkline(m, latestSeason) {
+  const max = Math.max(...Object.values(m.bySeason).map(b => b.deals));
+  const W = 6, GAP = 3, H = 28;
+  let bars = '';
+  for (let s = 1; s <= latestSeason; s++) {
+    const b = m.bySeason[s];
+    const h = b ? Math.max(4, Math.round(b.deals / max * (H - 2))) : 2;
+    bars += `<rect x="${(s - 1) * (W + GAP)}" y="${H - h}" width="${W}" height="${h}" rx="1" class="${b ? 'spark-on' : 'spark-off'}"><title>S${s}: ${b ? b.deals + ' deal' + (b.deals === 1 ? '' : 's') : 'ingen deals'}</title></rect>`;
+  }
+  const width = latestSeason * (W + GAP) - GAP;
+  return `<svg class="inv-spark" viewBox="0 0 ${width} ${H}" width="${width}" height="${H}" role="img" aria-label="Deals pr. sæson">${bars}</svg>`;
+}
+
+// Investorkort v2 — kompakt primærvisning (seneste sæson for aktive løver),
+// dybere data folder ud ved hover/focus. Klik/Enter åbner fuld profil.
+// m er et element fra buildInvestorIndex().investors.
 function renderInvestorCard(m, latestSeason) {
   const isActive = m.status === 'aktiv';
 
   const badge = isActive
-    ? '<div class="active-lion-badge">● Aktiv løve</div>'
-    : m.status === 'gaest' ? '<div class="active-lion-badge guest">Gæsteløve</div>' : '';
+    ? '<span class="inv-badge inv-badge--active">● Aktiv løve</span>'
+    : m.status === 'gaest'
+      ? '<span class="inv-badge">Gæsteløve</span>'
+      : '<span class="inv-badge">Tidligere løve</span>';
 
-  const latestRow = isActive
-    ? `<div class="inv-stat"><span class="k">Sæson ${latestSeason}</span><span class="v">${m.latestSeasonDeals} deal${m.latestSeasonDeals === 1 ? '' : 's'} · kr ${(m.latestSeasonReceived/1000000).toFixed(1)}M</span></div>`
-    : '';
+  const seasons = [...m.seasons].sort((a, b) => a - b);
+  const span = seasons.length === 1
+    ? `S${seasons[0]}`
+    : `S${seasons[0]}–S${seasons[seasons.length - 1]}`;
+
+  const heroLabel  = isActive ? `Sæson ${latestSeason}` : 'Karriere i hulen';
+  const heroDeals  = isActive ? m.latestSeasonDeals : m.deals;
+  const heroAmount = isActive ? m.latestSeasonReceived : m.received;
 
   return `
-    <div class="investor-card${isActive ? ' investor-card--active' : ''}" data-name="${esc(m.name)}">
-      ${badge}
+    <div class="investor-card${isActive ? ' investor-card--active' : ''}" data-name="${esc(m.name)}" tabindex="0" role="link" aria-label="${esc(m.name)} — åbn fuld profil">
+      <div class="inv-topline">${badge}<span class="inv-span">${span}</span></div>
       <div class="inv-name">${esc(m.name)}</div>
-      ${latestRow}
-      <div class="inv-stat"><span class="k">Antal deals</span><span class="v">${m.deals}</span></div>
-      <div class="inv-stat"><span class="k">Sæsoner aktiv</span><span class="v">${[...m.seasons].sort((a,b) => a-b).map(s => 'S'+s).join(', ')}</span></div>
-      <div class="inv-stat"><span class="k">Gns. andel solgt</span><span class="v">${m.avgShare ? m.avgShare.toFixed(1)+'%' : '—'}</span></div>
-      <div class="inv-stat"><span class="k">Samlet investeret</span><span class="v">kr ${(m.received/1000000).toFixed(1)}M</span></div>
+      <div class="inv-hero">
+        <div class="inv-hero-label">${heroLabel}</div>
+        <div class="inv-hero-value">${heroDeals} deal${heroDeals === 1 ? '' : 's'} · kr ${(heroAmount/1000000).toFixed(1)}M</div>
+      </div>
+      <div class="inv-details">
+        <div class="inv-details-inner">
+          <div class="inv-mini-grid">
+            <div class="inv-mini"><span class="k">Deals i alt</span><span class="v">${m.deals}</span></div>
+            <div class="inv-mini"><span class="k">Samlet investeret</span><span class="v">kr ${(m.received/1000000).toFixed(1)}M</span></div>
+            <div class="inv-mini"><span class="k">Gns. andel</span><span class="v">${m.avgShare ? m.avgShare.toFixed(1) + '%' : '—'}</span></div>
+            <div class="inv-mini"><span class="k">Største deal</span><span class="v">${m.largest ? 'kr ' + (m.largest.received/1000000).toFixed(1) + 'M' : '—'}</span></div>
+          </div>
+          ${m.largest ? `<div class="inv-largest">Største deal: ${esc(m.largest.name)}</div>` : ''}
+          <div class="inv-spark-row">
+            <span class="inv-spark-label">Deals pr. sæson</span>
+            ${renderSeasonSparkline(m, latestSeason)}
+          </div>
+          <div class="inv-cta">Se fuld profil →</div>
+        </div>
+      </div>
     </div>`;
 }

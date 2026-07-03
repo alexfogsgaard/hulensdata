@@ -94,12 +94,19 @@ function buildInvestorIndex(deals) {
       if (!map[inv]) map[inv] = {
         name: inv, deals: 0, received: 0, seasons: new Set(),
         latestSeasonDeals: 0, latestSeasonReceived: 0, shares: [],
+        bySeason: {}, largest: null,
       };
       const m = map[inv];
       m.deals++;
       m.received += d.received || 0;
       m.seasons.add(d.season);
       m.shares.push(d.shareSold);
+      const bs = m.bySeason[d.season] || (m.bySeason[d.season] = { deals: 0, received: 0 });
+      bs.deals++;
+      bs.received += d.received || 0;
+      if ((d.received || 0) > (m.largest ? m.largest.received : 0)) {
+        m.largest = { name: d.name, received: d.received };
+      }
       if (d.season === latestSeason) {
         m.latestSeasonDeals++;
         m.latestSeasonReceived += d.received || 0;

@@ -352,6 +352,7 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
+  align-items: start; /* kun det udfoldede kort vokser — naboer strækkes ikke */
 }
 
 /* â”€â”€ COMPANY CARDS â”€â”€ */
@@ -522,3 +523,107 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
   .co-detail-name { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; letter-spacing: -1px; line-height: 1; margin-bottom: 6px; }
   .co-detail-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 28px; }
   @media (max-width: 700px) { .co-detail-grid { grid-template-columns: 1fr; } }
+
+/* INVESTOR CARDS v2 — progressive disclosure (kompakt → udfoldet ved hover/focus) */
+.inv-topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; }
+
+.inv-badge {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  font-weight: 500;
+}
+.inv-badge--active { color: var(--gold); }
+
+.inv-span {
+  font-size: 0.64rem;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  border-radius: 4px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+
+.investor-card .inv-name { margin-bottom: 12px; padding-right: 0; }
+
+.inv-hero-label {
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.inv-hero-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--gold-light);
+  line-height: 1.25;
+}
+
+/* Udfoldelig detaljesektion — altid i DOM (skærmlæsere), animeret via grid-rows */
+.inv-details {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  margin-top: 0;
+  transition: grid-template-rows 0.3s ease, opacity 0.25s ease, margin-top 0.3s ease;
+}
+.inv-details-inner { overflow: hidden; min-height: 0; }
+
+@media (hover: hover) {
+  .investor-card:hover .inv-details {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    margin-top: 14px;
+  }
+}
+.investor-card:focus-visible .inv-details,
+.investor-card:focus .inv-details {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  margin-top: 14px;
+}
+.investor-card:focus { outline: none; }
+.investor-card:focus-visible { outline: 1px solid rgba(201,168,76,0.55); outline-offset: 3px; }
+
+.inv-mini-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.inv-mini { display: flex; flex-direction: column; gap: 1px; }
+.inv-mini .k { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.inv-mini .v { font-size: 0.92rem; font-weight: 500; color: var(--text); }
+
+.inv-largest {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inv-spark-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-top: 12px; }
+.inv-spark-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding-bottom: 2px; }
+.inv-spark { flex-shrink: 0; }
+.inv-spark .spark-on  { fill: var(--gold); opacity: 0.85; }
+.inv-spark .spark-off { fill: var(--border); }
+
+.inv-cta {
+  margin-top: 14px;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  opacity: 0.9;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inv-details { transition: none; }
+}

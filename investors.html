@@ -61,8 +61,13 @@ function renderGrid() {
     `).join('');
 }
 
-// Ét delegeret klik i stedet for onclick pr. kort
+// Ét delegeret klik i stedet for onclick pr. kort; Enter åbner også profilen (kortene er fokusérbare)
 document.getElementById('investor-grid').addEventListener('click', e => {
+  const card = e.target.closest('.investor-card');
+  if (card) showDetail(card.dataset.name);
+});
+document.getElementById('investor-grid').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
   const card = e.target.closest('.investor-card');
   if (card) showDetail(card.dataset.name);
 });
