@@ -27,6 +27,14 @@
   <div class="stat-block"><span class="stat-number" id="stat-amount">—</span><span class="stat-suffix">mio. kr.</span><div class="stat-label">Samlet investeret</div></div>
   <div class="stat-block"><span class="stat-number" id="stat-investors">—</span><div class="stat-label">Unikke investorer</div></div>
 </div>
+<div class="landing-highlights">
+  <div class="highlights-eyebrow" id="highlights-eyebrow">Sæson · højdepunkter</div>
+  <div class="highlights-grid" id="highlights-grid"></div>
+  <div class="season-strip">
+    <div class="strip-label">Investeret pr. sæson (mio. kr.)</div>
+    <div class="strip-bars" id="strip-bars"></div>
+  </div>
+</div>
 <div class="landing-nav-cards">
   <a class="landing-nav-card" href="deals.html"><div class="card-icon">📋</div><div class="card-title">Alle deals</div><div class="card-desc">Sortérbar og filtrerbar oversigt over alle investeringer.</div><span class="card-arrow">→</span></a>
   <a class="landing-nav-card" href="investors.html"><div class="card-icon">🦁</div><div class="card-title">Investorer</div><div class="card-desc">Hvem er mest aktiv i hulen? Løveprofiler med statistik.</div><span class="card-arrow">→</span></a>
@@ -49,6 +57,63 @@ async function init() {
   document.getElementById('stat-investors').textContent = stats.investors;
   const items = deals.filter(d => d.received).slice(0,20).map(d => `<span class="ticker-item"><span>kr ${(d.received/1000).toFixed(0)}k</span>${esc(d.name)}</span>`);
   document.getElementById('ticker-track').innerHTML = [...items,...items].join('');
+
+  renderHighlights(deals, stats.latestSeason);
+}
+
+// Datafortællinger: sæsonens højdepunkter + investeret pr. sæson
+function renderHighlights(deals, latestSeason) {
+  const S = latestSeason, P = latestSeason - 1;
+
+  // Største deal i seneste sæson
+  const seasonDeals = deals.filter(d => d.season === S && d.received);
+  const biggest = seasonDeals.reduce((a, b) => (b.received > (a?.received || 0) ? b : a), null);
+
+  // Mest aktive løve i seneste sæson
+  const { investors } = buildInvestorIndex(deals);
+  const topLion = investors.filter(m => m.status === 'aktiv').sort((a, b) => b.latestSeasonDeals - a.latestSeasonDeals)[0];
+
+  // Deal-rate seneste vs. forrige sæson (begge har fuld pitch-registrering)
+  const rate = s => {
+    const all = deals.filter(d => d.season === s);
+    return all.length ? Math.round(all.filter(d => d.received).length / all.length * 100) : null;
+  };
+  const rS = rate(S), rP = rate(P), delta = rS - rP;
+
+  document.getElementById('highlights-eyebrow').textContent = `Sæson ${S} · højdepunkter`;
+  document.getElementById('highlights-grid').innerHTML = `
+    <div class="story-card">
+      <div class="story-label">Største deal</div>
+      <div class="story-value">kr ${(biggest.received/1000000).toFixed(1)}M</div>
+      <div class="story-context">${esc(biggest.name)} · ${esc(biggest.investorList.join(', '))}</div>
+    </div>
+    <div class="story-card">
+      <div class="story-label">Mest aktive løve</div>
+      <div class="story-value">${esc(topLion.name.split(' ')[0])} <span class="story-sub">${esc(topLion.name.split(' ').slice(1).join(' '))}</span></div>
+      <div class="story-context">${topLion.latestSeasonDeals} deals · kr ${(topLion.latestSeasonReceived/1000000).toFixed(1)}M i sæson ${S}</div>
+    </div>
+    <div class="story-card">
+      <div class="story-label">Deal-rate</div>
+      <div class="story-value">${rS}% <span class="story-delta ${delta >= 0 ? 'val-up' : 'val-down'}">${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta)} pp</span></div>
+      <div class="story-context">af pitches endte med aftale · vs. ${rP}% i sæson ${P}</div>
+    </div>
+  `;
+
+  // Investeret pr. sæson — søjler
+  const bySeason = {};
+  deals.forEach(d => { if (d.received) bySeason[d.season] = (bySeason[d.season] || 0) + d.received; });
+  const maxV = Math.max(...Object.values(bySeason));
+  let bars = '';
+  for (let s = 1; s <= S; s++) {
+    const v = bySeason[s] || 0;
+    const mio = (v/1000000).toFixed(1);
+    bars += `
+      <div class="strip-col" title="Sæson ${s}: kr ${mio} mio.">
+        <div class="strip-fill${s === S ? ' latest' : ''}" style="height:${Math.max(4, Math.round(v / maxV * 100))}%"></div>
+        <span class="${s === S ? 'latest' : ''}">S${s}</span>
+      </div>`;
+  }
+  document.getElementById('strip-bars').innerHTML = bars;
 }
 init().catch(err => { console.error(err); showLoadError(); });
 </script>
