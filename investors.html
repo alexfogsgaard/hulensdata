@@ -23,7 +23,7 @@
 
   <!-- Detail view -->
   <div id="detail-view" style="display:none">
-    <a class="back-btn" href="#" onclick="showGrid(); return false;">← Alle investorer</a>
+    <a class="back-btn" href="#" id="back-btn">← Alle investorer</a>
     <div id="detail-body"></div>
   </div>
 
@@ -67,8 +67,9 @@ document.getElementById('investor-grid').addEventListener('click', e => {
   if (card) showDetail(card.dataset.name);
 });
 
-function showDetail(name) {
+function showDetail(name, push = true) {
   const deals = getInvestorDeals(name);
+  if (deals.length === 0) { showGrid(push); return; }
   const totalReceived = deals.reduce((s, d) => s + (d.received || 0), 0);
   const avgShare = avg(deals.map(d => d.shareSold));
   const seasons = [...new Set(deals.map(d => d.season))].sort((a, b) => a - b);
@@ -117,17 +118,38 @@ function showDetail(name) {
       </table>
     </div>
   `;
+
+  if (push) window.history.pushState({}, '', '?name=' + encodeURIComponent(name));
 }
 
-function showGrid() {
+function showGrid(push = true) {
   document.getElementById('grid-view').style.display = 'block';
   document.getElementById('detail-view').style.display = 'none';
+  if (push) window.history.pushState({}, '', 'investors.html');
 }
+
+// Tilbage/frem-knapper: vis den visning URL'en peger på, uden at skubbe ny historik
+window.addEventListener('popstate', () => {
+  const name = new URLSearchParams(window.location.search).get('name');
+  if (name) showDetail(name, false);
+  else showGrid(false);
+});
+
+document.getElementById('back-btn').addEventListener('click', e => {
+  e.preventDefault();
+  showGrid();
+});
 
 async function init() {
   allDeals = await loadDeals();
   renderHeaderStats(allDeals);
   renderGrid();
+
+  // Åbn direkte hvis URL har ?name= (delbare investorprofiler)
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('name')) {
+    showDetail(params.get('name'), false);
+  }
 }
 
 init().catch(err => { console.error(err); showLoadError(); });
