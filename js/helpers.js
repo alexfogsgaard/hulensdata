@@ -93,12 +93,13 @@ function buildInvestorIndex(deals) {
       if (inv === 'Alle investorer') return;
       if (!map[inv]) map[inv] = {
         name: inv, deals: 0, received: 0, seasons: new Set(),
-        latestSeasonDeals: 0, latestSeasonReceived: 0,
+        latestSeasonDeals: 0, latestSeasonReceived: 0, shares: [],
       };
       const m = map[inv];
       m.deals++;
       m.received += d.received || 0;
       m.seasons.add(d.season);
+      m.shares.push(d.shareSold);
       if (d.season === latestSeason) {
         m.latestSeasonDeals++;
         m.latestSeasonReceived += d.received || 0;
@@ -107,6 +108,7 @@ function buildInvestorIndex(deals) {
   });
   const investors = Object.values(map);
   investors.forEach(m => {
+    m.avgShare = avg(m.shares);
     m.status = GUEST_LIONS.has(m.name) ? 'gaest'
              : m.seasons.has(latestSeason) ? 'aktiv'
              : 'tidligere';

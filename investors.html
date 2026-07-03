@@ -31,6 +31,7 @@
 
 <script src="js/helpers.js"></script>
 <script src="js/supabase.js"></script>
+<script src="js/components.js"></script>
 <script>
 let allDeals = [];
 
@@ -39,7 +40,8 @@ function getInvestorDeals(name) {
 }
 
 function renderGrid() {
-  // Status (aktiv/gæst/tidligere) udledes af deals-data — se buildInvestorIndex i helpers.js
+  // Status (aktiv/gæst/tidligere) udledes af deals-data — se buildInvestorIndex i helpers.js.
+  // Kort-markup ejes af renderInvestorCard() i components.js; denne funktion er kun komposition.
   const { investors, latestSeason } = buildInvestorIndex(allDeals);
   const byDeals = (a, b) => b.deals - a.deals;
 
@@ -49,51 +51,21 @@ function renderGrid() {
     { title: 'Tidligere løver',              items: investors.filter(m => m.status === 'tidligere').sort(byDeals), muted: true },
   ];
 
-  const grid = document.getElementById('investor-grid');
-  grid.innerHTML = '';
-
-  function makeCard(m) {
-    const deals = getInvestorDeals(m.name);
-    const avgShare = avg(deals.map(d => d.shareSold));
-    const isActive = m.status === 'aktiv';
-
-    const badge = isActive
-      ? '<div class="active-lion-badge">● Aktiv løve</div>'
-      : m.status === 'gaest' ? '<div class="active-lion-badge guest">Gæsteløve</div>' : '';
-
-    const latestRow = isActive
-      ? `<div class="inv-stat"><span class="k">Sæson ${latestSeason}</span><span class="v">${m.latestSeasonDeals} deal${m.latestSeasonDeals === 1 ? '' : 's'} · kr ${(m.latestSeasonReceived/1000000).toFixed(1)}M</span></div>`
-      : '';
-
-    const card = document.createElement('div');
-    card.className = 'investor-card' + (isActive ? ' investor-card--active' : '');
-    card.onclick = () => showDetail(m.name);
-    card.innerHTML = `
-      ${badge}
-      <div class="inv-name">${esc(m.name)}</div>
-      ${latestRow}
-      <div class="inv-stat"><span class="k">Antal deals</span><span class="v">${m.deals}</span></div>
-      <div class="inv-stat"><span class="k">Sæsoner aktiv</span><span class="v">${[...m.seasons].sort((a,b) => a-b).map(s => 'S'+s).join(', ')}</span></div>
-      <div class="inv-stat"><span class="k">Gns. andel solgt</span><span class="v">${avgShare ? avgShare.toFixed(1)+'%' : '—'}</span></div>
-      <div class="inv-stat"><span class="k">Samlet investeret</span><span class="v">kr ${(m.received/1000000).toFixed(1)}M</span></div>
-    `;
-    return card;
-  }
-
-  groups.forEach(g => {
-    if (g.items.length === 0) return;
-    const h = document.createElement('div');
-    h.className = 'investor-section-header';
-    if (g.muted) { h.style.color = 'var(--muted)'; h.style.marginTop = '36px'; }
-    h.innerHTML = `${g.title} <span class="inv-section-count"${g.muted ? ' style="background:var(--surface2);border-color:var(--border);color:var(--muted)"' : ''}>${g.items.length}</span>`;
-    grid.appendChild(h);
-
-    const subgrid = document.createElement('div');
-    subgrid.className = 'investor-subgrid';
-    g.items.forEach(m => subgrid.appendChild(makeCard(m)));
-    grid.appendChild(subgrid);
-  });
+  document.getElementById('investor-grid').innerHTML = groups
+    .filter(g => g.items.length > 0)
+    .map(g => `
+      <div class="investor-section-header"${g.muted ? ' style="color:var(--muted);margin-top:36px"' : ''}>
+        ${g.title} <span class="inv-section-count"${g.muted ? ' style="background:var(--surface2);border-color:var(--border);color:var(--muted)"' : ''}>${g.items.length}</span>
+      </div>
+      <div class="investor-subgrid">${g.items.map(m => renderInvestorCard(m, latestSeason)).join('')}</div>
+    `).join('');
 }
+
+// Ét delegeret klik i stedet for onclick pr. kort
+document.getElementById('investor-grid').addEventListener('click', e => {
+  const card = e.target.closest('.investor-card');
+  if (card) showDetail(card.dataset.name);
+});
 
 function showDetail(name) {
   const deals = getInvestorDeals(name);
