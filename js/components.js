@@ -25,6 +25,25 @@ function renderDealRow(d) {
     </tr>`;
 }
 
+// Virksomhedskort (companies-gridet) — deals er virksomhedens deals, kronologisk
+function renderCompanyCard(name, deals) {
+  const latest = deals[deals.length - 1];
+  const hasDeal = deals.some(d => d.received);
+  const statusRaw = (latest.status || '').toLowerCase();
+  return `
+    <div class="co-card" data-name="${esc(name)}">
+      <div class="co-card-top">
+        <div class="co-status-dot ${esc(statusRaw) || 'ukendt'}"></div>
+        <div class="co-name">${esc(name)}</div>
+      </div>
+      <div class="co-meta">
+        <span class="co-badge">${[...new Set(deals.map(d => 'S' + d.season))].join(', ')}</span>
+        ${hasDeal ? '<span class="co-badge gold">Deal ✓</span>' : ''}
+        ${latest.category ? `<span class="co-badge">${esc(latest.category)}</span>` : ''}
+      </div>
+    </div>`;
+}
+
 // Investorkort — m er et element fra buildInvestorIndex().investors
 function renderInvestorCard(m, latestSeason) {
   const isActive = m.status === 'aktiv';

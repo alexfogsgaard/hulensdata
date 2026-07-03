@@ -34,17 +34,17 @@
 
     <div class="filters">
       <label>Sæson</label>
-      <select id="filter-season" onchange="renderGrid()">
+      <select id="filter-season">
         <option value="">Alle</option>
       </select>
       <label>Status</label>
-      <select id="filter-status" onchange="renderGrid()">
+      <select id="filter-status">
         <option value="">Alle</option>
         <option value="Aktiv">Aktiv</option>
         <option value="Inaktiv">Inaktiv</option>
         <option value="Ukendt">Ukendt</option>
       </select>
-      <input type="text" id="filter-search" placeholder="Søg virksomhed…" oninput="renderGrid()" style="min-width:160px">
+      <input type="text" id="filter-search" placeholder="Søg virksomhed…" style="min-width:160px">
     </div>
 
     <div class="co-grid" id="co-grid"></div>
@@ -53,7 +53,7 @@
 
   <!-- Detail view -->
   <div id="detail-view" style="display:none">
-    <a class="back-btn" href="#" onclick="showGrid(); return false;">← Alle virksomheder</a>
+    <a class="back-btn" href="#" id="back-btn">← Alle virksomheder</a>
     <div id="detail-body"></div>
   </div>
 
@@ -61,6 +61,7 @@
 
 <script src="js/helpers.js"></script>
 <script src="js/supabase.js"></script>
+<script src="js/components.js"></script>
 <script>
 let allDeals = [];
 
@@ -94,34 +95,27 @@ function getFilteredCompanies() {
 }
 
 function renderGrid() {
+  // Kort-markup ejes af renderCompanyCard() i components.js — ren komposition her
   const companies = getFilteredCompanies();
-  const grid = document.getElementById('co-grid');
-  grid.innerHTML = '';
-
-  companies.forEach(([name, deals]) => {
-    const latestDeal = deals[deals.length - 1];
-    const hasDeal = deals.some(d => d.received);
-    const statusRaw = (latestDeal.status || '').toLowerCase();
-
-    const card = document.createElement('div');
-    card.className = 'co-card';
-    card.onclick = () => showDetail(name);
-    card.innerHTML = `
-      <div class="co-card-top">
-        <div class="co-status-dot ${esc(statusRaw) || 'ukendt'}"></div>
-        <div class="co-name">${esc(name)}</div>
-      </div>
-      <div class="co-meta">
-        <span class="co-badge">${[...new Set(deals.map(d => 'S' + d.season))].join(', ')}</span>
-        ${hasDeal ? `<span class="co-badge gold">Deal ✓</span>` : ''}
-        ${latestDeal.category ? `<span class="co-badge">${esc(latestDeal.category)}</span>` : ''}
-      </div>
-    `;
-    grid.appendChild(card);
-  });
-
+  document.getElementById('co-grid').innerHTML =
+    companies.map(([name, deals]) => renderCompanyCard(name, deals)).join('');
   document.getElementById('co-count').textContent = `Viser ${companies.length} virksomheder`;
 }
+
+// Event-wiring — ingen inline handlers i markup
+document.getElementById('filter-season').addEventListener('change', renderGrid);
+document.getElementById('filter-status').addEventListener('change', renderGrid);
+document.getElementById('filter-search').addEventListener('input', renderGrid);
+
+document.getElementById('co-grid').addEventListener('click', e => {
+  const card = e.target.closest('.co-card');
+  if (card) showDetail(card.dataset.name);
+});
+
+document.getElementById('back-btn').addEventListener('click', e => {
+  e.preventDefault();
+  showGrid();
+});
 
 function showDetail(name, push = true) {
   const deals = allDeals.filter(d => d.name === name);
