@@ -23,28 +23,28 @@
 
   <div class="filters">
     <label>Sæson</label>
-    <select id="filter-season" onchange="renderTable()">
+    <select id="filter-season">
       <option value="">Alle</option>
     </select>
     <label>Investor</label>
-    <select id="filter-investor" onchange="renderTable()">
+    <select id="filter-investor">
       <option value="">Alle</option>
     </select>
-    <input type="text" id="filter-search" placeholder="Søg virksomhed…" oninput="renderTable()" style="min-width:160px">
+    <input type="text" id="filter-search" placeholder="Søg virksomhed…" style="min-width:160px">
   </div>
 
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          <th onclick="sortBy('name')">Virksomhed <span class="sort-icon">↕</span></th>
-          <th onclick="sortBy('season')">Sæson <span class="sort-icon">↕</span></th>
-          <th onclick="sortBy('asked')">Søger <span class="sort-icon">↕</span></th>
-          <th onclick="sortBy('shareOffered')">Tilbudt andel <span class="sort-icon">↕</span></th>
-          <th onclick="sortBy('valBefore')">Val. før <span class="sort-icon">↕</span></th>
-          <th onclick="sortBy('received')">Modtaget <span class="sort-icon">↕</span></th>
-          <th onclick="sortBy('shareSold')">Solgt andel <span class="sort-icon">↕</span></th>
-          <th onclick="sortBy('valAfter')">Val. efter <span class="sort-icon">↕</span></th>
+          <th data-sort="name">Virksomhed <span class="sort-icon">↕</span></th>
+          <th data-sort="season">Sæson <span class="sort-icon">↕</span></th>
+          <th data-sort="asked">Søger <span class="sort-icon">↕</span></th>
+          <th data-sort="shareOffered">Tilbudt andel <span class="sort-icon">↕</span></th>
+          <th data-sort="valBefore">Val. før <span class="sort-icon">↕</span></th>
+          <th data-sort="received">Modtaget <span class="sort-icon">↕</span></th>
+          <th data-sort="shareSold">Solgt andel <span class="sort-icon">↕</span></th>
+          <th data-sort="valAfter">Val. efter <span class="sort-icon">↕</span></th>
           <th>Ændring</th>
           <th>Investorer</th>
         </tr>
@@ -57,6 +57,7 @@
 
 <script src="js/helpers.js"></script>
 <script src="js/supabase.js"></script>
+<script src="js/components.js"></script>
 <script>
 let allDeals = [];
 let sortKey = 'season';
@@ -108,33 +109,31 @@ function renderTable() {
     return (av - bv) * sortDir;
   });
 
-  const tbody = document.getElementById('deals-tbody');
-  tbody.innerHTML = '';
+  document.getElementById('deals-tbody').innerHTML = data.length === 0
+    ? '<tr><td colspan="10" class="empty">Ingen deals matcher filteret</td></tr>'
+    : data.map(renderDealRow).join('');
 
-  if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="10" class="empty">Ingen deals matcher filteret</td></tr>';
-  } else {
-    data.forEach(d => {
-      const change = (d.valBefore && d.valAfter) ? d.valAfter - d.valBefore : null;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><span class="company-name" onclick="window.location='companies.html?name=${esc(encodeURIComponent(d.name).replace(/'/g, '%27'))}'">${esc(d.name)}</span></td>
-        <td><span class="season-badge">S${d.season}E${d.episode}</span></td>
-        <td>${fmt(d.asked)}</td>
-        <td>${pct(d.shareOffered)}</td>
-        <td>${fmt(d.valBefore)}</td>
-        <td>${fmt(d.received)}</td>
-        <td>${pct(d.shareSold)}</td>
-        <td>${fmt(d.valAfter)}</td>
-        <td class="${change == null ? '' : change >= 0 ? 'val-up' : 'val-down'}">${change == null ? '—' : (change >= 0 ? '+' : '') + fmt(change)}</td>
-        <td class="investors-cell" title="${esc(d.investors)}">${esc(d.investorList.slice(0,2).join(', '))}${d.investorList.length > 2 ? ' +' + (d.investorList.length - 2) : ''}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
+  // Markér aktiv sorteringskolonne (guld sort-ikon via thead th.sorted i style.css)
+  document.querySelectorAll('thead th[data-sort]').forEach(th =>
+    th.classList.toggle('sorted', th.dataset.sort === sortKey));
 
   document.getElementById('table-count').textContent = `Viser ${data.length} af ${allDeals.length} deals`;
 }
+
+// Event-wiring — ingen inline handlers i markup
+document.getElementById('filter-season').addEventListener('change', renderTable);
+document.getElementById('filter-investor').addEventListener('change', renderTable);
+document.getElementById('filter-search').addEventListener('input', renderTable);
+
+document.querySelector('thead').addEventListener('click', e => {
+  const th = e.target.closest('th[data-sort]');
+  if (th) sortBy(th.dataset.sort);
+});
+
+document.getElementById('deals-tbody').addEventListener('click', e => {
+  const el = e.target.closest('.company-name');
+  if (el) window.location = 'companies.html?name=' + encodeURIComponent(el.dataset.company);
+});
 
 async function init() {
   allDeals = await loadDeals();

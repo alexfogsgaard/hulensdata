@@ -6,6 +6,25 @@
    Events wires af siden via event-delegation (data-attributter).
    ═══════════════════════════════════════════════════════════════ */
 
+// Deal-række (deals-tabellen) — returnerer <tr>-markup for ét deal.
+// Klik på virksomhedsnavn håndteres af siden via delegation på data-company.
+function renderDealRow(d) {
+  const change = (d.valBefore && d.valAfter) ? d.valAfter - d.valBefore : null;
+  return `
+    <tr>
+      <td><span class="company-name" data-company="${esc(d.name)}">${esc(d.name)}</span></td>
+      <td><span class="season-badge">S${d.season}E${d.episode}</span></td>
+      <td>${fmt(d.asked)}</td>
+      <td>${pct(d.shareOffered)}</td>
+      <td>${fmt(d.valBefore)}</td>
+      <td>${fmt(d.received)}</td>
+      <td>${pct(d.shareSold)}</td>
+      <td>${fmt(d.valAfter)}</td>
+      <td class="${change == null ? '' : change >= 0 ? 'val-up' : 'val-down'}">${change == null ? '—' : (change >= 0 ? '+' : '') + fmt(change)}</td>
+      <td class="investors-cell" title="${esc(d.investors)}">${esc(d.investorList.slice(0,2).join(', '))}${d.investorList.length > 2 ? ' +' + (d.investorList.length - 2) : ''}</td>
+    </tr>`;
+}
+
 // Investorkort — m er et element fra buildInvestorIndex().investors
 function renderInvestorCard(m, latestSeason) {
   const isActive = m.status === 'aktiv';
