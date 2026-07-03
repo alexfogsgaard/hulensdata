@@ -122,24 +122,34 @@ function avg(arr) {
   return valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
 }
 
+// Globale nøgletal — beregnes ét sted; bruges af header-stats og forsiden
+function getGlobalStats(deals) {
+  const withDeal = deals.filter(d => d.received);
+  return {
+    deals: deals.length,                                       // alle pitches
+    dealsClosed: withDeal.length,                              // gennemførte deals
+    totalReceived: withDeal.reduce((s, d) => s + d.received, 0),
+    seasons: new Set(deals.map(d => d.season)).size,
+    latestSeason: Math.max(...deals.map(d => d.season)),
+    investors: new Set(deals.flatMap(d => d.investorList).filter(i => i !== 'Alle investorer')).size,
+  };
+}
+
 // Render header stats på en side
 function renderHeaderStats(deals) {
   const el = document.getElementById('header-stats');
   if (!el) return;
 
-  const totalReceived = deals.filter(d => d.received).reduce((s, d) => s + d.received, 0);
-  const seasons = new Set(deals.map(d => d.season)).size;
-  const investors = new Set(deals.flatMap(d => d.investorList).filter(i => i !== 'Alle investorer')).size;
-
+  const s = getGlobalStats(deals);
   el.innerHTML = [
-    { val: deals.length,                                     lbl: 'Deals' },
-    { val: seasons,                                          lbl: 'Sæsoner' },
-    { val: investors,                                        lbl: 'Investorer' },
-    { val: 'kr ' + (totalReceived / 1000000).toFixed(1) + 'M', lbl: 'Samlet investeret' },
-  ].map(s => `
+    { val: s.deals,                                             lbl: 'Deals' },
+    { val: s.seasons,                                           lbl: 'Sæsoner' },
+    { val: s.investors,                                         lbl: 'Investorer' },
+    { val: 'kr ' + (s.totalReceived / 1000000).toFixed(1) + 'M', lbl: 'Samlet investeret' },
+  ].map(p => `
     <div class="stat-pill">
-      <div class="val">${s.val}</div>
-      <div class="lbl">${s.lbl}</div>
+      <div class="val">${p.val}</div>
+      <div class="lbl">${p.lbl}</div>
     </div>
   `).join('');
 }

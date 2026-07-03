@@ -88,18 +88,15 @@
 <script>
 async function init() {
   const deals = await loadDeals();
-  const withDeal = deals.filter(d => d.received);
-  const totalReceived = withDeal.reduce((s,d) => s+d.received, 0);
-  const investors = new Set(deals.flatMap(d => d.investorList).filter(i => i !== 'Alle investorer')).size;
-  const maxSeason = Math.max(...deals.map(d => d.season));
-  document.getElementById('season-pill').textContent = `Sæson 1 – ${maxSeason}`;
-  document.getElementById('eyebrow-seasons').textContent = `Sæson 1–${maxSeason}`;
-  document.getElementById('hero-seasons').textContent = maxSeason;
-  document.getElementById('hero-deals').textContent = withDeal.length + ' deals.';
-  document.getElementById('stat-deals').textContent = withDeal.length;
-  document.getElementById('stat-amount').textContent = (totalReceived/1000000).toFixed(1);
-  document.getElementById('stat-investors').textContent = investors;
-  const items = withDeal.slice(0,20).map(d => `<span class="ticker-item"><span>kr ${(d.received/1000).toFixed(0)}k</span>${esc(d.name)}</span>`);
+  const stats = getGlobalStats(deals);
+  document.getElementById('season-pill').textContent = `Sæson 1 – ${stats.latestSeason}`;
+  document.getElementById('eyebrow-seasons').textContent = `Sæson 1–${stats.latestSeason}`;
+  document.getElementById('hero-seasons').textContent = stats.latestSeason;
+  document.getElementById('hero-deals').textContent = stats.dealsClosed + ' deals.';
+  document.getElementById('stat-deals').textContent = stats.dealsClosed;
+  document.getElementById('stat-amount').textContent = (stats.totalReceived/1000000).toFixed(1);
+  document.getElementById('stat-investors').textContent = stats.investors;
+  const items = deals.filter(d => d.received).slice(0,20).map(d => `<span class="ticker-item"><span>kr ${(d.received/1000).toFixed(0)}k</span>${esc(d.name)}</span>`);
   document.getElementById('ticker-track').innerHTML = [...items,...items].join('');
 }
 init().catch(err => { console.error(err); showLoadError(); });
