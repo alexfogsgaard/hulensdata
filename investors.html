@@ -73,59 +73,29 @@ document.getElementById('investor-grid').addEventListener('keydown', e => {
 });
 
 function showDetail(name, push = true) {
-  const deals = getInvestorDeals(name);
-  if (deals.length === 0) { showGrid(push); return; }
-  const totalReceived = deals.reduce((s, d) => s + (d.received || 0), 0);
-  const avgShare = avg(deals.map(d => d.shareSold));
-  const seasons = [...new Set(deals.map(d => d.season))].sort((a, b) => a - b);
+  // Profilen er et mini-dashboard — markup ejes af renderInvestorProfile() i components.js
+  const { investors, latestSeason } = buildInvestorIndex(allDeals);
+  const m = investors.find(x => x.name === name);
+  if (!m) { showGrid(push); return; }
 
   document.getElementById('grid-view').style.display = 'none';
   document.getElementById('detail-view').style.display = 'block';
 
-  const body = document.getElementById('detail-body');
-  body.innerHTML = `
-    <h1 style="font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3rem);font-weight:900;letter-spacing:-1px;margin-bottom:4px">${esc(name)}</h1>
-    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:28px">Sæson ${seasons.join(', ')} · ${deals.length} deals</p>
-
-    <div class="kpi-row">
-      <div class="kpi-card"><div class="kpi-label">Antal deals</div><div class="kpi-val">${deals.length}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Samlet investeret</div><div class="kpi-val" style="font-size:1.2rem">kr ${(totalReceived/1000000).toFixed(1)}M</div></div>
-      <div class="kpi-card"><div class="kpi-label">Gns. andel solgt</div><div class="kpi-val">${avgShare ? avgShare.toFixed(1)+'%' : '—'}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Sæsoner aktiv</div><div class="kpi-val">${seasons.length}</div></div>
-    </div>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Virksomhed</th>
-            <th>Sæson</th>
-            <th>Søgte</th>
-            <th>Modtaget</th>
-            <th>Solgt andel</th>
-            <th>Val. før</th>
-            <th>Val. efter</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${deals.map(d => `
-            <tr>
-              <td style="font-weight:500">${esc(d.name)}</td>
-              <td><span class="season-badge">S${d.season}E${d.episode}</span></td>
-              <td>${fmt(d.asked)}</td>
-              <td>${fmt(d.received)}</td>
-              <td>${pct(d.shareSold)}</td>
-              <td>${fmt(d.valBefore)}</td>
-              <td>${fmt(d.valAfter)}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
+  const profile = buildInvestorProfile(m, allDeals);
+  document.getElementById('detail-body').innerHTML = renderInvestorProfile(profile, latestSeason);
+  window.scrollTo({ top: 0, behavior: 'instant' });
 
   if (push) window.history.pushState({}, '', '?name=' + encodeURIComponent(name));
 }
+
+// Exploration loops i profilen: partner-chips → anden investorprofil,
+// virksomhedsnavne → companies-siden
+document.getElementById('detail-body').addEventListener('click', e => {
+  const chip = e.target.closest('.partner-chip');
+  if (chip) { showDetail(chip.dataset.name); return; }
+  const co = e.target.closest('.company-name');
+  if (co) window.location = 'companies.html?name=' + encodeURIComponent(co.dataset.company);
+});
 
 function showGrid(push = true) {
   document.getElementById('grid-view').style.display = 'block';

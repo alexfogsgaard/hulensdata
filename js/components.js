@@ -55,6 +55,86 @@ function renderCompanyCard(name, deals) {
     </div>`;
 }
 
+// Investor-profil — mini-dashboard (hero + sæsongraf + mønstre + deals-tabel).
+// p er output fra buildInvestorProfile(); klik på partnere/virksomheder
+// håndteres af siden via delegation (data-name / data-company).
+function renderInvestorProfile(p, latestSeason) {
+  const m = p.m;
+  const isActive = m.status === 'aktiv';
+  const badge = isActive
+    ? '<span class="inv-badge inv-badge--active">● Aktiv løve</span>'
+    : m.status === 'gaest' ? '<span class="inv-badge">Gæsteløve</span>' : '<span class="inv-badge">Tidligere løve</span>';
+  const seasons = [...m.seasons].sort((a, b) => a - b);
+  const span = seasons.length === 1 ? `S${seasons[0]}` : `S${seasons[0]}–S${seasons[seasons.length - 1]}`;
+
+  // Sæsongraf: investeret pr. sæson (kun investorens egne tal)
+  const maxV = Math.max(...Object.values(m.bySeason).map(b => b.received), 1);
+  let bars = '';
+  for (let s = 1; s <= latestSeason; s++) {
+    const b = m.bySeason[s];
+    const mio = b ? (b.received / 1000000).toFixed(1) : null;
+    bars += `
+      <div class="strip-col" title="${b ? `S${s}: ${b.deals} deal${b.deals === 1 ? '' : 's'} · kr ${mio} mio.` : `S${s}: ikke aktiv`}">
+        <div class="strip-fill${s === latestSeason && b ? ' latest' : ''}${b ? '' : ' inactive'}" style="height:${b ? Math.max(6, Math.round(b.received / maxV * 100)) : 3}%"></div>
+        <span class="${s === latestSeason && b ? 'latest' : ''}">S${s}</span>
+      </div>`;
+  }
+
+  const partnerChips = p.partners.slice(0, 4).map(pt =>
+    `<button class="partner-chip" data-name="${esc(pt.name)}">${esc(pt.name)} <span class="chip-count">${pt.count}</span></button>`
+  ).join('') || '<span class="profile-dim">Ingen co-investeringer</span>';
+
+  return `
+    <div class="profile-hero">
+      <div class="inv-topline">${badge}<span class="inv-span">${span}</span></div>
+      <h1 class="profile-name">${esc(m.name)}</h1>
+      <div class="profile-metrics">
+        <div class="pm"><span class="k">Deals</span><span class="v num">${m.deals}</span></div>
+        <div class="pm"><span class="k">Samlet investeret</span><span class="v num">kr ${(m.received/1000000).toFixed(1)}M</span></div>
+        <div class="pm"><span class="k">Gns. andel</span><span class="v num">${m.avgShare ? m.avgShare.toFixed(1) + '%' : '—'}</span></div>
+        <div class="pm"><span class="k">Typisk deal</span><span class="v num">${p.medianDeal ? 'kr ' + (p.medianDeal/1000).toFixed(0) + 'k' : '—'}</span></div>
+        <div class="pm"><span class="k">Største deal</span><span class="v num">${m.largest ? 'kr ' + (m.largest.received/1000000).toFixed(1) + 'M' : '—'}</span></div>
+      </div>
+    </div>
+
+    <div class="profile-grid">
+      <div class="profile-panel">
+        <div class="panel-label">Investeret pr. sæson</div>
+        <div class="strip-bars profile-strip">${bars}</div>
+      </div>
+      <div class="profile-panel">
+        <div class="panel-label">Mønstre</div>
+        <div class="pattern-row"><span class="k">Største deal</span><span class="v">${m.largest ? `<span class="company-name" data-company="${esc(m.largest.name)}">${esc(m.largest.name)}</span> · kr ${(m.largest.received/1000000).toFixed(1)}M` : '—'}</span></div>
+        <div class="pattern-row"><span class="k">Solo / sammen</span><span class="v num">${p.solo} / ${p.shared}</span></div>
+        <div class="pattern-row pattern-partners"><span class="k">Hyppigste partnere</span></div>
+        <div class="partner-chips">${partnerChips}</div>
+      </div>
+    </div>
+
+    <div class="profile-panel profile-table">
+      <div class="panel-label">Alle deals (${p.dealList.length})</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Virksomhed</th>
+              <th>Sæson</th>
+              <th class="num">Søger</th>
+              <th class="num col-secondary">Tilbudt andel</th>
+              <th class="num col-secondary">Val. før</th>
+              <th class="num">Modtaget</th>
+              <th class="num col-secondary">Solgt andel</th>
+              <th class="num col-secondary">Val. efter</th>
+              <th class="num col-secondary">Ændring</th>
+              <th>Investorer</th>
+            </tr>
+          </thead>
+          <tbody>${p.dealList.map(renderDealRow).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
 // Skeleton-placeholders — vises mens data hentes (styles i style.css §SKELETON)
 function renderSkeletonCards(count) {
   return Array.from({ length: count }, () => '<div class="skeleton skeleton-card"></div>').join('');

@@ -129,6 +129,30 @@ function avg(arr) {
   return valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
 }
 
+// Profildata for én investor — beriger et buildInvestorIndex-element med
+// mønstre, der kun bruges på profilsiden (median, partnere, solo-andel)
+function buildInvestorProfile(m, allDeals) {
+  const dealList = allDeals.filter(d => d.investorList.includes(m.name));
+  const received = dealList.map(d => d.received).filter(v => v).sort((a, b) => a - b);
+  const mid = received.length / 2;
+  const medianDeal = received.length
+    ? (received.length % 2 ? received[Math.floor(mid)] : (received[mid - 1] + received[mid]) / 2)
+    : null;
+
+  const partnerCounts = {};
+  let solo = 0;
+  dealList.forEach(d => {
+    const others = d.investorList.filter(i => i !== m.name && i !== 'Alle investorer');
+    if (others.length === 0) solo++;
+    others.forEach(p => partnerCounts[p] = (partnerCounts[p] || 0) + 1);
+  });
+  const partners = Object.entries(partnerCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => ({ name, count }));
+
+  return { m, dealList, medianDeal, partners, solo, shared: dealList.length - solo };
+}
+
 // Globale nøgletal — beregnes ét sted; bruges af header-stats og forsiden
 function getGlobalStats(deals) {
   const withDeal = deals.filter(d => d.received);
