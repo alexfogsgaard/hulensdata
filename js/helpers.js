@@ -15,6 +15,9 @@ function esc(s) {
 // Formatér tal til dansk valuta
 const fmt = n => n == null ? '—' : 'kr ' + n.toLocaleString('da-DK');
 
+// Kompakt beløbsformat til nøgletal: kr 450k / kr 2.0M
+const fmtShort = n => n == null ? '—' : n >= 1000000 ? `kr ${(n/1000000).toFixed(1)}M` : `kr ${(n/1000).toFixed(0)}k`;
+
 // Formatér procent
 const pct = n => n == null ? '—' : n + '%';
 
@@ -151,6 +154,50 @@ function buildInvestorProfile(m, allDeals) {
     .map(([name, count]) => ({ name, count }));
 
   return { m, dealList, medianDeal, partners, solo, shared: dealList.length - solo };
+}
+
+// Profildata for én virksomhed — kapitalhistorik, investornetværk og sæsonkontekst
+function buildCompanyProfile(name, allDeals) {
+  const dealList = allDeals.filter(d => d.name === name);
+  if (dealList.length === 0) return null;
+
+  const latest = dealList[dealList.length - 1];
+  const totalReceived = dealList.reduce((s, d) => s + (d.received || 0), 0);
+  const totalAsked = dealList.reduce((s, d) => s + (d.asked || 0), 0);
+  const totalShareSold = dealList.reduce((s, d) => s + (d.shareSold || 0), 0) || null;
+  const lastValAfter = [...dealList].reverse().find(d => d.valAfter)?.valAfter || null;
+  const investors = [...new Set(dealList.flatMap(d => d.investorList).filter(i => i !== 'Alle investorer'))];
+  const seasonSpan = [...new Set(dealList.map(d => 'S' + d.season))].join(' · ');
+
+  // Relaterede virksomheder = deler investorer (ecosystem-loop).
+  // Vægt = antal fælles investorer på tværs af deals.
+  const relatedCounts = {};
+  if (investors.length) {
+    allDeals.forEach(d => {
+      if (d.name === name) return;
+      const overlap = d.investorList.filter(i => investors.includes(i)).length;
+      if (overlap) relatedCounts[d.name] = (relatedCounts[d.name] || 0) + overlap;
+    });
+  }
+  const related = Object.entries(relatedCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([n, count]) => ({ name: n, count }));
+
+  // Sæsonkontekst pr. deal: placering blandt sæsonens deals + sæsonmedian
+  const seasonContext = dealList.map(d => {
+    if (!d.received) return null;
+    const sd = allDeals.filter(x => x.season === d.season && x.received).sort((a, b) => b.received - a.received);
+    const vals = sd.map(x => x.received).sort((a, b) => a - b);
+    const mid = vals.length / 2;
+    return {
+      rank: sd.indexOf(d) + 1,
+      total: sd.length,
+      median: vals.length % 2 ? vals[Math.floor(mid)] : (vals[mid - 1] + vals[mid]) / 2,
+    };
+  });
+
+  return { name, dealList, latest, totalReceived, totalAsked, totalShareSold, lastValAfter, investors, seasonSpan, related, seasonContext };
 }
 
 // Globale nøgletal — beregnes ét sted; bruges af header-stats og forsiden

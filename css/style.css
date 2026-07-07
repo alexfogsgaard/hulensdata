@@ -938,3 +938,62 @@ tbody tr:not(.skeleton-row) td:first-child { max-width: 220px; overflow: hidden;
   .profile-grid { grid-template-columns: 1fr; }
   .profile-strip { height: 90px; }
 }
+
+/* COMPANY-PROFIL — kapitalhistorik & netværk */
+.co-status-line { display: inline-flex; align-items: center; gap: var(--space-2); }
+.co-status-line .co-status-dot { margin-top: 0; }
+
+.profile-stack { display: grid; gap: var(--space-4); align-content: start; }
+
+.funding-timeline { position: relative; padding-left: 22px; }
+.funding-timeline::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--border);
+}
+.funding-step { position: relative; padding-bottom: var(--space-5); }
+.funding-step:last-child { padding-bottom: 0; }
+.fs-marker {
+  position: absolute;
+  left: -22.5px;
+  top: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+}
+.fs-marker.deal {
+  background: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 0 10px rgba(201,168,76,0.35);
+}
+.fs-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-1);
+}
+.fs-outcome {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 1px 8px;
+  border-radius: 10px;
+}
+.fs-outcome.deal {
+  color: var(--gold-light);
+  border-color: rgba(201,168,76,0.35);
+  background: rgba(201,168,76,0.08);
+}
+.fs-delta { font-size: var(--text-sm); font-weight: 500; }
+.fs-row { font-size: var(--text-base); }
+.fs-row .gold { color: var(--gold-light); font-weight: 500; }
+.fs-ctx { font-size: var(--text-sm); color: var(--muted); margin-top: 2px; }

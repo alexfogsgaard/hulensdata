@@ -110,46 +110,26 @@ document.getElementById('back-btn').addEventListener('click', e => {
 });
 
 function showDetail(name, push = true) {
-  const deals = allDeals.filter(d => d.name === name);
-  if (deals.length === 0) { showGrid(push); return; }
-
-  // Seneste deal bestemmer status/kategori; investorer samles på tværs af alle deals
-  const latest = deals[deals.length - 1];
-  const allInvestors = [...new Set(deals.flatMap(d => d.investorList))];
+  // Profilen er et mini-dashboard — markup ejes af renderCompanyProfile() i components.js
+  const p = buildCompanyProfile(name, allDeals);
+  if (!p) { showGrid(push); return; }
 
   document.getElementById('grid-view').style.display = 'none';
   document.getElementById('detail-view').style.display = 'block';
-
-  const dealCards = deals.map(d => `
-    <div class="co-detail-card">
-      <h4>Deal <span>·</span> ${deals.length > 1 ? `S${d.season}E${d.episode}` : 'tal'}</h4>
-      <div class="co-info-row"><span class="ci-label">Søgte</span><span class="ci-val">${fmt(d.asked)}</span></div>
-      <div class="co-info-row"><span class="ci-label">Tilbudt andel</span><span class="ci-val">${pct(d.shareOffered)}</span></div>
-      <div class="co-info-row"><span class="ci-label">Valuation før</span><span class="ci-val">${fmt(d.valBefore)}</span></div>
-      <div class="co-info-row"><span class="ci-label">Modtaget</span><span class="ci-val">${fmt(d.received)}</span></div>
-      <div class="co-info-row"><span class="ci-label">Solgt andel</span><span class="ci-val">${pct(d.shareSold)}</span></div>
-      <div class="co-info-row"><span class="ci-label">Valuation efter</span><span class="ci-val">${fmt(d.valAfter)}</span></div>
-    </div>
-  `).join('');
-
-  const body = document.getElementById('detail-body');
-  body.innerHTML = `
-    <div class="co-detail-name">${esc(name)}</div>
-    <div class="co-detail-sub">Sæson ${[...new Set(deals.map(d => d.season))].join(', ')} · ${esc(latest.status) || 'Ukendt status'}</div>
-    <div class="co-detail-grid">
-      ${dealCards}
-      <div class="co-detail-card">
-        <h4>Om <span>·</span> virksomheden</h4>
-        <div class="co-info-row"><span class="ci-label">Kategori</span><span class="ci-val">${esc(latest.category) || '—'}</span></div>
-        <div class="co-info-row"><span class="ci-label">Status</span><span class="ci-val">${esc(latest.status) || '—'}</span></div>
-        <div class="co-info-row"><span class="ci-label">Investor(er)</span><span class="ci-val">${esc(allInvestors.join(', ')) || '—'}</span></div>
-        <div class="co-info-row"><span class="ci-label">Afsnit</span><span class="ci-val">${deals.map(d => `S${d.season}E${d.episode}`).join(', ')}</span></div>
-      </div>
-    </div>
-  `;
+  document.getElementById('detail-body').innerHTML = renderCompanyProfile(p);
+  window.scrollTo({ top: 0, behavior: 'instant' });
 
   if (push) window.history.pushState({}, '', '?name=' + encodeURIComponent(name));
 }
+
+// Exploration loops i profilen: relateret virksomhed → dens profil (samme side),
+// investor-chip → investorprofilen
+document.getElementById('detail-body').addEventListener('click', e => {
+  const rel = e.target.closest('.related-chip');
+  if (rel) { showDetail(rel.dataset.name); return; }
+  const inv = e.target.closest('.partner-chip');
+  if (inv) window.location = 'investors.html?name=' + encodeURIComponent(inv.dataset.name);
+});
 
 function showGrid(push = true) {
   document.getElementById('grid-view').style.display = 'block';

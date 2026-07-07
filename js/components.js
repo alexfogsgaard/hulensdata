@@ -135,6 +135,81 @@ function renderInvestorProfile(p, latestSeason) {
     </div>`;
 }
 
+// Virksomheds-profil — mini-dashboard (hero + kapitalhistorik + netværk).
+// p er output fra buildCompanyProfile(); chips håndteres af siden via
+// delegation: .related-chip → anden virksomhed, .partner-chip → investorprofil.
+function renderCompanyProfile(p) {
+  const statusRaw = (p.latest.status || '').toLowerCase();
+  const hasDeal = p.totalReceived > 0;
+
+  // Kapitalhistorik: ét trin pr. optræden i hulen
+  const steps = p.dealList.map((d, i) => {
+    const ctx = p.seasonContext[i];
+    const valDelta = (d.valBefore && d.valAfter)
+      ? Math.round((d.valAfter - d.valBefore) / d.valBefore * 100)
+      : null;
+    return `
+      <div class="funding-step">
+        <div class="fs-marker${d.received ? ' deal' : ''}"></div>
+        <div class="fs-head">
+          <span class="season-badge">S${d.season}E${d.episode}</span>
+          ${d.received
+            ? '<span class="fs-outcome deal">Deal ✓</span>'
+            : '<span class="fs-outcome">Ingen aftale</span>'}
+          ${valDelta != null ? `<span class="num fs-delta ${valDelta >= 0 ? 'val-up' : 'val-down'}">${valDelta >= 0 ? '▲' : '▼'} ${Math.abs(valDelta)}% val.</span>` : ''}
+        </div>
+        <div class="fs-row">Søgte <span class="num">${fmt(d.asked)}</span> for <span class="num">${pct(d.shareOffered)}</span>${d.valBefore ? ` · val. <span class="num">${fmt(d.valBefore)}</span>` : ''}</div>
+        ${d.received ? `<div class="fs-row">Fik <span class="num gold">${fmt(d.received)}</span> for <span class="num">${pct(d.shareSold)}</span>${d.valAfter ? ` · val. <span class="num">${fmt(d.valAfter)}</span>` : ''}</div>` : ''}
+        ${ctx ? `<div class="fs-ctx">#${ctx.rank} af ${ctx.total} deals i S${d.season} · sæsonmedian ${fmtShort(ctx.median)}</div>` : ''}
+      </div>`;
+  }).join('');
+
+  const investorChips = p.investors.map(n =>
+    `<button class="partner-chip" data-name="${esc(n)}">${esc(n)}</button>`).join('')
+    || '<span class="profile-dim">Ingen investorer — fik ikke en aftale</span>';
+
+  const relatedChips = p.related.map(r =>
+    `<button class="partner-chip related-chip" data-name="${esc(r.name)}">${esc(r.name)} <span class="chip-count">${r.count}</span></button>`).join('')
+    || '<span class="profile-dim">Ingen fælles investorer med andre virksomheder</span>';
+
+  return `
+    <div class="profile-hero">
+      <div class="inv-topline">
+        <span class="co-status-line">
+          <span class="co-status-dot ${esc(statusRaw) || 'ukendt'}"></span>
+          <span class="inv-badge">${esc(p.latest.status) || 'Ukendt status'}</span>
+          ${p.latest.category ? `<span class="co-badge">${esc(p.latest.category)}</span>` : ''}
+        </span>
+        <span class="inv-span">${p.seasonSpan}</span>
+      </div>
+      <h1 class="profile-name">${esc(p.name)}</h1>
+      <div class="profile-metrics">
+        <div class="pm"><span class="k">Modtaget</span><span class="v num">${hasDeal ? fmtShort(p.totalReceived) : '—'}</span></div>
+        <div class="pm"><span class="k">Søgte</span><span class="v num">${fmtShort(p.totalAsked)}</span></div>
+        <div class="pm"><span class="k">Solgt andel</span><span class="v num">${hasDeal && p.totalShareSold ? p.totalShareSold + '%' : '—'}</span></div>
+        <div class="pm"><span class="k">Seneste valuation</span><span class="v num">${p.lastValAfter ? fmtShort(p.lastValAfter) : '—'}</span></div>
+        <div class="pm"><span class="k">Pitches</span><span class="v num">${p.dealList.length}</span></div>
+      </div>
+    </div>
+
+    <div class="profile-grid">
+      <div class="profile-panel">
+        <div class="panel-label">Kapitalhistorik</div>
+        <div class="funding-timeline">${steps}</div>
+      </div>
+      <div class="profile-stack">
+        <div class="profile-panel">
+          <div class="panel-label">Investor${p.investors.length === 1 ? '' : 'er'} (${p.investors.length})</div>
+          <div class="partner-chips">${investorChips}</div>
+        </div>
+        <div class="profile-panel">
+          <div class="panel-label">Relaterede virksomheder · samme investorer</div>
+          <div class="partner-chips">${relatedChips}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
 // Skeleton-placeholders — vises mens data hentes (styles i style.css §SKELETON)
 function renderSkeletonCards(count) {
   return Array.from({ length: count }, () => '<div class="skeleton skeleton-card"></div>').join('');
