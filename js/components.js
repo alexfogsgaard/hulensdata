@@ -210,6 +210,51 @@ function renderCompanyProfile(p) {
     </div>`;
 }
 
+/* ── Forside-dashboard (A+) ── */
+
+// KPI-tile: stort nøgletal i guld + mono-undertekst
+function renderKpiTile(label, value, sub) {
+  return `
+    <div class="kpi">
+      <div class="k">${esc(label)}</div>
+      <div class="v">${esc(value)}</div>
+      <div class="s num">${esc(sub)}</div>
+    </div>`;
+}
+
+// Kompakt deal-række til "Seneste deals"-panelet (4 kolonner)
+function renderLatestDealRow(d) {
+  return `
+    <tr>
+      <td class="co"><span class="company-name" data-company="${esc(d.name)}">${esc(d.name)}</span></td>
+      <td><span class="ep num">S${d.season}E${d.episode}</span></td>
+      <td class="amt num">${fmt(d.received)}</td>
+      <td class="inv">${esc(d.investorList.join(', '))}</td>
+    </tr>`;
+}
+
+// Højdepunkts-række (label + stort tal + kontekst)
+function renderStoryRow(label, value, context, deltaHtml) {
+  return `
+    <div class="story">
+      <div class="k">${esc(label)}</div>
+      <div class="v">${esc(value)}${deltaHtml || ''}</div>
+      <div class="c">${esc(context)}</div>
+    </div>`;
+}
+
+// Aktiv løve-række: navn + proportional guld-bar + deals·beløb (mono)
+function renderLionRow(m, maxDeals) {
+  const w = Math.max(10, Math.round(m.latestSeasonDeals / maxDeals * 96));
+  return `
+    <div class="lion" data-name="${esc(m.name)}" tabindex="0" role="link" aria-label="${esc(m.name)} — åbn profil">
+      <span class="dot"></span>
+      <span class="n">${esc(m.name)}</span>
+      <span class="bar" style="width:${w}px"></span>
+      <span class="d num">${m.latestSeasonDeals} · ${(m.latestSeasonReceived/1000000).toFixed(1)}M</span>
+    </div>`;
+}
+
 // Skeleton-placeholders — vises mens data hentes (styles i style.css §SKELETON)
 function renderSkeletonCards(count) {
   return Array.from({ length: count }, () => '<div class="skeleton skeleton-card"></div>').join('');

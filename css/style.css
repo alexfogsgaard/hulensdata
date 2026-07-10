@@ -487,55 +487,6 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
   .site-nav a { padding: 8px 10px; font-size: 0.72rem; white-space: nowrap; }
 }
 
-/* LANDING (index) — flyttet fra index.html */
-  .landing-screen { min-height:100vh; display:flex; flex-direction:column; position:relative; overflow:hidden; }
-  .landing-screen::before { content:''; position:absolute; inset:0; background-image:linear-gradient(rgba(201,168,76,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.04) 1px,transparent 1px); background-size:60px 60px; animation:gridDrift 30s linear infinite; pointer-events:none; }
-  @keyframes gridDrift { 0%{background-position:0 0} 100%{background-position:60px 60px} }
-  .landing-glow { position:absolute; width:700px; height:700px; border-radius:50%; background:radial-gradient(circle,rgba(201,168,76,0.08) 0%,transparent 70%); top:50%; left:50%; transform:translate(-50%,-60%); pointer-events:none; }
-  .landing-nav { display:flex; justify-content:space-between; align-items:center; padding:32px 48px; position:relative; z-index:2; }
-  .landing-nav .wordmark { font-family:'Playfair Display',serif; font-size:1rem; font-weight:700; color:var(--muted); }
-  .landing-nav .wordmark span { color:var(--gold); }
-  .season-pill { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); border:1px solid var(--border); border-radius:20px; padding:5px 14px; }
-  .landing-hero { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:60px 40px; position:relative; z-index:2; }
-  .landing-eyebrow { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.18em; color:var(--gold); margin-bottom:28px; opacity:0; animation:fadeUp 0.7s ease 0.1s forwards; }
-  .landing-headline { font-family:'Playfair Display',serif; font-size:clamp(3.2rem,8vw,7rem); font-weight:900; line-height:0.95; letter-spacing:-2px; margin-bottom:32px; opacity:0; animation:fadeUp 0.8s ease 0.25s forwards; }
-  .landing-headline em { font-style:italic; color:var(--gold); }
-  .landing-sub { max-width:500px; font-size:1rem; color:var(--muted); line-height:1.7; margin-bottom:52px; opacity:0; animation:fadeUp 0.8s ease 0.4s forwards; }
-  .landing-cta { display:inline-flex; align-items:center; gap:12px; background:var(--gold); color:#0e0e0e; font-family:'DM Sans',sans-serif; font-size:0.85rem; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; padding:16px 36px; border-radius:4px; border:none; cursor:pointer; text-decoration:none; transition:background 0.2s,transform 0.2s,box-shadow 0.2s; opacity:0; animation:fadeUp 0.8s ease 0.55s forwards; }
-  .landing-cta:hover { background:var(--gold-light); transform:translateY(-2px); box-shadow:0 12px 40px rgba(201,168,76,0.25); }
-  .landing-cta .arrow { transition:transform 0.2s; }
-  .landing-cta:hover .arrow { transform:translateX(4px); }
-  .scroll-hint { position:absolute; bottom:28px; left:50%; transform:translateX(-50%); font-size:0.65rem; text-transform:uppercase; letter-spacing:0.2em; color:var(--border); animation:hintBounce 2.2s ease infinite; pointer-events:none; }
-  @keyframes hintBounce { 0%,100%{transform:translateX(-50%) translateY(0);opacity:0.5} 50%{transform:translateX(-50%) translateY(7px);opacity:1} }
-  .landing-stats { display:flex; border-top:1px solid var(--border); border-bottom:1px solid var(--border); background:var(--surface); }
-  .stat-block { flex:1; padding:56px 40px; text-align:center; border-right:1px solid var(--border); }
-  .stat-block:last-child { border-right:none; }
-  .stat-number { font-family:'Playfair Display',serif; font-size:clamp(3rem,7vw,5.5rem); font-weight:900; color:var(--gold); line-height:1; letter-spacing:-2px; display:block; }
-  .stat-suffix { font-size:clamp(0.9rem,2vw,1.2rem); font-weight:300; color:var(--muted); display:block; margin-top:6px; }
-  .stat-label { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.14em; color:var(--muted); margin-top:16px; }
-  .landing-nav-cards { display:grid; grid-template-columns:repeat(4,1fr); border-bottom:1px solid var(--border); }
-  .landing-nav-card { padding:44px 36px; border-right:1px solid var(--border); cursor:pointer; text-decoration:none; transition:background 0.2s; display:flex; flex-direction:column; }
-  .landing-nav-card:last-child { border-right:none; }
-  .landing-nav-card:hover { background:var(--surface2); }
-  .card-icon { font-size:1.8rem; margin-bottom:20px; }
-  .card-title { font-family:'Playfair Display',serif; font-size:1.25rem; font-weight:700; margin-bottom:10px; color:var(--text); }
-  .card-desc { font-size:0.8rem; color:var(--muted); line-height:1.65; flex:1; }
-  .card-arrow { margin-top:24px; color:var(--gold); font-size:1.1rem; display:inline-block; transition:transform 0.2s; }
-  .landing-nav-card:hover .card-arrow { transform:translateX(6px); }
-  .landing-ticker { overflow:hidden; border-top:1px solid var(--border); padding:10px 0; }
-  .ticker-track { display:flex; gap:48px; white-space:nowrap; animation:ticker 40s linear infinite; }
-  @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
-  .ticker-item { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--border); flex-shrink:0; }
-  .ticker-item span { color:var(--gold); margin-right:8px; }
-  @media (max-width:700px) {
-    .landing-stats { flex-direction:column; }
-    .stat-block { border-right:none; border-bottom:1px solid var(--border); padding:40px 24px; }
-    .landing-nav-cards { grid-template-columns:1fr 1fr; }
-    .landing-nav-card:nth-child(2) { border-right:none; }
-    .landing-nav { padding:24px 20px; }
-    .landing-hero { padding:40px 20px; }
-  }
-
 /* DEALS-SIDEN — flyttet fra deals.html */
   .investors-cell { max-width: 220px; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: 0.8rem; }
   .company-name { font-weight: 500; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border); }
@@ -739,103 +690,6 @@ tbody tr:not(.skeleton-row) td:first-child { max-width: 220px; overflow: hidden;
 }
 @media (prefers-reduced-motion: reduce) { .co-details { transition: none; } }
 
-/* LANDING HIGHLIGHTS — datafortællinger på forsiden */
-.landing-highlights {
-  border-bottom: 1px solid var(--border);
-  padding: 48px 40px;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-.highlights-eyebrow {
-  font-size: var(--text-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--gold);
-  margin-bottom: var(--space-5);
-}
-.highlights-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
-}
-.story-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-5);
-  transition: border-color 0.2s;
-}
-.story-card:hover { border-color: rgba(201,168,76,0.4); }
-.story-label {
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--muted);
-  margin-bottom: var(--space-2);
-}
-.story-value {
-  font-family: var(--font-display);
-  font-size: 2rem;
-  font-weight: 900;
-  color: var(--gold);
-  line-height: 1.1;
-  letter-spacing: -0.5px;
-}
-.story-value .story-sub { font-size: 1.1rem; font-weight: 700; color: var(--gold-light); }
-.story-value .story-delta { font-family: var(--font-body); font-size: 0.85rem; font-weight: 500; letter-spacing: 0; }
-.story-context {
-  font-size: var(--text-sm);
-  color: var(--muted);
-  margin-top: var(--space-2);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.season-strip { }
-.strip-label {
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--muted);
-  margin-bottom: var(--space-3);
-}
-.strip-bars {
-  display: flex;
-  gap: var(--space-2);
-  align-items: flex-end;
-  height: 96px;
-}
-.strip-col {
-  flex: 1;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: var(--space-2);
-  cursor: default;
-}
-.strip-fill {
-  background: linear-gradient(180deg, rgba(201,168,76,0.75), rgba(201,168,76,0.25));
-  border-radius: 3px 3px 0 0;
-  transition: background 0.2s;
-}
-.strip-fill.latest { background: linear-gradient(180deg, var(--gold-light), rgba(201,168,76,0.5)); }
-.strip-col:hover .strip-fill { background: linear-gradient(180deg, var(--gold-light), rgba(201,168,76,0.45)); }
-.strip-col span {
-  font-size: var(--text-xs);
-  color: var(--muted);
-  text-align: center;
-}
-.strip-col span.latest { color: var(--gold); font-weight: 500; }
-
-@media (max-width: 800px) {
-  .landing-highlights { padding: 32px 20px; }
-  .highlights-grid { grid-template-columns: 1fr; }
-  .strip-bars { gap: 4px; }
-}
-
 /* INVESTOR-PROFIL — mini-dashboard */
 .profile-hero {
   background: linear-gradient(135deg, rgba(201,168,76,0.06) 0%, var(--surface) 55%);
@@ -997,3 +851,182 @@ tbody tr:not(.skeleton-row) td:first-child { max-width: 220px; overflow: hidden;
 .fs-row { font-size: var(--text-base); }
 .fs-row .gold { color: var(--gold-light); font-weight: 500; }
 .fs-ctx { font-size: var(--text-sm); color: var(--muted); margin-top: 2px; }
+
+/* FORSIDE-DASHBOARD (A+) — terminal-densitet, guld reserveret til nøgletal */
+:root { --font-mono: 'Roboto Mono', monospace; }
+.num-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* Global søgning (⌘K) i headeren */
+.global-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 0 1 330px;
+  height: 36px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 12px;
+}
+.global-search:focus-within { border-color: rgba(201,168,76,0.5); }
+.global-search input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+}
+.global-search input::placeholder { color: #666; }
+.global-search .kbd {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: #555;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+.search-results {
+  position: absolute;
+  top: 42px;
+  left: 0;
+  right: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  overflow: hidden;
+  z-index: 50;
+}
+.sr-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 9px 14px;
+  text-decoration: none;
+  color: var(--text);
+  font-size: 0.82rem;
+  border-bottom: 1px solid var(--hairline, #1d1d1d);
+}
+.sr-item:last-child { border-bottom: none; }
+.sr-item:hover, .sr-item.active { background: rgba(201,168,76,0.1); }
+.sr-item .sr-type { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.sr-empty { padding: 12px 14px; font-size: 0.8rem; color: var(--muted); }
+
+/* Sæsonbånd */
+.season-band {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  padding: 12px 40px;
+  border-bottom: 1px solid #1d1d1d;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.season-band .season { color: var(--gold); }
+.season-band .up { color: var(--green); }
+.season-band .right { margin-left: auto; color: #555; font-size: 0.66rem; }
+
+/* KPI-række */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+.kpi .k { font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.kpi .v { font-family: var(--font-display); font-weight: 900; font-size: 2.3rem; color: var(--gold); line-height: 1.3; }
+.kpi .s { font-family: var(--font-mono); font-size: 0.68rem; color: #666; }
+
+/* Dashboard-grid */
+.dash-grid { display: grid; grid-template-columns: 1fr 420px; gap: var(--space-5); align-items: start; }
+.dash-main .profile-panel + .profile-panel,
+.dash-side .profile-panel + .profile-panel { margin-top: var(--space-5); }
+.panel-label .more { margin-left: auto; color: var(--gold); font-size: 0.66rem; letter-spacing: 0.08em; text-decoration: none; text-transform: uppercase; }
+.panel-label .more:hover { color: var(--gold-light); }
+
+/* Sæsongraf (genbruger strip-mønstret fra profilerne) */
+.strip-bars { display: flex; gap: var(--space-2); align-items: flex-end; height: 96px; }
+.strip-col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; gap: var(--space-2); cursor: default; }
+.strip-fill { background: linear-gradient(180deg, rgba(201,168,76,0.75), rgba(201,168,76,0.25)); border-radius: 3px 3px 0 0; transition: background 0.2s; }
+.strip-fill.latest { background: linear-gradient(180deg, var(--gold-light), rgba(201,168,76,0.5)); }
+.strip-col:hover .strip-fill { background: linear-gradient(180deg, var(--gold-light), rgba(201,168,76,0.45)); }
+.strip-col span { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--muted); text-align: center; }
+.strip-col span.latest { color: var(--gold); font-weight: 500; }
+.strip-col .val { font-family: var(--font-mono); font-size: 0.62rem; color: var(--muted); text-align: center; }
+.dash-strip { height: 190px; }
+
+/* Seneste deals-tabel (kompakt, 4 kolonner) */
+.mini-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.mini-table th {
+  text-align: left; font-size: 0.62rem; letter-spacing: 0.09em; color: #666;
+  font-weight: 500; padding: 0 12px 10px 0; border-bottom: 1px solid var(--border);
+  cursor: default; text-transform: uppercase;
+}
+.mini-table th.r { text-align: right; }
+.mini-table td { padding: 11px 12px 11px 0; border-bottom: 1px solid #1d1d1d; white-space: nowrap; }
+.mini-table tr:last-child td { border-bottom: none; }
+.mini-table td.co { font-weight: 500; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+.mini-table td .ep { font-family: var(--font-mono); font-size: 0.66rem; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 7px; }
+.mini-table td.amt { font-family: var(--font-mono); color: var(--gold-light); font-weight: 500; text-align: right; }
+.mini-table td.inv { color: var(--muted); font-size: 0.74rem; max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
+
+/* Højdepunkter */
+.story { padding: 13px 0; border-bottom: 1px solid #1d1d1d; }
+.story:first-child { padding-top: 2px; }
+.story:last-child { border-bottom: none; padding-bottom: 2px; }
+.story .k { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: #666; font-weight: 500; }
+.story .v { font-family: var(--font-display); font-weight: 900; font-size: 1.55rem; color: var(--gold); line-height: 1.35; }
+.story .v .delta { font-family: var(--font-body); font-size: 0.8rem; font-weight: 500; }
+.story .c { font-size: 0.74rem; color: var(--muted); }
+
+/* Aktive løver-liste */
+.lion {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: 8px 0; border-bottom: 1px solid #1d1d1d; cursor: pointer;
+}
+.lion:last-child { border-bottom: none; }
+.lion:hover .n, .lion:focus-visible .n { color: var(--gold-light); }
+.lion:focus { outline: none; }
+.lion:focus-visible { outline: 1px solid rgba(201,168,76,0.55); outline-offset: 2px; border-radius: 4px; }
+.lion .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+.lion .n { font-weight: 500; font-size: 0.82rem; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lion .bar { height: 4px; border-radius: 2px; background: rgba(201,168,76,0.55); flex-shrink: 0; }
+.lion .d { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); width: 74px; text-align: right; flex-shrink: 0; }
+
+/* Dashboard-footer */
+.dash-footer {
+  display: flex; gap: var(--space-4);
+  padding: 16px 40px 28px; margin-top: var(--space-5);
+  border-top: 1px solid #1d1d1d;
+  font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.06em; color: #555;
+}
+.dash-footer span:last-child { margin-left: auto; }
+
+@media (max-width: 1100px) {
+  .dash-grid { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 700px) {
+  .kpis { grid-template-columns: 1fr; }
+  .season-band { padding: 10px 20px; gap: 18px; }
+  .season-band .right { display: none; }
+  .global-search { display: none; }
+  .dash-footer { padding: 14px 20px 24px; }
+  .mini-table td.inv { display: none; }
+  .mini-table th:last-child { display: none; }
+}
