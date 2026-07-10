@@ -67,7 +67,7 @@ function populateFilters() {
     sel.appendChild(opt);
   });
 
-  const investors = [...new Set(allDeals.flatMap(d => d.investorList).filter(i => i !== 'Alle investorer'))].sort();
+  const investors = [...new Set(allDeals.flatMap(d => d.investorList))].sort();
   const isel = document.getElementById('filter-investor');
   investors.forEach(inv => {
     const opt = document.createElement('option');

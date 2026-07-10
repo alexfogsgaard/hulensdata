@@ -21,79 +21,15 @@ const fmtShort = n => n == null ? '—' : n >= 1000000 ? `kr ${(n/1000000).toFix
 // Formatér procent
 const pct = n => n == null ? '—' : n + '%';
 
-// Kanoniske navne — normaliserer stavevarianter
-const NAME_CANON = {
-  'birgith aaby':          'Birgit Aaby',
-  'birgit aaby':           'Birgit Aaby',
-  'ilse jackobsen':        'Ilse Jacobsen',
-  'ilse jacobsen':         'Ilse Jacobsen',
-  'jakob risgaard':        'Jacob Risgaard',
-  'jacob risgaard':        'Jacob Risgaard',
-  'christian ahrnstedt':   'Christian Arnstedt',
-  'christian arhnstedt':   'Christian Arnstedt',
-  'christian arnstedt':    'Christian Arnstedt',
-  'nicolai nyholm':        'Nikolaj Nyholm',
-  'nikolaj nyholm':        'Nikolaj Nyholm',
-  'louise herping':        'Louise Herping Ellegaard',
-  'louise herping ellegaard': 'Louise Herping Ellegaard',
-  'anne stampe':           'Anne Stampe Olesen',
-  'anne stampe olesen':    'Anne Stampe Olesen',
-  'tahir':                 'Tahir Siddique',
-  'tahir siddique':        'Tahir Siddique',
-  'morten larsen':         'Morten Larsen',
-  'jesper buch':           'Jesper Buch',
-  'christian stadil':      'Christian Stadil',
-  'tommy ahlers':          'Tommy Ahlers',
-  'jan lehrmann':          'Jan Lehrmann',
-  'mia wagner':            'Mia Wagner',
-  'peter warnøe':          'Peter Warnøe',
-  'thomas visti':          'Thomas Visti',
-  'rasmus kolbe':          'Rasmus Kolbe',
-};
-
-function canonName(name) {
-  return NAME_CANON[name.toLowerCase().trim()] || name.trim();
-}
-
-// Parse investor-streng til array af kanoniske navne
-function parseInvestors(str) {
-  if (!str) return [];
-  const parts = str
-    .replace(/og /gi, ', ')
-    .split(',')
-    .map(x => x.trim())
-    .filter(Boolean);
-
-  const result = [];
-  parts.forEach(name => {
-    const lc = name.toLowerCase().trim();
-    // Ikke-navne må aldrig blive til investorer (fx gammel S5-7-konvention
-    // hvor "Ingen aftale" stod i investor-feltet — jf. K2 i vaulten)
-    if (lc === 'ingen aftale' || lc === 'ingen investor' || lc === 'ingen') return;
-    if (lc.includes('alle')) { result.push('Alle investorer'); return; }
-    result.push(canonName(name));
-  });
-  return [...new Set(result)];
-}
-
-// Gæsteløver — deltog enkelte afsnit uden at være fast panel-medlem.
-// Kan ikke udledes af deals-data; flyttes til investors-tabellen i Supabase (Fase 3).
-const GUEST_LIONS = new Set([
-  'Thomas Visti',   // gæst i S9
-  'Rasmus Kolbe',   // gæst i S10 (jubilæumssæsonen)
-]);
-
-// Byg investor-indeks fra deals-data — status udledes, ikke hardcodes:
-//   aktiv     = har deal(s) i seneste sæson i datasættet
-//   gaest     = på GUEST_LIONS-listen
-//   tidligere = alle andre
+// Byg investor-indeks: aggregater udledes af deals-data (observerbar sandhed),
+// status/panel-sæsoner kommer fra investor_status-viewet (redaktionel sandhed,
+// udfyldt i INVESTOR_STATUS af loadDeals). Intet er hardcodet.
 // Returnerer { investors: [...], latestSeason }
 function buildInvestorIndex(deals) {
   const latestSeason = Math.max(...deals.map(d => d.season));
   const map = {};
   deals.forEach(d => {
     d.investorList.forEach(inv => {
-      if (inv === 'Alle investorer') return;
       if (!map[inv]) map[inv] = {
         name: inv, deals: 0, received: 0, seasons: new Set(),
         latestSeasonDeals: 0, latestSeasonReceived: 0, shares: [],
@@ -119,9 +55,9 @@ function buildInvestorIndex(deals) {
   const investors = Object.values(map);
   investors.forEach(m => {
     m.avgShare = avg(m.shares);
-    m.status = GUEST_LIONS.has(m.name) ? 'gaest'
-             : m.seasons.has(latestSeason) ? 'aktiv'
-             : 'tidligere';
+    const st = INVESTOR_STATUS[m.name];
+    m.status = st ? st.status : 'tidligere';
+    m.panelSeasons = st && st.panel_seasons ? st.panel_seasons : [...m.seasons].sort((a, b) => a - b);
   });
   return { investors, latestSeason };
 }
@@ -145,7 +81,7 @@ function buildInvestorProfile(m, allDeals) {
   const partnerCounts = {};
   let solo = 0;
   dealList.forEach(d => {
-    const others = d.investorList.filter(i => i !== m.name && i !== 'Alle investorer');
+    const others = d.investorList.filter(i => i !== m.name);
     if (others.length === 0) solo++;
     others.forEach(p => partnerCounts[p] = (partnerCounts[p] || 0) + 1);
   });
@@ -166,7 +102,7 @@ function buildCompanyProfile(name, allDeals) {
   const totalAsked = dealList.reduce((s, d) => s + (d.asked || 0), 0);
   const totalShareSold = dealList.reduce((s, d) => s + (d.shareSold || 0), 0) || null;
   const lastValAfter = [...dealList].reverse().find(d => d.valAfter)?.valAfter || null;
-  const investors = [...new Set(dealList.flatMap(d => d.investorList).filter(i => i !== 'Alle investorer'))];
+  const investors = [...new Set(dealList.flatMap(d => d.investorList))];
   const seasonSpan = [...new Set(dealList.map(d => 'S' + d.season))].join(' · ');
 
   // Relaterede virksomheder = deler investorer (ecosystem-loop).
@@ -209,7 +145,7 @@ function getGlobalStats(deals) {
     totalReceived: withDeal.reduce((s, d) => s + d.received, 0),
     seasons: new Set(deals.map(d => d.season)).size,
     latestSeason: Math.max(...deals.map(d => d.season)),
-    investors: new Set(deals.flatMap(d => d.investorList).filter(i => i !== 'Alle investorer')).size,
+    investors: new Set(deals.flatMap(d => d.investorList)).size,
   };
 }
 

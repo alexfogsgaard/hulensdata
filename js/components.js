@@ -31,7 +31,7 @@ function renderCompanyCard(name, deals) {
   const latest = deals[deals.length - 1];
   const hasDeal = deals.some(d => d.received);
   const totalReceived = deals.reduce((s, d) => s + (d.received || 0), 0);
-  const investors = [...new Set(deals.flatMap(d => d.investorList).filter(i => i !== 'Alle investorer'))];
+  const investors = [...new Set(deals.flatMap(d => d.investorList))];
   const statusRaw = (latest.status || '').toLowerCase();
   return `
     <div class="co-card" data-name="${esc(name)}" tabindex="0" role="link" aria-label="${esc(name)} — åbn virksomhed">
@@ -64,7 +64,7 @@ function renderInvestorProfile(p, latestSeason) {
   const badge = isActive
     ? '<span class="inv-badge inv-badge--active">● Aktiv løve</span>'
     : m.status === 'gaest' ? '<span class="inv-badge">Gæsteløve</span>' : '<span class="inv-badge">Tidligere løve</span>';
-  const seasons = [...m.seasons].sort((a, b) => a - b);
+  const seasons = m.panelSeasons;
   const span = seasons.length === 1 ? `S${seasons[0]}` : `S${seasons[0]}–S${seasons[seasons.length - 1]}`;
 
   // Sæsongraf: investeret pr. sæson (kun investorens egne tal)
@@ -245,7 +245,8 @@ function renderInvestorCard(m, latestSeason) {
       ? '<span class="inv-badge">Gæsteløve</span>'
       : '<span class="inv-badge">Tidligere løve</span>';
 
-  const seasons = [...m.seasons].sort((a, b) => a - b);
+  // Spænd-chippen viser PANEL-sæsoner (hvornår de sad i hulen), ikke kun deal-sæsoner
+  const seasons = m.panelSeasons;
   const span = seasons.length === 1
     ? `S${seasons[0]}`
     : `S${seasons[0]}–S${seasons[seasons.length - 1]}`;

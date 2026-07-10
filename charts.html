@@ -95,7 +95,6 @@ function renderCharts(deals) {
   const invMap = {};
   deals.forEach(d => {
     d.investorList.forEach(inv => {
-      if (inv === 'Alle investorer') return;
       invMap[inv] = (invMap[inv] || 0) + (d.received ? 1 : 0);
     });
   });
