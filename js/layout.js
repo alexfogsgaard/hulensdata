@@ -41,11 +41,11 @@ async function ensureSearchIndex() {
   if (SEARCH_INDEX) return SEARCH_INDEX;
   const [invs, cos] = await Promise.all([
     sbFetch('investor_status?select=canonical_name,status&order=canonical_name.asc'),
-    sbFetch('companies?select=name&order=name.asc'),
+    sbFetch('companies?select=name,slug&order=name.asc'),
   ]);
   SEARCH_INDEX = [
     ...invs.map(i => ({ type: 'Løve', name: i.canonical_name, url: 'investors.html?name=' + encodeURIComponent(i.canonical_name) })),
-    ...cos.map(c => ({ type: 'Virksomhed', name: c.name, url: 'companies.html?name=' + encodeURIComponent(c.name) })),
+    ...cos.map(c => ({ type: 'Virksomhed', name: c.name, url: c.slug ? 'companies.html?co=' + encodeURIComponent(c.slug) : 'companies.html?name=' + encodeURIComponent(c.name) })),
   ];
   return SEARCH_INDEX;
 }

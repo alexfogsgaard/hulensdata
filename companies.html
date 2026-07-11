@@ -119,7 +119,7 @@ function showDetail(name, push = true) {
   document.getElementById('detail-body').innerHTML = renderCompanyProfile(p);
   window.scrollTo({ top: 0, behavior: 'instant' });
 
-  if (push) window.history.pushState({}, '', '?name=' + encodeURIComponent(name));
+  if (push) window.history.pushState({}, '', '?co=' + encodeURIComponent(COMPANY_SLUGS[name] || name));
 }
 
 // Exploration loops i profilen: relateret virksomhed → dens profil (samme side),
@@ -137,9 +137,17 @@ function showGrid(push = true) {
   if (push) window.history.pushState({}, '', 'companies.html');
 }
 
+// Slug (?co=) er URL-nøglen; ?name= accepteres som legacy fra gamle delte links
+function companyFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get('co');
+  if (slug) return COMPANY_NAMES[slug] || null;
+  return params.get('name');
+}
+
 // Tilbage/frem-knapper: vis den visning URL'en peger på, uden at skubbe ny historik
 window.addEventListener('popstate', () => {
-  const name = new URLSearchParams(window.location.search).get('name');
+  const name = companyFromUrl();
   if (name) showDetail(name, false);
   else showGrid(false);
 });
@@ -151,10 +159,14 @@ async function init() {
   populateFilters();
   renderGrid();
 
-  // Åbn direkte hvis URL har ?name= (params.get dekoder selv — ingen ekstra decode)
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('name')) {
-    showDetail(params.get('name'), false);
+  // Åbn direkte hvis URL peger på en virksomhed (?co=slug, eller legacy ?name=).
+  // Legacy-links normaliseres til slug-URL'en uden ny historikpost.
+  const name = companyFromUrl();
+  if (name) {
+    showDetail(name, false);
+    if (new URLSearchParams(window.location.search).get('name') && COMPANY_SLUGS[name]) {
+      window.history.replaceState({}, '', '?co=' + encodeURIComponent(COMPANY_SLUGS[name]));
+    }
   }
 }
 

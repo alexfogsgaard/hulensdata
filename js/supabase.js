@@ -13,6 +13,12 @@ var INVESTOR_STATUS = {};
 // Sæson → år (fra seasons-tabellen). Udfyldes af loadDeals().
 var SEASON_YEARS = {};
 
+// Virksomheds-slugs (fra companies-tabellen) — slug er nøglen i URL-laget,
+// navnet forbliver intern nøgle i aggregeringerne. Udfyldes af loadDeals();
+// læses af companyUrl() i helpers.js og slug-opslag på companies.html.
+var COMPANY_SLUGS = {};   // name → slug
+var COMPANY_NAMES = {};   // slug → name
+
 async function sbFetch(path) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     headers: {
@@ -30,14 +36,17 @@ async function sbFetch(path) {
 // Henter alle deals (med investor-relationer via deal_investors) samt
 // investor-status, og returnerer deals i det format resten af koden forventer
 async function loadDeals() {
-  const [rows, statuses, seasons] = await Promise.all([
+  const [rows, statuses, seasons, companies] = await Promise.all([
     sbFetch('deals?select=virksomhed,saeson,afsnit,saeson_afsnit,soeger,andel_tilbudt,beloeb_modtaget,andel_solgt,kategori,status,aftale,deal_investors(investor:investors(canonical_name))&order=saeson.asc,afsnit.asc&limit=1000'),
     sbFetch('investor_status?select=canonical_name,slug,status,first_season,last_season,panel_seasons'),
     sbFetch('seasons?select=season_number,year'),
+    sbFetch('companies?select=name,slug&limit=1000'),
   ]);
 
   INVESTOR_STATUS = Object.fromEntries(statuses.map(s => [s.canonical_name, s]));
   SEASON_YEARS = Object.fromEntries(seasons.map(s => [s.season_number, s.year]));
+  COMPANY_SLUGS = Object.fromEntries(companies.map(c => [c.name, c.slug]));
+  COMPANY_NAMES = Object.fromEntries(companies.map(c => [c.slug, c.name]));
 
   return rows.map(row => {
     const investorList = row.deal_investors.map(di => di.investor.canonical_name).sort();

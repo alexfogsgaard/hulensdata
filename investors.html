@@ -94,7 +94,7 @@ document.getElementById('detail-body').addEventListener('click', e => {
   const chip = e.target.closest('.partner-chip');
   if (chip) { showDetail(chip.dataset.name); return; }
   const co = e.target.closest('.company-name');
-  if (co) window.location = 'companies.html?name=' + encodeURIComponent(co.dataset.company);
+  if (co) window.location = companyUrl(co.dataset.company);
 });
 
 function showGrid(push = true) {

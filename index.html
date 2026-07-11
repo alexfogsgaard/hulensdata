@@ -153,7 +153,7 @@ document.getElementById('active-lions').addEventListener('keydown', e => {
 });
 document.getElementById('latest-deals').addEventListener('click', e => {
   const el = e.target.closest('.company-name');
-  if (el) window.location = 'companies.html?name=' + encodeURIComponent(el.dataset.company);
+  if (el) window.location = companyUrl(el.dataset.company);
 });
 
 init().catch(err => { console.error(err); showLoadError(); });

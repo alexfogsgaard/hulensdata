@@ -21,6 +21,14 @@ const fmtShort = n => n == null ? '—' : n >= 1000000 ? `kr ${(n/1000000).toFix
 // Formatér procent
 const pct = n => n == null ? '—' : n + '%';
 
+// URL til en virksomhedsprofil. Slug er nøglen i URL-laget (stabil ved
+// navneændringer + SEO); navne-param kun som fallback hvis slug mangler.
+function companyUrl(name) {
+  const slug = COMPANY_SLUGS[name];
+  return slug ? 'companies.html?co=' + encodeURIComponent(slug)
+              : 'companies.html?name=' + encodeURIComponent(name);
+}
+
 // Byg investor-indeks: aggregater udledes af deals-data (observerbar sandhed),
 // status/panel-sæsoner kommer fra investor_status-viewet (redaktionel sandhed,
 // udfyldt i INVESTOR_STATUS af loadDeals). Intet er hardcodet.
