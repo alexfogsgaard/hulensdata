@@ -37,7 +37,7 @@ async function sbFetch(path) {
 // investor-status, og returnerer deals i det format resten af koden forventer
 async function loadDeals() {
   const [rows, statuses, seasons, companies] = await Promise.all([
-    sbFetch('deals?select=virksomhed,saeson,afsnit,saeson_afsnit,soeger,andel_tilbudt,beloeb_modtaget,andel_solgt,kategori,status,aftale,deal_investors(investor:investors(canonical_name))&order=saeson.asc,afsnit.asc&limit=1000'),
+    sbFetch('deals?select=saeson,afsnit,soeger,andel_tilbudt,beloeb_modtaget,andel_solgt,aftale,company:companies(name,slug,category,status),deal_investors(investor:investors(canonical_name))&order=saeson.asc,afsnit.asc&limit=1000'),
     sbFetch('investor_status?select=canonical_name,slug,status,first_season,last_season,panel_seasons'),
     sbFetch('seasons?select=season_number,year'),
     sbFetch('companies?select=name,slug&limit=1000'),
@@ -51,18 +51,20 @@ async function loadDeals() {
   return rows.map(row => {
     const investorList = row.deal_investors.map(di => di.investor.canonical_name).sort();
     return {
-      name:         row.virksomhed,
+      // Virksomhedsfakta kommer fra companies-relationen — deals ejer kun
+      // TV-øjeblikkets tal. Én redigerbar sandhed pr. domænefaktum.
+      name:         row.company.name,
+      slug:         row.company.slug,
       season:       row.saeson,
       episode:      row.afsnit,
-      saeson_afsnit: row.saeson_afsnit,
       asked:        row.soeger,
       shareOffered: row.andel_tilbudt,
       received:     row.beloeb_modtaget,
       shareSold:    row.andel_solgt,
       investors:    investorList.join(', '),   // visningsstreng (fx title-attributter)
       investorList,
-      category:     row.kategori || '',
-      status:       row.status || '',
+      category:     row.company.category || '',
+      status:       row.company.status || '',
       aftale:       row.aftale,
       // Beregn valuations fra de rå tal
       valBefore:    row.soeger && row.andel_tilbudt

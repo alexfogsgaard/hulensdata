@@ -177,7 +177,7 @@ function renderCompanyProfile(p) {
       <div class="inv-topline">
         <span class="co-status-line">
           <span class="co-status-dot ${esc(statusRaw) || 'ukendt'}"></span>
-          <span class="inv-badge">${esc(p.latest.status) || 'Ukendt status'}</span>
+          <span class="inv-badge">${p.latest.status ? esc(p.latest.status[0].toUpperCase() + p.latest.status.slice(1)) : 'Ukendt status'}</span>
           ${p.latest.category ? `<span class="co-badge">${esc(p.latest.category)}</span>` : ''}
         </span>
         <span class="inv-span">${p.seasonSpan}</span>
