@@ -852,6 +852,44 @@ tbody tr:not(.skeleton-row) td:first-child { max-width: 220px; overflow: hidden;
 .fs-row .gold { color: var(--gold-light); font-weight: 500; }
 .fs-ctx { font-size: var(--text-sm); color: var(--muted); margin-top: 2px; }
 
+/* ARKIVET — efterlivs-tidslinje, fodnoter, stempel, revision */
+.aftermath-divider {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  padding: var(--space-3) 0 var(--space-5);
+}
+.aftermath-divider b { color: var(--gold); font-weight: 400; }
+.ae-marker { border-radius: 0; transform: rotate(45deg) scale(0.85); } /* efterliv = kantede markører (arkiv), TV = runde */
+.ae-date { color: var(--gold); font-size: var(--text-sm); letter-spacing: 0.08em; }
+.ae-desc { font-size: var(--text-sm); color: var(--muted); margin-top: 2px; max-width: 52ch; line-height: 1.55; }
+.ae-sources { font-size: var(--text-xs); color: var(--muted); margin-top: var(--space-1); letter-spacing: 0.02em; }
+.ae-sources a { color: var(--muted); text-decoration: underline dotted; text-underline-offset: 3px; }
+.ae-sources a:hover { color: var(--gold-light); }
+.status-stamp {
+  display: inline-block;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  color: var(--muted);
+  border: 2px solid var(--muted);
+  padding: 4px 10px;
+  transform: rotate(-4deg);
+  margin: var(--space-2) 0;
+  user-select: none;
+}
+.status-stamp.gold { color: var(--gold-light); border-color: var(--gold); transform: rotate(3deg); }
+.archive-revision {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+}
+
 /* FORSIDE-DASHBOARD (A+) — terminal-densitet, guld reserveret til nøgletal */
 :root { --font-mono: 'Roboto Mono', monospace; }
 .num-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }

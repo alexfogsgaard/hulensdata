@@ -29,6 +29,19 @@ function companyUrl(name) {
               : 'companies.html?name=' + encodeURIComponent(name);
 }
 
+// Kilder for en entitet (fodnoter) — tom liste hvis arkivlaget ikke er loadet
+function sourcesFor(entityType, entityId) {
+  return (typeof SOURCES !== 'undefined' && SOURCES[entityType + ':' + entityId]) || [];
+}
+
+// Arkivdato med præcisionsærlighed: "2018" ≠ "17.04.2018"
+function fmtEventDate(isoDate, precision) {
+  const [y, m, d] = isoDate.split('-');
+  if (precision === 'day') return `${d}.${m}.${y}`;
+  if (precision === 'month') return `${m}.${y}`;
+  return y;
+}
+
 // Byg investor-indeks: aggregater udledes af deals-data (observerbar sandhed),
 // status/panel-sæsoner kommer fra investor_status-viewet (redaktionel sandhed,
 // udfyldt i INVESTOR_STATUS af loadDeals). Intet er hardcodet.
@@ -141,7 +154,21 @@ function buildCompanyProfile(name, allDeals) {
     };
   });
 
-  return { name, dealList, latest, totalReceived, totalAsked, totalShareSold, lastValAfter, investors, seasonSpan, related, seasonContext };
+  // Arkivlaget: efterlivs-events (med kilder) + stempel + revisionsdato.
+  // Events bor i COMPANY_EVENTS (loadCompanyArchive) — tom liste hvis ikke loadet.
+  const slug = typeof COMPANY_SLUGS !== 'undefined' ? COMPANY_SLUGS[name] : null;
+  const events = ((typeof COMPANY_EVENTS !== 'undefined' && COMPANY_EVENTS[slug]) || [])
+    .map(e => ({ ...e, sources: sourcesFor('company_event', e.id) }));
+  const STAMP_TYPES = { bankruptcy: 'Konkurs', closed: 'Lukket', exit: 'Exit', cancelled: 'Deal kollapset' };
+  const stampEvent = [...events].reverse().find(e => STAMP_TYPES[e.event_type]);
+  const stamp = stampEvent
+    ? { text: STAMP_TYPES[stampEvent.event_type], gold: stampEvent.event_type === 'exit' }
+    : null;
+  const revised = events.length
+    ? events.map(e => e.updated_at).sort().pop().slice(0, 10)
+    : null;
+
+  return { name, dealList, latest, totalReceived, totalAsked, totalShareSold, lastValAfter, investors, seasonSpan, related, seasonContext, events, stamp, revised };
 }
 
 // Globale nøgletal — beregnes ét sted; bruges af header-stats og forsiden

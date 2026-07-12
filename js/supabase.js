@@ -37,7 +37,7 @@ async function sbFetch(path) {
 // investor-status, og returnerer deals i det format resten af koden forventer
 async function loadDeals() {
   const [rows, statuses, seasons, companies] = await Promise.all([
-    sbFetch('deals?select=saeson,afsnit,soeger,andel_tilbudt,beloeb_modtaget,andel_solgt,aftale,company:companies(name,slug,category,status),deal_investors(investor:investors(canonical_name))&order=saeson.asc,afsnit.asc&limit=1000'),
+    sbFetch('deals?select=id,saeson,afsnit,soeger,andel_tilbudt,beloeb_modtaget,andel_solgt,aftale,company:companies(name,slug,category,status),deal_investors(investor:investors(canonical_name))&order=saeson.asc,afsnit.asc&limit=1000'),
     sbFetch('investor_status?select=canonical_name,slug,status,first_season,last_season,panel_seasons'),
     sbFetch('seasons?select=season_number,year'),
     sbFetch('companies?select=name,slug&limit=1000'),
@@ -53,6 +53,7 @@ async function loadDeals() {
     return {
       // Virksomhedsfakta kommer fra companies-relationen — deals ejer kun
       // TV-øjeblikkets tal. Én redigerbar sandhed pr. domænefaktum.
+      id:           row.id,
       name:         row.company.name,
       slug:         row.company.slug,
       season:       row.saeson,
@@ -75,4 +76,30 @@ async function loadDeals() {
                       : null,
     };
   });
+}
+
+// ─── Arkivet: efterlivs-events + kilder (fodnoter) ───
+// Kaldes kun på sider med sagsprofiler (companies.html). Fejler blødt:
+// arkivlaget er berigelse — profilen skal kunne vises uden.
+var COMPANY_EVENTS = {};  // company-slug → [events, kronologisk]
+var SOURCES = {};         // 'entity_type:entity_id' → [kilder]
+
+async function loadCompanyArchive() {
+  try {
+    const [events, sources] = await Promise.all([
+      sbFetch('company_events?select=id,event_date,date_precision,event_type,title,description,amount,created_at,updated_at,company:companies(slug)&order=event_date.asc&limit=1000'),
+      sbFetch('sources?select=id,entity_type,entity_id,field_name,source_name,source_url,note,confidence&limit=1000'),
+    ]);
+    COMPANY_EVENTS = {};
+    events.forEach(e => {
+      (COMPANY_EVENTS[e.company.slug] = COMPANY_EVENTS[e.company.slug] || []).push(e);
+    });
+    SOURCES = {};
+    sources.forEach(s => {
+      const k = s.entity_type + ':' + s.entity_id;
+      (SOURCES[k] = SOURCES[k] || []).push(s);
+    });
+  } catch (err) {
+    console.error('Arkiv-data kunne ikke hentes (profilen vises uden efterliv):', err);
+  }
 }

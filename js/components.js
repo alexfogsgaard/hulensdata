@@ -137,6 +137,46 @@ function renderInvestorProfile(p, latestSeason) {
 
 // Virksomheds-profil — mini-dashboard (hero + kapitalhistorik + netværk).
 // p er output fra buildCompanyProfile(); chips håndteres af siden via
+/* ── Arkivet: efterlivs-tidslinje, fodnoter, stempel (generiske komponenter) ── */
+
+const EVENT_TYPE_LABELS = {
+  renegotiated: 'Genforhandlet', cancelled: 'Samarbejde ophørt',
+  follow_on_investment: 'Opfølgende investering', exit: 'Exit',
+  bankruptcy: 'Konkurs', closed: 'Lukket', comeback: 'Comeback',
+  rebrand: 'Rebranding', funding_round: 'Fundingrunde',
+  milestone: 'Milepæl', other: 'Hændelse',
+};
+
+// SourceFootnote: kildeliste under et tidslinje-punkt. Kun http(s)-links
+// rendres som links (håndhæves også af DB-constraint); noten ligger i title.
+function renderSourceList(sources) {
+  if (!sources.length) return '';
+  const items = sources.map(s => {
+    const label = esc(s.source_name) + (s.confidence === 'uncertain' ? ' (usikker)' : '');
+    const t = s.note ? ` title="${esc(s.note)}"` : '';
+    return s.source_url && /^https?:\/\//i.test(s.source_url)
+      ? `<a href="${esc(s.source_url)}" target="_blank" rel="noopener"${t}>${label}</a>`
+      : `<span${t}>${label}</span>`;
+  }).join(' · ');
+  return `<div class="ae-sources">Kilde${sources.length === 1 ? '' : 'r'}: ${items}</div>`;
+}
+
+// EventItem: ét efterlivs-punkt — dato (med præcisionsærlighed), type, titel,
+// beskrivelse (hændelser, ikke narrativer — se decisions), kilder
+function renderArchiveEvent(e) {
+  return `
+    <div class="funding-step archive-event">
+      <div class="fs-marker ae-marker${e.event_type === 'exit' ? ' deal' : ''}"></div>
+      <div class="fs-head">
+        <span class="ae-date num">${fmtEventDate(e.event_date, e.date_precision)}</span>
+        <span class="fs-outcome${e.event_type === 'exit' ? ' deal' : ''}">${EVENT_TYPE_LABELS[e.event_type] || 'Hændelse'}</span>
+      </div>
+      <div class="fs-row">${esc(e.title)}</div>
+      ${e.description ? `<div class="ae-desc">${esc(e.description)}</div>` : ''}
+      ${renderSourceList(e.sources)}
+    </div>`;
+}
+
 // delegation: .related-chip → anden virksomhed, .partner-chip → investorprofil.
 function renderCompanyProfile(p) {
   const statusRaw = (p.latest.status || '').toLowerCase();
@@ -161,8 +201,17 @@ function renderCompanyProfile(p) {
         <div class="fs-row">Søgte <span class="num">${fmt(d.asked)}</span> for <span class="num">${pct(d.shareOffered)}</span>${d.valBefore ? ` · val. <span class="num">${fmt(d.valBefore)}</span>` : ''}</div>
         ${d.received ? `<div class="fs-row">Fik <span class="num gold">${fmt(d.received)}</span> for <span class="num">${pct(d.shareSold)}</span>${d.valAfter ? ` · val. <span class="num">${fmt(d.valAfter)}</span>` : ''}</div>` : ''}
         ${ctx ? `<div class="fs-ctx">#${ctx.rank} af ${ctx.total} deals i S${d.season} · sæsonmedian ${fmtShort(ctx.median)}</div>` : ''}
+        ${renderSourceList(sourcesFor('deal', d.id))}
       </div>`;
   }).join('');
+
+  // Efterlivet: tidslinjen fortsætter efter TV-øjeblikket ("kameraerne slukker")
+  const aftermath = p.events.length ? `
+      <div class="aftermath-divider"><span>— kameraerne slukker · <b>efterlivet</b> —</span></div>
+      ${p.events.map(renderArchiveEvent).join('')}` : '';
+
+  const revisionInfo = p.revised
+    ? `<div class="archive-revision">Sagen revideret ${p.revised.split('-').reverse().join('.')}</div>` : '';
 
   const investorChips = p.investors.map(n =>
     `<button class="partner-chip" data-name="${esc(n)}">${esc(n)}</button>`).join('')
@@ -182,6 +231,7 @@ function renderCompanyProfile(p) {
         </span>
         <span class="inv-span">${p.seasonSpan}</span>
       </div>
+      ${p.stamp ? `<span class="status-stamp${p.stamp.gold ? ' gold' : ''}">${esc(p.stamp.text)}</span>` : ''}
       <h1 class="profile-name">${esc(p.name)}</h1>
       <div class="profile-metrics">
         <div class="pm"><span class="k">Modtaget</span><span class="v num">${hasDeal ? fmtShort(p.totalReceived) : '—'}</span></div>
@@ -194,8 +244,9 @@ function renderCompanyProfile(p) {
 
     <div class="profile-grid">
       <div class="profile-panel">
-        <div class="panel-label">Kapitalhistorik</div>
-        <div class="funding-timeline">${steps}</div>
+        <div class="panel-label">Kapitalhistorik${p.events.length ? ' & efterliv' : ''}</div>
+        <div class="funding-timeline">${steps}${aftermath}</div>
+        ${revisionInfo}
       </div>
       <div class="profile-stack">
         <div class="profile-panel">

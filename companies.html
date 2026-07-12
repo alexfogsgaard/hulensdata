@@ -154,7 +154,9 @@ window.addEventListener('popstate', () => {
 
 async function init() {
   document.getElementById('co-grid').innerHTML = renderSkeletonCards(12);
-  allDeals = await loadDeals();
+  // Arkivlaget (efterliv + kilder) hentes parallelt; fejler blødt uden profil-tab
+  const [deals] = await Promise.all([loadDeals(), loadCompanyArchive()]);
+  allDeals = deals;
   renderHeaderStats(allDeals);
   populateFilters();
   renderGrid();
