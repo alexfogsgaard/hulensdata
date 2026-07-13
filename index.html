@@ -141,19 +141,15 @@ async function init() {
     `DATA: SÆSON 1–${S} · ${stats.deals} PITCHES · ${stats.dealsClosed} DEALS`;
 }
 
-// Exploration: løve-rækker → profil; virksomhedsnavne i tabellen → companies
+// Exploration: løve-rækker → trykte bind (virksomhedsnavne er ægte links)
 document.getElementById('active-lions').addEventListener('click', e => {
   const lion = e.target.closest('.lion');
-  if (lion) window.location = 'investors.html?name=' + encodeURIComponent(lion.dataset.name);
+  if (lion) window.location = investorUrl(lion.dataset.name);
 });
 document.getElementById('active-lions').addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const lion = e.target.closest('.lion');
-  if (lion) window.location = 'investors.html?name=' + encodeURIComponent(lion.dataset.name);
-});
-document.getElementById('latest-deals').addEventListener('click', e => {
-  const el = e.target.closest('.company-name');
-  if (el) window.location = companyUrl(el.dataset.company);
+  if (lion) window.location = investorUrl(lion.dataset.name);
 });
 
 init().catch(err => { console.error(err); showLoadError(); });

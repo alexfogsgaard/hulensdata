@@ -2,3 +2,10 @@ mockup-*.html
 .claude/
 .DS_Store
 Sæson data Løvetjek/
+
+# Trykpressens artefakter (genereres af tools/tryk.mjs ved hvert build)
+virksomheder/
+loever/
+saesoner/
+data/
+sitemap.xml

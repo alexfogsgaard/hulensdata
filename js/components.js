@@ -7,12 +7,12 @@
    ═══════════════════════════════════════════════════════════════ */
 
 // Deal-række (deals-tabellen) — returnerer <tr>-markup for ét deal.
-// Klik på virksomhedsnavn håndteres af siden via delegation på data-company.
+// Virksomhedsnavne er ægte links til de trykte bind (crawlbar intern graf).
 function renderDealRow(d) {
   const change = (d.valBefore && d.valAfter) ? d.valAfter - d.valBefore : null;
   return `
     <tr>
-      <td><span class="company-name" data-company="${esc(d.name)}">${esc(d.name)}</span></td>
+      <td><a class="company-name" href="${companyUrl(d.name)}">${esc(d.name)}</a></td>
       <td><span class="season-badge">S${d.season}E${d.episode}</span></td>
       <td class="num">${fmt(d.asked)}</td>
       <td class="num dim col-secondary">${pct(d.shareOffered)}</td>
@@ -81,7 +81,7 @@ function renderInvestorProfile(p, latestSeason) {
   }
 
   const partnerChips = p.partners.slice(0, 4).map(pt =>
-    `<button class="partner-chip" data-name="${esc(pt.name)}">${esc(pt.name)} <span class="chip-count">${pt.count}</span></button>`
+    `<a class="partner-chip" href="${investorUrl(pt.name)}">${esc(pt.name)} <span class="chip-count">${pt.count}</span></a>`
   ).join('') || '<span class="profile-dim">Ingen co-investeringer</span>';
 
   return `
@@ -214,11 +214,11 @@ function renderCompanyProfile(p) {
     ? `<div class="archive-revision">Sagen revideret ${p.revised.split('-').reverse().join('.')}</div>` : '';
 
   const investorChips = p.investors.map(n =>
-    `<button class="partner-chip" data-name="${esc(n)}">${esc(n)}</button>`).join('')
+    `<a class="partner-chip" href="${investorUrl(n)}">${esc(n)}</a>`).join('')
     || '<span class="profile-dim">Ingen investorer — fik ikke en aftale</span>';
 
   const relatedChips = p.related.map(r =>
-    `<button class="partner-chip related-chip" data-name="${esc(r.name)}">${esc(r.name)} <span class="chip-count">${r.count}</span></button>`).join('')
+    `<a class="partner-chip related-chip" href="${companyUrl(r.name)}">${esc(r.name)} <span class="chip-count">${r.count}</span></a>`).join('')
     || '<span class="profile-dim">Ingen fælles investorer med andre virksomheder</span>';
 
   return `
@@ -277,7 +277,7 @@ function renderKpiTile(label, value, sub) {
 function renderLatestDealRow(d) {
   return `
     <tr>
-      <td class="co"><span class="company-name" data-company="${esc(d.name)}">${esc(d.name)}</span></td>
+      <td class="co"><a class="company-name" href="${companyUrl(d.name)}">${esc(d.name)}</a></td>
       <td><span class="ep num">S${d.season}E${d.episode}</span></td>
       <td class="amt num">${fmt(d.received)}</td>
       <td class="inv">${esc(d.investorList.join(', '))}</td>

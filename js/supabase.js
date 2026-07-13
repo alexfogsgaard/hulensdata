@@ -19,7 +19,20 @@ var SEASON_YEARS = {};
 var COMPANY_SLUGS = {};   // name → slug
 var COMPANY_NAMES = {};   // slug → name
 
+// Læsestien går gennem det trykte arkiv (/data/arkiv.json fra seneste
+// build) — Supabase er redaktionsdatabase, CDN'en er publikationen.
+// Fallback til live REST når arkivet ikke findes (lokal udvikling uden tryk).
+var ARKIV = null;
 async function sbFetch(path) {
+  if (ARKIV === null) {
+    try {
+      const r = await fetch('/data/arkiv.json');
+      ARKIV = r.ok ? await r.json() : false;
+    } catch (e) { ARKIV = false; }
+  }
+  const key = path.split('?')[0];
+  if (ARKIV && ARKIV[key]) return ARKIV[key];
+
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     headers: {
       'apikey': SUPABASE_KEY,

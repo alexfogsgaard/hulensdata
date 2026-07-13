@@ -62,14 +62,15 @@ function renderGrid() {
 }
 
 // Ét delegeret klik i stedet for onclick pr. kort; Enter åbner også profilen (kortene er fokusérbare)
+// Kort navigerer til det trykte bind (/loever/<slug>/)
 document.getElementById('investor-grid').addEventListener('click', e => {
   const card = e.target.closest('.investor-card');
-  if (card) showDetail(card.dataset.name);
+  if (card) window.location = investorUrl(card.dataset.name);
 });
 document.getElementById('investor-grid').addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const card = e.target.closest('.investor-card');
-  if (card) showDetail(card.dataset.name);
+  if (card) window.location = investorUrl(card.dataset.name);
 });
 
 function showDetail(name, push = true) {
@@ -122,11 +123,14 @@ async function init() {
   renderHeaderStats(allDeals);
   renderGrid();
 
-  // Åbn direkte hvis URL har ?name= (delbare investorprofiler)
+  // Legacy-links (?name=) omdirigeres til det trykte bind
   const params = new URLSearchParams(window.location.search);
-  if (params.get('name')) {
-    showDetail(params.get('name'), false);
+  const navn = params.get('name');
+  if (navn && INVESTOR_STATUS[navn] && INVESTOR_STATUS[navn].slug) {
+    window.location.replace(investorUrl(navn));
+    return;
   }
+  if (navn) showDetail(navn, false); // fallback: ukendt navn uden bind
 }
 
 init().catch(err => { console.error(err); showLoadError(); });

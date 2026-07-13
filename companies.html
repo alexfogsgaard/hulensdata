@@ -94,14 +94,15 @@ document.getElementById('filter-season').addEventListener('change', renderGrid);
 document.getElementById('filter-status').addEventListener('change', renderGrid);
 document.getElementById('filter-search').addEventListener('input', renderGrid);
 
+// Kort navigerer til det trykte bind (/virksomheder/<slug>/)
 document.getElementById('co-grid').addEventListener('click', e => {
   const card = e.target.closest('.co-card');
-  if (card) showDetail(card.dataset.name);
+  if (card) window.location = companyUrl(card.dataset.name);
 });
 document.getElementById('co-grid').addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const card = e.target.closest('.co-card');
-  if (card) showDetail(card.dataset.name);
+  if (card) window.location = companyUrl(card.dataset.name);
 });
 
 document.getElementById('back-btn').addEventListener('click', e => {
@@ -161,15 +162,14 @@ async function init() {
   populateFilters();
   renderGrid();
 
-  // Åbn direkte hvis URL peger på en virksomhed (?co=slug, eller legacy ?name=).
-  // Legacy-links normaliseres til slug-URL'en uden ny historikpost.
+  // Legacy-links (?co=slug / ?name=) omdirigeres til det trykte bind —
+  // den statiske side er den kanoniske profil.
   const name = companyFromUrl();
-  if (name) {
-    showDetail(name, false);
-    if (new URLSearchParams(window.location.search).get('name') && COMPANY_SLUGS[name]) {
-      window.history.replaceState({}, '', '?co=' + encodeURIComponent(COMPANY_SLUGS[name]));
-    }
+  if (name && COMPANY_SLUGS[name]) {
+    window.location.replace(companyUrl(name));
+    return;
   }
+  if (name) showDetail(name, false); // fallback: ukendt slug/navn uden bind
 }
 
 init().catch(err => { console.error(err); showLoadError(); });

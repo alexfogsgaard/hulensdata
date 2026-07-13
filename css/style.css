@@ -880,6 +880,17 @@ tbody tr:not(.skeleton-row) td:first-child { max-width: 220px; overflow: hidden;
   user-select: none;
 }
 .status-stamp.gold { color: var(--gold-light); border-color: var(--gold); transform: rotate(3deg); }
+a.company-name, a.partner-chip { text-decoration: none; color: inherit; }
+.tryk-kolofon {
+  text-align: center;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--muted);
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
 .archive-revision {
   font-size: var(--text-xs);
   text-transform: uppercase;

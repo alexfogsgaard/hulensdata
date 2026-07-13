@@ -125,11 +125,6 @@ document.querySelector('thead').addEventListener('click', e => {
   if (th) sortBy(th.dataset.sort);
 });
 
-document.getElementById('deals-tbody').addEventListener('click', e => {
-  const el = e.target.closest('.company-name');
-  if (el) window.location = companyUrl(el.dataset.company);
-});
-
 async function init() {
   document.getElementById('deals-tbody').innerHTML = renderSkeletonRows(8, 10);
   allDeals = await loadDeals();

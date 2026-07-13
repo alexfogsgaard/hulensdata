@@ -2,11 +2,12 @@
    js/layout.js — fælles layout-elementer (header/nav + global søgning)
    ═══════════════════════════════════════════════════════════════ */
 
+// Absolutte stier: headeren bruges også på de trykte bind (/virksomheder/…)
 const NAV_PAGES = [
-  { id: 'deals',     href: 'deals.html',     label: 'Deals' },
-  { id: 'investors', href: 'investors.html', label: 'Investorer' },
-  { id: 'companies', href: 'companies.html', label: 'Virksomheder' },
-  { id: 'charts',    href: 'charts.html',    label: 'Grafer' },
+  { id: 'deals',     href: '/deals.html',     label: 'Deals' },
+  { id: 'investors', href: '/investors.html', label: 'Investorer' },
+  { id: 'companies', href: '/companies.html', label: 'Virksomheder' },
+  { id: 'charts',    href: '/charts.html',    label: 'Grafer' },
 ];
 
 // Udfylder <header class="site-header"> med wordmark, nav, global søgning
@@ -16,7 +17,7 @@ function renderSiteHeader(activePage) {
   const host = document.querySelector('.site-header');
   if (!host) return;
   host.innerHTML = `
-    <a class="wordmark" href="index.html">Hulens <span>Data</span></a>
+    <a class="wordmark" href="/">Hulens <span>Data</span></a>
     <nav class="site-nav">
       ${NAV_PAGES.map(p =>
         `<a href="${p.href}"${p.id === activePage ? ' class="active"' : ''}>${p.label}</a>`
@@ -40,12 +41,12 @@ let searchActiveIdx = -1;
 async function ensureSearchIndex() {
   if (SEARCH_INDEX) return SEARCH_INDEX;
   const [invs, cos] = await Promise.all([
-    sbFetch('investor_status?select=canonical_name,status&order=canonical_name.asc'),
+    sbFetch('investor_status?select=canonical_name,slug,status&order=canonical_name.asc'),
     sbFetch('companies?select=name,slug&order=name.asc'),
   ]);
   SEARCH_INDEX = [
-    ...invs.map(i => ({ type: 'Løve', name: i.canonical_name, url: 'investors.html?name=' + encodeURIComponent(i.canonical_name) })),
-    ...cos.map(c => ({ type: 'Virksomhed', name: c.name, url: c.slug ? 'companies.html?co=' + encodeURIComponent(c.slug) : 'companies.html?name=' + encodeURIComponent(c.name) })),
+    ...invs.map(i => ({ type: 'Løve', name: i.canonical_name, url: i.slug ? '/loever/' + encodeURIComponent(i.slug) + '/' : 'investors.html?name=' + encodeURIComponent(i.canonical_name) })),
+    ...cos.map(c => ({ type: 'Virksomhed', name: c.name, url: c.slug ? '/virksomheder/' + encodeURIComponent(c.slug) + '/' : 'companies.html?name=' + encodeURIComponent(c.name) })),
   ];
   return SEARCH_INDEX;
 }

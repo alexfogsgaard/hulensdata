@@ -21,12 +21,17 @@ const fmtShort = n => n == null ? '—' : n >= 1000000 ? `kr ${(n/1000000).toFix
 // Formatér procent
 const pct = n => n == null ? '—' : n + '%';
 
-// URL til en virksomhedsprofil. Slug er nøglen i URL-laget (stabil ved
-// navneændringer + SEO); navne-param kun som fallback hvis slug mangler.
+// URL'er til profilerne = de statisk trykte bind (/virksomheder/, /loever/).
+// Navne-param kun som fallback hvis slug mangler (bør ikke ske).
 function companyUrl(name) {
   const slug = COMPANY_SLUGS[name];
-  return slug ? 'companies.html?co=' + encodeURIComponent(slug)
+  return slug ? '/virksomheder/' + encodeURIComponent(slug) + '/'
               : 'companies.html?name=' + encodeURIComponent(name);
+}
+function investorUrl(name) {
+  const st = INVESTOR_STATUS[name];
+  return st && st.slug ? '/loever/' + encodeURIComponent(st.slug) + '/'
+                       : 'investors.html?name=' + encodeURIComponent(name);
 }
 
 // Kilder for en entitet (fodnoter) — tom liste hvis arkivlaget ikke er loadet
