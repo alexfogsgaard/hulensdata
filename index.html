@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hulens Data — Løvens Hule Investeringer</title>
+<title>Hulens Data — Kartoteket over dansk iværksætteri på TV</title>
+<meta name="description" content="Det definitive arkiv over alle investeringer i DR's Løvens Hule: 326 sager, 11 bind, efterliv og kilder. Åbn en skuffe og træk en sag frem.">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <script src="js/layout.js"></script>
@@ -11,146 +12,97 @@
 <body>
 
 <header class="site-header"></header>
-<script>renderSiteHeader('home');</script>
+<script>renderSiteHeader('');</script>
 
-<div class="season-band" id="season-band"></div>
+<main class="page-main laesesal">
 
-<main class="page-main">
-  <div class="kpis" id="kpi-row"></div>
-
-  <div class="dash-grid">
-    <div class="dash-main">
-      <div class="profile-panel">
-        <div class="panel-label">Investeret pr. sæson (mio. kr.) <a class="more" href="charts.html">Alle grafer →</a></div>
-        <div class="strip-bars dash-strip" id="season-chart"></div>
-      </div>
-
-      <div class="profile-panel">
-        <div class="panel-label">Seneste deals <a class="more" href="deals.html" id="all-deals-link">Se alle →</a></div>
-        <table class="mini-table">
-          <thead><tr><th>Virksomhed</th><th>Afsnit</th><th class="r">Modtaget</th><th>Investorer</th></tr></thead>
-          <tbody id="latest-deals"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="dash-side">
-      <div class="profile-panel">
-        <div class="panel-label" id="highlights-label">Højdepunkter</div>
-        <div id="highlights"></div>
-      </div>
-
-      <div class="profile-panel">
-        <div class="panel-label" id="lions-label">Aktive løver <a class="more" href="investors.html">Alle 18 →</a></div>
-        <div id="active-lions"></div>
-      </div>
-    </div>
+  <!-- Kartotekets titelblad -->
+  <div class="titelblad">
+    <div class="tb-linje num">DET UOFFICIELLE ARKIV · GRUNDLAGT 2026 · OPDATERES LØBENDE</div>
+    <h1 class="tb-titel">Kartoteket</h1>
+    <p class="tb-under">over dansk iværksætteri gennem <em>Løvens Hule</em> — hver virksomhed en sag, hver sæson et bind, hvert tal med kilde.</p>
   </div>
-</main>
 
-<footer class="dash-footer">
-  <span>UOFFICIELT DATAPROJEKT OM DR'S LØVENS HULE</span>
-  <span id="footer-data">DATA: —</span>
-</footer>
+  <!-- Skuffevæggen: navigationen ER møblet -->
+  <section class="skuffevaeg" aria-label="Kartotekets skuffer">
+    <a class="skuffe" href="/companies.html">
+      <span class="sk-etiket">Virksomhederne</span>
+      <span class="sk-detalje num" id="sk-virk">sager A–Å</span>
+      <span class="sk-greb" aria-hidden="true"></span>
+    </a>
+    <a class="skuffe" href="/investors.html">
+      <span class="sk-etiket">Løverne</span>
+      <span class="sk-detalje num" id="sk-loever">personakter</span>
+      <span class="sk-greb" aria-hidden="true"></span>
+    </a>
+    <a class="skuffe" href="/deals.html">
+      <span class="sk-etiket">Protokollen</span>
+      <span class="sk-detalje num" id="sk-deals">alle indførsler</span>
+      <span class="sk-greb" aria-hidden="true"></span>
+    </a>
+    <a class="skuffe" href="/charts.html">
+      <span class="sk-etiket">Tavlerne</span>
+      <span class="sk-detalje num">statistik i 4 opslag</span>
+      <span class="sk-greb" aria-hidden="true"></span>
+    </a>
+  </section>
+
+  <!-- Samlingen: bindene på hylden -->
+  <section class="reol-sektion" aria-label="Samlingen — sæsonbindene">
+    <div class="afsnit-etiket">Samlingen · ét bind pr. sæson</div>
+    <div class="reol" id="reol"></div>
+    <div class="hylde" aria-hidden="true"></div>
+  </section>
+
+  <!-- Nyeste tilførsler: journalen -->
+  <section class="tilfoersler" aria-label="Nyeste tilførsler til arkivet">
+    <div class="afsnit-etiket">Nyeste tilførsler til arkivet</div>
+    <ol class="journal" id="journal"></ol>
+  </section>
+
+  <!-- Arkivets omfang: messingplakette -->
+  <div class="plakette num" id="plakette"></div>
+
+</main>
 
 <script src="js/helpers.js"></script>
 <script src="js/supabase.js"></script>
 <script src="js/components.js"></script>
 <script>
 async function init() {
-  // Skeletons mens data hentes
-  document.getElementById('kpi-row').innerHTML = renderSkeletonCards(4);
-  document.getElementById('latest-deals').innerHTML = renderSkeletonRows(5, 4);
+  const allDeals = await loadDeals();
+  renderHeaderStats(allDeals);
+  const s = getGlobalStats(allDeals);
+  const sager = Object.keys(COMPANY_SLUGS).length;
 
-  const deals = await loadDeals();
-  const stats = getGlobalStats(deals);
-  const { investors, latestSeason } = buildInvestorIndex(deals);
-  const S = latestSeason, P = latestSeason - 1;
+  // Skuffe-etiketter med faktiske omfang
+  document.getElementById('sk-virk').textContent = `${sager} sager · A–Å`;
+  document.getElementById('sk-loever').textContent = `${s.investors} personakter`;
+  document.getElementById('sk-deals').textContent = `${s.deals} indførsler · ${s.dealsClosed} aftaler`;
 
-  // ── Sæsonbånd ──
-  const seasonDeals = deals.filter(d => d.season === S);
-  const closedS = seasonDeals.filter(d => d.received).length;
-  const rate = s => {
-    const all = deals.filter(d => d.season === s);
-    return all.length ? Math.round(all.filter(d => d.received).length / all.length * 100) : null;
-  };
-  const rS = rate(S), delta = rS - rate(P);
-  document.getElementById('season-band').innerHTML = `
-    <span class="season">SÆSON ${S}${typeof SEASON_YEARS !== 'undefined' && SEASON_YEARS[S] ? ' · ' + SEASON_YEARS[S] : ''}</span>
-    <span>${seasonDeals.length} PITCHES</span>
-    <span>${closedS} DEALS</span>
-    <span>DEAL-RATE ${rS}%</span>
-    <span class="up">${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta)} PP VS. S${P}</span>
-    <span class="right">SÆSON 1–${S} · ${stats.deals} PITCHES REGISTRERET</span>
-  `;
+  // Reolen: bindene I–XI med årstal på ryggen
+  const seasons = [...new Set(allDeals.map(d => d.season))].sort((a, b) => a - b);
+  document.getElementById('reol').innerHTML = seasons.map(n => `
+    <a class="bind" href="/saesoner/${n}/" aria-label="Løvens Hule sæson ${n} (${SEASON_YEARS[n] || ''})">
+      <span class="bind-nr">${romertal(n)}</span>
+      <span class="bind-aar num">${SEASON_YEARS[n] || ''}</span>
+    </a>`).join('');
 
-  // ── KPI-række ──
-  const biggestEver = deals.filter(d => d.received).reduce((a, b) => (b.received > (a?.received || 0) ? b : a), null);
-  document.getElementById('kpi-row').innerHTML = [
-    renderKpiTile('Deals i alt', String(stats.dealsClosed), `af ${stats.deals} pitches`),
-    renderKpiTile('Samlet investeret', `kr ${(stats.totalReceived/1000000).toFixed(1).replace('.', ',')}M`, `sæson 1–${S}`),
-    renderKpiTile('Løver', String(stats.investors), `${investors.filter(m => m.status === 'aktiv').length} aktive i S${S}`),
-    renderKpiTile('Største deal', fmtShort(biggestEver.received).replace('.', ','), `${biggestEver.name} · S${biggestEver.season}`),
-  ].join('');
+  // Journalen: de 8 nyeste indførsler som journallinjer
+  const nyeste = allDeals.slice(-8).reverse();
+  document.getElementById('journal').innerHTML = nyeste.map(d => `
+    <li class="journal-linje">
+      <span class="jl-ep num">S${d.season}E${d.episode}</span>
+      <a class="jl-navn" href="${companyUrl(d.name)}">${esc(d.name)}</a>
+      <span class="jl-prikker" aria-hidden="true"></span>
+      <span class="jl-beloeb num">${d.received ? fmt(d.received) : 'ingen aftale'}</span>
+    </li>`).join('');
 
-  // ── Sæsongraf (selektive værdilabels: kun max og seneste sæson) ──
-  const bySeason = {};
-  deals.forEach(d => { if (d.received) bySeason[d.season] = (bySeason[d.season] || 0) + d.received; });
-  const maxV = Math.max(...Object.values(bySeason));
-  let bars = '';
-  for (let s = 1; s <= S; s++) {
-    const v = bySeason[s] || 0;
-    const mio = (v/1000000).toFixed(1).replace('.', ',');
-    const showVal = v === maxV || s === S;
-    bars += `
-      <div class="strip-col" title="Sæson ${s}: kr ${mio} mio.">
-        ${showVal ? `<div class="val">${mio}</div>` : ''}
-        <div class="strip-fill${s === S ? ' latest' : ''}" style="height:${Math.max(4, Math.round(v / maxV * 100))}%"></div>
-        <span class="${s === S ? 'latest' : ''}">S${s}</span>
-      </div>`;
-  }
-  document.getElementById('season-chart').innerHTML = bars;
-
-  // ── Seneste deals (5 nyeste med aftale) ──
-  const latest = [...deals].filter(d => d.received)
-    .sort((a, b) => b.season - a.season || b.episode - a.episode).slice(0, 5);
-  document.getElementById('latest-deals').innerHTML = latest.map(renderLatestDealRow).join('');
-  document.getElementById('all-deals-link').textContent = `Se alle ${stats.deals} →`;
-
-  // ── Højdepunkter ──
-  const sDeals = seasonDeals.filter(d => d.received);
-  const biggest = sDeals.reduce((a, b) => (b.received > (a?.received || 0) ? b : a), null);
-  const topLion = investors.filter(m => m.status === 'aktiv').sort((a, b) => b.latestSeasonDeals - a.latestSeasonDeals)[0];
-  document.getElementById('highlights-label').textContent = `Sæson ${S} · Højdepunkter`;
-  document.getElementById('highlights').innerHTML = [
-    renderStoryRow('Største deal', `kr ${(biggest.received/1000000).toFixed(1).replace('.', ',')}M`, `${biggest.name} · ${biggest.investorList.join(' + ')}`),
-    renderStoryRow('Mest aktive løve', topLion.name, `${topLion.latestSeasonDeals} deals · kr ${(topLion.latestSeasonReceived/1000000).toFixed(1).replace('.', ',')}M i sæson ${S}`),
-    renderStoryRow('Deal-rate', `${rS}% `, `af pitches endte med aftale · vs. ${rate(P)}% i S${P}`,
-      `<span class="delta ${delta >= 0 ? 'val-up' : 'val-down'}">${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta)} pp</span>`),
-  ].join('');
-
-  // ── Aktive løver ──
-  const active = investors.filter(m => m.status === 'aktiv')
-    .sort((a, b) => b.latestSeasonDeals - a.latestSeasonDeals || b.latestSeasonReceived - a.latestSeasonReceived);
-  const maxDeals = Math.max(...active.map(m => m.latestSeasonDeals), 1);
-  document.getElementById('lions-label').innerHTML = `Aktive løver · S${S} <a class="more" href="investors.html">Alle ${stats.investors} →</a>`;
-  document.getElementById('active-lions').innerHTML = active.map(m => renderLionRow(m, maxDeals)).join('');
-
-  // ── Footer ──
-  document.getElementById('footer-data').textContent =
-    `DATA: SÆSON 1–${S} · ${stats.deals} PITCHES · ${stats.dealsClosed} DEALS`;
+  // Plaketten: arkivets omfang, ét blik
+  const aar = seasons.map(n => SEASON_YEARS[n]).filter(Boolean);
+  document.getElementById('plakette').innerHTML =
+    `ARKIVETS OMFANG — ${s.deals} PITCHES · ${s.dealsClosed} AFTALER · KR ${(s.totalReceived/1e6).toFixed(1).replace('.', ',')}M · ${sager} VIRKSOMHEDER · ${s.investors} LØVER · ${aar[0]}–${aar[aar.length-1]}`;
 }
-
-// Exploration: løve-rækker → trykte bind (virksomhedsnavne er ægte links)
-document.getElementById('active-lions').addEventListener('click', e => {
-  const lion = e.target.closest('.lion');
-  if (lion) window.location = investorUrl(lion.dataset.name);
-});
-document.getElementById('active-lions').addEventListener('keydown', e => {
-  if (e.key !== 'Enter') return;
-  const lion = e.target.closest('.lion');
-  if (lion) window.location = investorUrl(lion.dataset.name);
-});
 
 init().catch(err => { console.error(err); showLoadError(); });
 </script>

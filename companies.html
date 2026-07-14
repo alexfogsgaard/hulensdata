@@ -17,7 +17,8 @@
 
   <!-- Grid view -->
   <div id="grid-view">
-    <h1 class="page-title">Virksomheder <span>·</span> alle sæsoner</h1>
+    <h1 class="page-title">Skuffen <span>·</span> Virksomhederne A–Å</h1>
+    <nav class="ryttere" id="ryttere" aria-label="Spring til bogstav"></nav>
 
     <div class="filters">
       <label>Sæson</label>
@@ -34,7 +35,7 @@
       <input type="text" id="filter-search" placeholder="Søg virksomhed…" style="min-width:160px">
     </div>
 
-    <div class="co-grid" id="co-grid"></div>
+    <div class="kartei" id="co-grid"></div>
     <p class="table-count" id="co-count"></p>
   </div>
 
@@ -82,11 +83,23 @@ function getFilteredCompanies() {
 }
 
 function renderGrid() {
-  // Kort-markup ejes af renderCompanyCard() i components.js — ren komposition her
-  const companies = getFilteredCompanies();
-  document.getElementById('co-grid').innerHTML =
-    companies.map(([name, deals]) => renderCompanyCard(name, deals)).join('');
-  document.getElementById('co-count').textContent = `Viser ${companies.length} virksomheder`;
+  // Karteien: kort grupperet under bogstav-faner, som i en rigtig skuffe.
+  // Kort-markup ejes af renderCompanyCard() i components.js.
+  const companies = getFilteredCompanies()
+    .sort((a, b) => a[0].localeCompare(b[0], 'da'));
+  const grupper = new Map();
+  companies.forEach(([name, deals]) => {
+    const bogstav = /^[0-9]/.test(name) ? '0–9' : name[0].toUpperCase();
+    if (!grupper.has(bogstav)) grupper.set(bogstav, []);
+    grupper.get(bogstav).push([name, deals]);
+  });
+  document.getElementById('co-grid').innerHTML = [...grupper.entries()].map(([b, liste]) =>
+    `<div class="kartei-fane" id="fane-${encodeURIComponent(b)}"><span>${b}</span><span class="kf-antal num">${liste.length}</span></div>` +
+    liste.map(([name, deals]) => renderCompanyCard(name, deals)).join('')
+  ).join('');
+  document.getElementById('ryttere').innerHTML = [...grupper.keys()].map(b =>
+    `<a href="#fane-${encodeURIComponent(b)}">${b}</a>`).join('');
+  document.getElementById('co-count').textContent = `${companies.length} sager i skuffen`;
 }
 
 // Event-wiring — ingen inline handlers i markup
@@ -94,16 +107,7 @@ document.getElementById('filter-season').addEventListener('change', renderGrid);
 document.getElementById('filter-status').addEventListener('change', renderGrid);
 document.getElementById('filter-search').addEventListener('input', renderGrid);
 
-// Kort navigerer til det trykte bind (/virksomheder/<slug>/)
-document.getElementById('co-grid').addEventListener('click', e => {
-  const card = e.target.closest('.co-card');
-  if (card) window.location = companyUrl(card.dataset.name);
-});
-document.getElementById('co-grid').addEventListener('keydown', e => {
-  if (e.key !== 'Enter') return;
-  const card = e.target.closest('.co-card');
-  if (card) window.location = companyUrl(card.dataset.name);
-});
+// Kartei-kortene er ægte links (<a>) — ingen delegation nødvendig.
 
 document.getElementById('back-btn').addEventListener('click', e => {
   e.preventDefault();

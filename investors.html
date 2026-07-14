@@ -17,7 +17,7 @@
 
   <!-- Grid view -->
   <div id="grid-view">
-    <h1 class="page-title">Investorer <span>·</span> klik for profil</h1>
+    <h1 class="page-title">Skuffen <span>·</span> Løverne</h1>
     <div id="investor-grid"></div>
   </div>
 
@@ -46,32 +46,20 @@ function renderGrid() {
   const byDeals = (a, b) => b.deals - a.deals;
 
   const groups = [
-    { title: '<span>🦁</span> Aktive løver', items: investors.filter(m => m.status === 'aktiv').sort(byDeals), muted: false },
-    { title: 'Gæsteløver',                   items: investors.filter(m => m.status === 'gaest').sort(byDeals), muted: true },
-    { title: 'Tidligere løver',              items: investors.filter(m => m.status === 'tidligere').sort(byDeals), muted: true },
+    { title: 'Aktive løver',    items: investors.filter(m => m.status === 'aktiv').sort(byDeals) },
+    { title: 'Gæsteløver',      items: investors.filter(m => m.status === 'gaest').sort(byDeals) },
+    { title: 'Tidligere løver', items: investors.filter(m => m.status === 'tidligere').sort(byDeals) },
   ];
 
-  document.getElementById('investor-grid').innerHTML = groups
+  document.getElementById('investor-grid').innerHTML = '<div class="kartei">' + groups
     .filter(g => g.items.length > 0)
     .map(g => `
-      <div class="investor-section-header"${g.muted ? ' style="color:var(--muted);margin-top:36px"' : ''}>
-        ${g.title} <span class="inv-section-count"${g.muted ? ' style="background:var(--surface2);border-color:var(--border);color:var(--muted)"' : ''}>${g.items.length}</span>
-      </div>
-      <div class="investor-subgrid">${g.items.map(m => renderInvestorCard(m, latestSeason)).join('')}</div>
-    `).join('');
+      <div class="kartei-fane"><span>${g.title}</span><span class="kf-antal num">${g.items.length}</span></div>
+      ${g.items.map(m => renderInvestorCard(m, latestSeason)).join('')}
+    `).join('') + '</div>';
 }
 
-// Ét delegeret klik i stedet for onclick pr. kort; Enter åbner også profilen (kortene er fokusérbare)
-// Kort navigerer til det trykte bind (/loever/<slug>/)
-document.getElementById('investor-grid').addEventListener('click', e => {
-  const card = e.target.closest('.investor-card');
-  if (card) window.location = investorUrl(card.dataset.name);
-});
-document.getElementById('investor-grid').addEventListener('keydown', e => {
-  if (e.key !== 'Enter') return;
-  const card = e.target.closest('.investor-card');
-  if (card) window.location = investorUrl(card.dataset.name);
-});
+// Kartei-kortene er ægte links (<a>) — ingen delegation nødvendig.
 
 function showDetail(name, push = true) {
   // Profilen er et mini-dashboard — markup ejes af renderInvestorProfile() i components.js

@@ -1163,3 +1163,199 @@ tbody tr:hover { background: rgba(138,106,40,0.07); }
 
 /* Fraunces' blødere skæringer til navne */
 .profile-name, .co-name, .inv-name, .page-title, .sag-name { font-weight: 600; }
+
+/* ═══ MØBLERNE (Kartoteket v2, 2026-07-13) ═══
+   Arkivet som møbel: forsiden er en skuffevæg, lister er karteier
+   (kant-stillede kort), profiler er sagsmapper med faneblad,
+   deals er protokollen med løbenumre. */
+
+/* ── Titelbladet ── */
+.laesesal { max-width: 1000px; }
+.titelblad { text-align: center; padding: var(--space-6) 0; }
+.tb-linje { font-family: 'IBM Plex Mono', monospace; font-size: var(--text-xs); letter-spacing: 0.28em; color: var(--muted); }
+.tb-titel { font-family: var(--font-display); font-weight: 900; font-size: clamp(3rem, 8vw, 5.2rem); line-height: 1.05; margin: var(--space-3) 0 var(--space-2); }
+.tb-under { font-size: 1rem; color: var(--muted); max-width: 44ch; margin: 0 auto; }
+.tb-under em { font-style: italic; color: var(--text); }
+
+/* ── Skuffevæggen ── */
+.skuffevaeg { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--space-4); margin: var(--space-6) 0; }
+.skuffe {
+  position: relative;
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--text);
+  box-shadow: inset 0 0 0 4px var(--surface), inset 0 0 0 5px var(--border), 0 2px 0 rgba(35,28,16,0.18);
+  padding: 26px 18px 54px;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.skuffe:hover, .skuffe:focus-visible {
+  transform: translateY(5px);   /* skuffen trækkes ud mod dig */
+  box-shadow: inset 0 0 0 4px var(--surface), inset 0 0 0 5px var(--border), 0 9px 0 rgba(35,28,16,0.22);
+}
+.sk-etiket {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  background: #fbf7ec;                     /* etiketsedlen i messingrammen */
+  border: 1px solid var(--border);
+  box-shadow: inset 0 0 0 2px #fbf7ec, inset 0 0 0 3px var(--gold);
+  padding: 8px 18px;
+}
+.sk-detalje { display: block; margin-top: 10px; font-family: 'IBM Plex Mono', monospace; font-size: var(--text-xs); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.sk-greb {
+  position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%);
+  width: 64px; height: 12px;
+  border: 2px solid var(--text);
+  border-radius: 0 0 10px 10px;            /* buet messinggreb — eneste kurve i huset */
+  border-top: none;
+  background: linear-gradient(180deg, var(--surface2), var(--surface));
+}
+.skuffe:hover .sk-greb { border-color: var(--gold-light); }
+
+/* ── Reolen: bindene på hylden ── */
+.afsnit-etiket { font-family: 'IBM Plex Mono', monospace; font-size: var(--text-xs); letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); margin: var(--space-6) 0 var(--space-3); }
+.reol { display: flex; gap: 6px; align-items: flex-end; flex-wrap: wrap; }
+.bind {
+  display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+  width: 58px; height: 132px;
+  background: var(--surface);
+  border: 1px solid var(--text);
+  border-bottom: none;
+  box-shadow: inset 0 6px 0 var(--stempel), inset 0 8px 0 var(--surface), 3px 0 0 -1px rgba(35,28,16,0.15);
+  padding: 16px 0 10px;
+  text-decoration: none; color: inherit;
+  transition: transform 0.16s ease;
+}
+.bind:hover, .bind:focus-visible { transform: translateY(-8px); }  /* bindet trækkes op af hylden */
+.bind-nr { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; writing-mode: vertical-rl; }
+.bind-aar { font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem; color: var(--muted); }
+.hylde { height: 10px; background: var(--surface2); border: 1px solid var(--text); box-shadow: 0 4px 0 rgba(35,28,16,0.18); }
+
+/* ── Journalen: nyeste tilførsler ── */
+.journal { list-style: none; max-width: 720px; }
+.journal-linje { display: flex; align-items: baseline; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: var(--text-base); }
+.jl-ep { font-family: 'IBM Plex Mono', monospace; font-size: var(--text-sm); color: var(--stempel); }
+.jl-navn { text-decoration: none; color: inherit; font-weight: 500; }
+.jl-navn:hover { text-decoration: underline; text-decoration-color: var(--stempel); text-underline-offset: 3px; }
+.jl-prikker { flex: 1; border-bottom: 1px dotted var(--border); transform: translateY(-4px); }
+.jl-beloeb { font-family: 'IBM Plex Mono', monospace; font-size: var(--text-sm); color: var(--gold-light); }
+
+/* ── Plaketten ── */
+.plakette {
+  margin: var(--space-6) auto 0;
+  max-width: 860px;
+  text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: var(--text-xs);
+  letter-spacing: 0.18em;
+  color: var(--gold-light);
+  background: linear-gradient(180deg, #e8dcba, #d9cba1);
+  border: 1px solid var(--gold-light);
+  box-shadow: inset 0 0 0 3px #e3d5ae, inset 0 0 0 4px var(--gold-light);
+  padding: 14px 22px;
+}
+
+/* ── KARTEIEN: kant-stillede kort i skuffen ── */
+.kartei { max-width: 860px; border-top: 2px solid var(--text); }
+.kartei-fane {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; justify-content: space-between; align-items: baseline;
+  width: 42%; min-width: 220px;
+  margin-top: var(--space-4);
+  background: var(--surface2);
+  border: 1px solid var(--text);
+  border-bottom: none;
+  padding: 5px 14px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.kartei-fane:nth-of-type(even) { margin-left: 29%; }   /* faneblade i forskudte positioner, som i skuffen */
+.kf-antal { font-family: 'IBM Plex Mono', monospace; font-size: var(--text-xs); color: var(--muted); }
+.kartei-kort {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--stempel);      /* kortets røde hovedlinje — ses på kanten */
+  margin-top: -1px;
+  text-decoration: none; color: inherit;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+.kartei-kort:hover, .kartei-kort:focus-visible {
+  position: relative; z-index: 1;
+  transform: translateY(-3px);               /* kortet løftes op af skuffen */
+  box-shadow: 0 5px 0 rgba(35,28,16,0.14);
+}
+.kk-kant { display: flex; align-items: baseline; gap: 14px; padding: 10px 16px; }
+.kk-nr { font-family: 'IBM Plex Mono', monospace; font-size: var(--text-sm); color: var(--stempel); min-width: 64px; }
+.kk-navn { font-family: var(--font-display); font-weight: 600; font-size: 1.02rem; }
+.kk-spaend { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: var(--text-xs); color: var(--muted); }
+.kk-maerke { width: 9px; height: 9px; background: var(--muted); flex-shrink: 0; align-self: center; }
+.kk-maerke.aktiv { background: var(--green); }
+.kk-maerke.inaktiv { background: var(--stempel); }
+.kk-maerke.ingen { background: transparent; border: 1px solid var(--muted); }
+.kk-front {
+  display: block; max-height: 0; overflow: hidden;
+  transition: max-height 0.2s ease;
+}
+.kartei-kort:hover .kk-front, .kartei-kort:focus-visible .kk-front { max-height: 150px; }
+.kk-linje { display: block; padding: 0 16px; font-size: var(--text-base); overflow: hidden; }
+.kk-linje:first-child { padding-top: 2px; }
+.kk-linje b { color: var(--gold-light); font-weight: 500; }
+.kk-linje.dim { color: var(--muted); font-size: var(--text-sm); }
+.kk-traek { display: block; padding: 6px 16px 12px; font-family: 'IBM Plex Mono', monospace; font-size: var(--text-xs); letter-spacing: 0.14em; text-transform: uppercase; color: var(--stempel); overflow: hidden; }
+@media (hover: none) { .kk-front { display: none; } }  /* mobil: kanten er linket — akten åbner sagen */
+
+.ryttere { display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: var(--space-4); }
+.ryttere a { font-family: 'IBM Plex Mono', monospace; font-size: var(--text-sm); color: var(--muted); text-decoration: none; border: 1px solid var(--border); padding: 2px 8px; }
+.ryttere a:hover { color: var(--text); border-color: var(--text); }
+
+/* Skeletons i karteien: kant-linjer, ikke bokse */
+.kartei .skeleton-card { height: 40px; padding: 0; border-top: 2px solid var(--border); }
+
+/* ── SAGSMAPPEN: profil med faneblad og nummererede dokumenter ── */
+.mappe { position: relative; max-width: 1100px; }
+.mappe-fane {
+  display: inline-flex; align-items: baseline; gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--text);
+  border-bottom: none;
+  padding: 8px 22px 6px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  transform: translateY(1px);
+}
+.mappe-fane .num { font-family: 'IBM Plex Mono', monospace; font-weight: 400; font-size: var(--text-xs); letter-spacing: 0.18em; color: var(--stempel); }
+.mf-bind { color: var(--muted) !important; }
+.mappe-indhold {
+  background: var(--surface);
+  border: 1px solid var(--text);
+  box-shadow: 4px 4px 0 rgba(35,28,16,0.12), 8px 8px 0 rgba(35,28,16,0.06); /* mappens papirer under */
+  padding: var(--space-5);
+  counter-reset: dok;
+}
+.mappe-indhold .profile-hero { border: none; background: transparent; padding: 0 0 var(--space-5); }
+.mappe-indhold .profile-panel { counter-increment: dok; }
+.mappe-indhold .panel-label::before {
+  content: 'DOK. ' counter(dok) ' — ';
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--stempel);
+  letter-spacing: 0.1em;
+}
+
+/* ── PROTOKOLLEN: løbenumre og skillelinjer ── */
+#deals-tbody { counter-reset: prot; }
+#deals-tbody tr td:first-child::before {
+  counter-increment: prot;
+  content: counter(prot, decimal-leading-zero) '  ';
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.table-wrap td, .table-wrap th { border-left: 1px solid var(--border); }
+.table-wrap td:first-child, .table-wrap th:first-child { border-left: none; }

@@ -26,34 +26,32 @@ function renderDealRow(d) {
 }
 
 // Virksomhedskort (companies-gridet) — deals er virksomhedens deals, kronologisk.
-// Kompakt: status + navn + badges. Hover/fokus: deal-tal, investorer, afsnit.
+// KARTEIEN: kortet står på højkant i skuffen — hvilende ses kun kanten
+// (№, navn, spænd, statusmærke); hover/fokus løfter kortet op og viser
+// forsiden. Hele kortet er ét link til det trykte bind.
 function renderCompanyCard(name, deals) {
   const latest = deals[deals.length - 1];
   const hasDeal = deals.some(d => d.received);
   const totalReceived = deals.reduce((s, d) => s + (d.received || 0), 0);
   const investors = [...new Set(deals.flatMap(d => d.investorList))];
   const statusRaw = (latest.status || '').toLowerCase();
+  const nr = sagsNr(name);
   return `
-    <div class="co-card" data-name="${esc(name)}" tabindex="0" role="link" aria-label="${esc(name)} — åbn sagen">
-      ${sagsNr(name) ? `<div class="kort-journal">Sag <b>№ ${sagsNr(name)}</b> · Bind ${romertal(deals[0].season)}</div>` : ''}
-      <div class="co-card-top">
-        <div class="co-status-dot ${esc(statusRaw) || 'ukendt'}"></div>
-        <div class="co-name">${esc(name)}</div>
-      </div>
-      <div class="co-meta">
-        <span class="co-badge">${[...new Set(deals.map(d => 'S' + d.season))].join(', ')}</span>
-        ${hasDeal ? '<span class="co-badge gold">Deal ✓</span>' : ''}
-        ${latest.category ? `<span class="co-badge">${esc(latest.category)}</span>` : ''}
-      </div>
-      <div class="co-details">
-        <div class="co-details-inner">
-          <div class="co-detail-row"><span class="k">${hasDeal ? 'Modtaget' : 'Søgte'}</span><span class="v num${hasDeal ? ' gold' : ''}">${fmt(hasDeal ? totalReceived : latest.asked)}</span></div>
-          ${investors.length ? `<div class="co-detail-row"><span class="k">Investor${investors.length > 1 ? 'er' : ''}</span><span class="v">${esc(investors.slice(0, 2).join(', '))}${investors.length > 2 ? ' +' + (investors.length - 2) : ''}</span></div>` : ''}
-          <div class="co-detail-row"><span class="k">Afsnit</span><span class="v">${deals.map(d => `S${d.season}E${d.episode}`).join(', ')}</span></div>
-          <div class="co-cta">Se virksomhed →</div>
-        </div>
-      </div>
-    </div>`;
+    <a class="kartei-kort" href="${companyUrl(name)}" data-name="${esc(name)}" aria-label="${esc(name)} — træk sagen frem">
+      <span class="kk-kant">
+        <span class="kk-nr num">${nr ? '№ ' + nr : '—'}</span>
+        <span class="kk-navn">${esc(name)}</span>
+        <span class="kk-spaend num">${[...new Set(deals.map(d => 'S' + d.season))].join('·')}</span>
+        <span class="kk-maerke ${esc(statusRaw) || 'ukendt'}${hasDeal ? '' : ' ingen'}" title="${hasDeal ? 'aftale i hulen' : 'ingen aftale'}"></span>
+      </span>
+      <span class="kk-front">
+        <span class="kk-linje">${hasDeal
+          ? `Aftale <b class="num">${fmt(totalReceived)}</b> — ${esc(investors.join(', '))}`
+          : 'Pitchede uden aftale'}</span>
+        <span class="kk-linje dim">${latest.category ? esc(latest.category) + ' · ' : ''}${deals.map(d => `S${d.season}E${d.episode}`).join(', ')} · Bind ${romertal(deals[0].season)}</span>
+        <span class="kk-traek">træk sagen frem →</span>
+      </span>
+    </a>`;
 }
 
 // Investor-profil — mini-dashboard (hero + sæsongraf + mønstre + deals-tabel).
@@ -86,7 +84,10 @@ function renderInvestorProfile(p, latestSeason) {
   ).join('') || '<span class="profile-dim">Ingen co-investeringer</span>';
 
   return `
-    <div class="profile-hero">
+    <div class="mappe">
+    <div class="mappe-fane"><span class="num">PERSONAKT</span> ${esc(m.name)} <span class="mf-bind num">${span}</span></div>
+    <div class="mappe-indhold">
+    <div class="profile-hero dokument">
       <div class="inv-topline">${badge}<span class="inv-span">${span}</span></div>
       <h1 class="profile-name">${esc(m.name)}</h1>
       <div class="profile-metrics">
@@ -133,6 +134,8 @@ function renderInvestorProfile(p, latestSeason) {
           <tbody>${p.dealList.map(renderDealRow).join('')}</tbody>
         </table>
       </div>
+    </div>
+    </div>
     </div>`;
 }
 
@@ -223,7 +226,10 @@ function renderCompanyProfile(p) {
     || '<span class="profile-dim">Ingen fælles investorer med andre virksomheder</span>';
 
   return `
-    <div class="profile-hero">
+    <div class="mappe">
+    <div class="mappe-fane"><span class="num">${sagsNr(p.name) ? 'SAG № ' + sagsNr(p.name) : 'SAG'}</span> ${esc(p.name)} <span class="mf-bind num">BIND ${romertal(p.dealList[0].season)}</span></div>
+    <div class="mappe-indhold">
+    <div class="profile-hero dokument">
       <div class="inv-topline">
         <span class="co-status-line">
           <span class="co-status-dot ${esc(statusRaw) || 'ukendt'}"></span>
@@ -232,7 +238,6 @@ function renderCompanyProfile(p) {
         </span>
         <span class="inv-span">${p.seasonSpan}</span>
       </div>
-      ${sagsNr(p.name) ? `<div class="sag-journal">Sag № ${sagsNr(p.name)} · Bind ${romertal(p.dealList[0].season)}</div>` : ''}
       ${p.stamp ? `<span class="status-stamp${p.stamp.gold ? ' gold' : ''}">${esc(p.stamp.text)}</span>` : ''}
       <h1 class="profile-name">${esc(p.name)}</h1>
       <div class="profile-metrics">
@@ -260,6 +265,8 @@ function renderCompanyProfile(p) {
           <div class="partner-chips">${relatedChips}</div>
         </div>
       </div>
+    </div>
+    </div>
     </div>`;
 }
 
@@ -354,28 +361,17 @@ function renderInvestorCard(m, latestSeason) {
   const heroAmount = isActive ? m.latestSeasonReceived : m.received;
 
   return `
-    <div class="investor-card${isActive ? ' investor-card--active' : ''}" data-name="${esc(m.name)}" tabindex="0" role="link" aria-label="${esc(m.name)} — åbn fuld profil">
-      <div class="inv-topline">${badge}<span class="inv-span">${span}</span></div>
-      <div class="inv-name">${esc(m.name)}</div>
-      <div class="inv-hero">
-        <div class="inv-hero-label">${heroLabel}</div>
-        <div class="inv-hero-value">${heroDeals} deal${heroDeals === 1 ? '' : 's'} · kr ${(heroAmount/1000000).toFixed(1)}M</div>
-      </div>
-      <div class="inv-details">
-        <div class="inv-details-inner">
-          <div class="inv-mini-grid">
-            <div class="inv-mini"><span class="k">Deals i alt</span><span class="v">${m.deals}</span></div>
-            <div class="inv-mini"><span class="k">Samlet investeret</span><span class="v">kr ${(m.received/1000000).toFixed(1)}M</span></div>
-            <div class="inv-mini"><span class="k">Gns. andel</span><span class="v">${m.avgShare ? m.avgShare.toFixed(1) + '%' : '—'}</span></div>
-            <div class="inv-mini"><span class="k">Største deal</span><span class="v">${m.largest ? 'kr ' + (m.largest.received/1000000).toFixed(1) + 'M' : '—'}</span></div>
-          </div>
-          ${m.largest ? `<div class="inv-largest">Største deal: ${esc(m.largest.name)}</div>` : ''}
-          <div class="inv-spark-row">
-            <span class="inv-spark-label">Deals pr. sæson</span>
-            ${renderSeasonSparkline(m, latestSeason)}
-          </div>
-          <div class="inv-cta">Se fuld profil →</div>
-        </div>
-      </div>
-    </div>`;
+    <a class="kartei-kort kartei-kort--person${isActive ? ' er-aktiv' : ''}" href="${investorUrl(m.name)}" data-name="${esc(m.name)}" aria-label="${esc(m.name)} — træk personakten frem">
+      <span class="kk-kant">
+        <span class="kk-nr num">${span}</span>
+        <span class="kk-navn">${esc(m.name)}</span>
+        <span class="kk-spaend num">${heroDeals} deal${heroDeals === 1 ? '' : 's'} · kr ${(heroAmount/1000000).toFixed(1).replace('.', ',')}M</span>
+        <span class="kk-maerke ${isActive ? 'aktiv' : m.status === 'gaest' ? 'ukendt' : 'inaktiv'}" title="${isActive ? 'aktiv løve' : m.status === 'gaest' ? 'gæsteløve' : 'tidligere løve'}"></span>
+      </span>
+      <span class="kk-front">
+        <span class="kk-linje">${m.deals} deals i alt · <b class="num">kr ${(m.received/1000000).toFixed(1).replace('.', ',')}M</b> investeret${m.avgShare ? ` · gns. andel ${m.avgShare.toFixed(1).replace('.', ',')} %` : ''}</span>
+        ${m.largest ? `<span class="kk-linje dim">Største aftale: ${esc(m.largest.name)} (kr ${(m.largest.received/1000000).toFixed(1).replace('.', ',')}M)</span>` : ''}
+        <span class="kk-traek">træk personakten frem →</span>
+      </span>
+    </a>`;
 }
