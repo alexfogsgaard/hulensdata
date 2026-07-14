@@ -13,7 +13,7 @@ function renderDealRow(d) {
   return `
     <tr>
       <td><a class="company-name" href="${companyUrl(d.name)}">${esc(d.name)}</a></td>
-      <td><span class="season-badge">S${d.season}E${d.episode}</span></td>
+      <td><span class="season-badge">S${d.season}${d.episode ? `E` + d.episode : ``}</span></td>
       <td class="num">${fmt(d.asked)}</td>
       <td class="num dim col-secondary">${pct(d.shareOffered)}</td>
       <td class="num dim col-secondary">${fmt(d.valBefore)}</td>
@@ -48,7 +48,7 @@ function renderCompanyCard(name, deals) {
         <span class="kk-linje">${hasDeal
           ? `Aftale <b class="num">${fmt(totalReceived)}</b> — ${esc(investors.join(', '))}`
           : 'Pitchede uden aftale'}</span>
-        <span class="kk-linje dim">${latest.category ? esc(latest.category) + ' · ' : ''}${deals.map(d => `S${d.season}E${d.episode}`).join(', ')} · Bind ${romertal(deals[0].season)}</span>
+        <span class="kk-linje dim">${latest.category ? esc(latest.category) + ' · ' : ''}${deals.map(d => `S${d.season}${d.episode ? `E` + d.episode : ``}`).join(', ')} · Bind ${romertal(deals[0].season)}</span>
         <span class="kk-traek">træk sagen frem →</span>
       </span>
     </a>`;
@@ -196,7 +196,7 @@ function renderCompanyProfile(p) {
       <div class="funding-step">
         <div class="fs-marker${d.received ? ' deal' : ''}"></div>
         <div class="fs-head">
-          <span class="season-badge">S${d.season}E${d.episode}</span>
+          <span class="season-badge">S${d.season}${d.episode ? `E` + d.episode : ``}</span>
           ${d.received
             ? '<span class="fs-outcome deal">Deal ✓</span>'
             : '<span class="fs-outcome">Ingen aftale</span>'}
@@ -287,7 +287,7 @@ function renderLatestDealRow(d) {
   return `
     <tr>
       <td class="co"><a class="company-name" href="${companyUrl(d.name)}">${esc(d.name)}</a></td>
-      <td><span class="ep num">S${d.season}E${d.episode}</span></td>
+      <td><span class="ep num">S${d.season}${d.episode ? `E` + d.episode : ``}</span></td>
       <td class="amt num">${fmt(d.received)}</td>
       <td class="inv">${esc(d.investorList.join(', '))}</td>
     </tr>`;
