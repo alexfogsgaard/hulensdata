@@ -39,6 +39,18 @@ function sourcesFor(entityType, entityId) {
   return (typeof SOURCES !== 'undefined' && SOURCES[entityType + ':' + entityId]) || [];
 }
 
+// Journalnummer ("Sag № 022") og bind (sæson som romertal) — kartotekets mærker
+function sagsNr(name) {
+  const id = typeof COMPANY_IDS !== 'undefined' ? COMPANY_IDS[name] : null;
+  return id ? String(id).padStart(3, '0') : null;
+}
+function romertal(n) {
+  const t = [[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
+  let r = '';
+  for (const [v, s] of t) while (n >= v) { r += s; n -= v; }
+  return r;
+}
+
 // Arkivdato med præcisionsærlighed: "2018" ≠ "17.04.2018"
 function fmtEventDate(isoDate, precision) {
   const [y, m, d] = isoDate.split('-');

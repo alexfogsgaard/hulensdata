@@ -90,7 +90,7 @@ function side({ sti, titel, beskrivelse, jsonld, krop }) {
 <meta property="og:title" content="${esc(titel)}">
 <meta property="og:description" content="${esc(beskrivelse)}">
 <meta property="og:url" content="${url}">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 <script src="/js/layout.js"></script>
 <script type="application/ld+json">${JSON.stringify(jsonld)}</script>

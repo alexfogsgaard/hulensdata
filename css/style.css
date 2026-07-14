@@ -5,17 +5,24 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:         #0e0e0e;
-  --surface:    #161616;
-  --surface2:   #1f1f1f;
-  --border:     #2a2a2a;
-  --gold:       #c9a84c;
-  --gold-light: #e8c97a;
-  --text:       #f0ece3;
-  --muted:      #888;
-  --red:        #e05252;
-  --green:      #5ec98a;
-  --radius:     10px;
+  /* ═══ KARTOTEKET (designretning 2026-07-13) ═══
+     Materialer: papir, blæk, stempel. Et moderne digitalt arkiv —
+     Rigsarkivets læsesal, ikke et dashboard. Den tidligere mørke
+     guld-terminal ligger i git-historikken (pre-arkivdesign).
+     NB: --gold er historisk navn for accent-slottet; værdien er nu
+     messing/okker på papir. Stempler bruger --stempel (seglrød). */
+  --bg:         #eae2cf;   /* magasinpapir */
+  --surface:    #f4eedd;   /* kartotekskort */
+  --surface2:   #e0d6bd;   /* indsunkne felter, tryk */
+  --border:     rgba(35,28,16,0.28);   /* blæk-hairline */
+  --gold:       #8a6a28;   /* messing — accent */
+  --gold-light: #6d5116;   /* stærk emfase = mørkere messing (vi er på papir) */
+  --text:       #231c10;   /* jerngallus-blæk */
+  --muted:      #6e6452;   /* blyant */
+  --red:        #9c3421;   /* seglrød */
+  --green:      #48684b;   /* arkivgrøn */
+  --stempel:    #9c3421;
+  --radius:     0px;       /* skårne kanter — genstand, ikke software */
 
   /* Spacing-skala — brug disse i alt nyt CSS */
   --space-1: 4px;
@@ -25,9 +32,9 @@
   --space-5: 24px;
   --space-6: 40px;
 
-  /* Typografisk skala */
-  --font-display: 'Playfair Display', serif;
-  --font-body: 'DM Sans', sans-serif;
+  /* Typografisk skala — Fraunces (arkivets stemme), Archivo (registret) */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Archivo', 'Helvetica Neue', sans-serif;
   --text-xs:   0.62rem;  /* labels, badges */
   --text-sm:   0.72rem;  /* metadata */
   --text-base: 0.84rem;  /* brødtekst, tabeller */
@@ -43,11 +50,26 @@ html { scroll-behavior: smooth; }
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 300;
+  font-family: var(--font-body);
+  font-weight: 400;
   line-height: 1.6;
   min-height: 100vh;
 }
+
+/* Papirkorn — taktilitet uden kitsch: ren SVG-støj, næsten usynlig */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='k'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23k)'/%3E%3C/svg%3E");
+}
+
+::selection { background: var(--stempel); color: var(--surface); }
+:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
 /* â”€â”€ SCROLLBAR â”€â”€ */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -66,7 +88,7 @@ body {
 }
 
 .site-header .wordmark {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--muted);
@@ -87,7 +109,7 @@ body {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 8px 14px;
-  border-radius: 6px;
+  border-radius: 0;
   text-decoration: none;
   transition: color 0.2s, background 0.2s;
 }
@@ -95,7 +117,7 @@ body {
 .site-nav a:hover,
 .site-nav a.active {
   color: var(--gold);
-  background: rgba(201,168,76,0.08);
+  background: rgba(138,106,40,0.08);
 }
 
 /* â”€â”€ FILTERS â”€â”€ */
@@ -120,8 +142,8 @@ body {
   border: 1px solid var(--border);
   color: var(--text);
   padding: 7px 12px;
-  border-radius: 6px;
-  font-family: 'DM Sans', sans-serif;
+  border-radius: 0;
+  font-family: var(--font-body);
   font-size: 0.82rem;
   outline: none;
   cursor: pointer;
@@ -169,7 +191,7 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
   display: inline-block;
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 0;
   font-size: 0.68rem;
   padding: 2px 7px;
   color: var(--muted);
@@ -177,10 +199,10 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
 
 .tag {
   display: inline-block;
-  background: rgba(201,168,76,0.12);
-  border: 1px solid rgba(201,168,76,0.25);
+  background: rgba(138,106,40,0.12);
+  border: 1px solid rgba(138,106,40,0.25);
   color: var(--gold-light);
-  border-radius: 4px;
+  border-radius: 0;
   font-size: 0.68rem;
   padding: 2px 7px;
 }
@@ -200,7 +222,7 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
 .card:hover {
   border-color: var(--gold);
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  box-shadow: 3px 3px 0 rgba(35,28,16,0.10);
 }
 
 /* â”€â”€ PAGE LAYOUT â”€â”€ */
@@ -211,7 +233,7 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
 }
 
 .page-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 24px;
@@ -224,10 +246,10 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
   background: none;
   border: 1px solid var(--border);
   color: var(--muted);
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.8rem;
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: 0;
   cursor: pointer;
   margin-bottom: 32px;
   display: inline-block;
@@ -239,8 +261,8 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
 
 /* LOAD ERROR */
 .load-error {
-  background: rgba(224,82,82,0.08);
-  border: 1px solid rgba(224,82,82,0.4);
+  background: rgba(156,52,33,0.07);
+  border: 1px solid rgba(156,52,33,0.45);
   color: var(--text);
   border-radius: var(--radius);
   padding: 16px 20px;
@@ -270,7 +292,7 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
 
 .stat-pill { text-align: right; }
 .stat-pill .val {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
   font-size: 1.4rem;
   font-weight: 700;
   color: var(--gold);
@@ -303,12 +325,12 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
 .investor-card:hover {
   border-color: var(--gold);
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  box-shadow: 3px 3px 0 rgba(35,28,16,0.10);
 }
 
 .investor-card--active {
-  border-color: rgba(201,168,76,0.4);
-  background: linear-gradient(135deg, rgba(201,168,76,0.06) 0%, var(--surface) 60%);
+  border-color: rgba(138,106,40,0.4);
+  background: linear-gradient(135deg, rgba(138,106,40,0.06) 0%, var(--surface) 60%);
 }
 
 .active-lion-badge {
@@ -323,7 +345,7 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
 .active-lion-badge.guest { color: var(--muted); }
 
 .inv-name {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 700;
   margin-bottom: 16px;
@@ -344,7 +366,7 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
 .inv-stat .v { font-weight: 500; color: var(--gold-light); }
 
 .investor-section-header {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text);
@@ -357,12 +379,12 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
 }
 
 .inv-section-count {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.72rem;
-  background: rgba(201,168,76,0.12);
-  border: 1px solid rgba(201,168,76,0.2);
+  background: rgba(138,106,40,0.12);
+  border: 1px solid rgba(138,106,40,0.2);
   color: var(--gold);
-  border-radius: 20px;
+  border-radius: 0;
   padding: 2px 10px;
   font-weight: 400;
 }
@@ -392,7 +414,7 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
   position: relative;
 }
 
-.co-card:hover { border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.3); }
+.co-card:hover { border-color: var(--gold); transform: translateY(-2px); box-shadow: 3px 3px 0 rgba(35,28,16,0.10); }
 
 .co-card-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; padding-right: 24px; }
 
@@ -401,12 +423,12 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
 .co-status-dot.inaktiv { background: var(--red); }
 .co-status-dot.ukendt  { background: var(--muted); }
 
-.co-name { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
+.co-name { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
 
 .co-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 
-.co-badge { font-size: 0.68rem; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); color: var(--muted); }
-.co-badge.gold { background: rgba(201,168,76,0.1); border-color: rgba(201,168,76,0.25); color: var(--gold-light); }
+.co-badge { font-size: 0.68rem; padding: 2px 8px; border-radius: 0; border: 1px solid var(--border); color: var(--muted); }
+.co-badge.gold { background: rgba(138,106,40,0.1); border-color: rgba(138,106,40,0.25); color: var(--gold-light); }
 
 /* â”€â”€ CHARTS â”€â”€ */
 .chart-grid {
@@ -423,7 +445,7 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
 }
 
 .chart-card h3 {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   margin-bottom: 20px;
 }
@@ -456,7 +478,7 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
 }
 
 .kpi-val {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--gold);
@@ -495,13 +517,13 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
 /* COMPANIES DETALJE — flyttet fra companies.html */
   .co-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
   .co-detail-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
-  .co-detail-card h4 { font-family: 'Playfair Display', serif; font-size: 0.9rem; font-weight: 700; margin-bottom: 16px; }
+  .co-detail-card h4 { font-family: var(--font-display); font-size: 0.9rem; font-weight: 700; margin-bottom: 16px; }
   .co-detail-card h4 span { color: var(--gold); }
   .co-info-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; gap: 12px; }
   .co-info-row:last-child { border-bottom: none; }
   .co-info-row .ci-label { color: var(--muted); flex-shrink: 0; }
   .co-info-row .ci-val { font-weight: 500; text-align: right; }
-  .co-detail-name { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; letter-spacing: -1px; line-height: 1; margin-bottom: 6px; }
+  .co-detail-name { font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; letter-spacing: -1px; line-height: 1; margin-bottom: 6px; }
   .co-detail-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 28px; }
   @media (max-width: 700px) { .co-detail-grid { grid-template-columns: 1fr; } }
 
@@ -522,7 +544,7 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
   color: var(--muted);
   border: 1px solid var(--border);
   background: var(--surface2);
-  border-radius: 4px;
+  border-radius: 0;
   padding: 1px 7px;
   white-space: nowrap;
 }
@@ -537,7 +559,7 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
   margin-bottom: 2px;
 }
 .inv-hero-value {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
   font-size: 1.3rem;
   font-weight: 700;
   color: var(--gold-light);
@@ -568,7 +590,7 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
   margin-top: 14px;
 }
 .investor-card:focus { outline: none; }
-.investor-card:focus-visible { outline: 1px solid rgba(201,168,76,0.55); outline-offset: 3px; }
+.investor-card:focus-visible { outline: 1px solid rgba(138,106,40,0.55); outline-offset: 3px; }
 
 .inv-mini-grid {
   display: grid;
@@ -622,12 +644,12 @@ td { padding: 11px 16px; vertical-align: middle; white-space: nowrap; }
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.045), transparent);
+  background: linear-gradient(90deg, transparent, rgba(35,28,16,0.05), transparent);
   animation: shimmer 1.3s infinite;
 }
 @keyframes shimmer { to { transform: translateX(100%); } }
 .skeleton-card { height: 165px; }
-.skeleton-line { height: 14px; border-radius: 4px; }
+.skeleton-line { height: 14px; border-radius: 0; }
 .skeleton-row td { padding: 14px 16px; }
 @media (prefers-reduced-motion: reduce) { .skeleton::after { animation: none; } }
 
@@ -667,7 +689,7 @@ tbody tr:not(.skeleton-row) td:first-child { max-width: 220px; overflow: hidden;
 .co-card:focus .co-details,
 .co-card:focus-visible .co-details { grid-template-rows: 1fr; opacity: 1; margin-top: 10px; }
 .co-card:focus { outline: none; }
-.co-card:focus-visible { outline: 1px solid rgba(201,168,76,0.55); outline-offset: 3px; }
+.co-card:focus-visible { outline: 1px solid rgba(138,106,40,0.55); outline-offset: 3px; }
 
 .co-details-inner > .co-detail-row:first-child { border-top: 1px solid var(--border); padding-top: 10px; }
 .co-detail-row {
@@ -692,8 +714,8 @@ tbody tr:not(.skeleton-row) td:first-child { max-width: 220px; overflow: hidden;
 
 /* INVESTOR-PROFIL — mini-dashboard */
 .profile-hero {
-  background: linear-gradient(135deg, rgba(201,168,76,0.06) 0%, var(--surface) 55%);
-  border: 1px solid rgba(201,168,76,0.25);
+  background: linear-gradient(135deg, rgba(138,106,40,0.06) 0%, var(--surface) 55%);
+  border: 1px solid rgba(138,106,40,0.25);
   border-radius: var(--radius);
   padding: var(--space-5);
   margin-bottom: var(--space-4);
@@ -765,18 +787,18 @@ tbody tr:not(.skeleton-row) td:first-child { max-width: 220px; overflow: hidden;
 
 .partner-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .partner-chip {
-  background: rgba(201,168,76,0.08);
-  border: 1px solid rgba(201,168,76,0.3);
+  background: rgba(138,106,40,0.08);
+  border: 1px solid rgba(138,106,40,0.3);
   color: var(--gold-light);
   font-family: var(--font-body);
   font-size: var(--text-sm);
   padding: 5px 10px;
-  border-radius: 20px;
+  border-radius: 0;
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
 }
 .partner-chip:hover, .partner-chip:focus-visible {
-  background: rgba(201,168,76,0.16);
+  background: rgba(138,106,40,0.16);
   border-color: var(--gold);
 }
 .partner-chip .chip-count {
@@ -824,7 +846,7 @@ tbody tr:not(.skeleton-row) td:first-child { max-width: 220px; overflow: hidden;
 .fs-marker.deal {
   background: var(--gold);
   border-color: var(--gold);
-  box-shadow: 0 0 10px rgba(201,168,76,0.35);
+  box-shadow: 0 0 10px rgba(138,106,40,0.35);
 }
 .fs-head {
   display: flex;
@@ -840,12 +862,12 @@ tbody tr:not(.skeleton-row) td:first-child { max-width: 220px; overflow: hidden;
   color: var(--muted);
   border: 1px solid var(--border);
   padding: 1px 8px;
-  border-radius: 10px;
+  border-radius: 0;
 }
 .fs-outcome.deal {
   color: var(--gold-light);
-  border-color: rgba(201,168,76,0.35);
-  background: rgba(201,168,76,0.08);
+  border-color: rgba(138,106,40,0.35);
+  background: rgba(138,106,40,0.08);
 }
 .fs-delta { font-size: var(--text-sm); font-weight: 500; }
 .fs-row { font-size: var(--text-base); }
@@ -902,7 +924,7 @@ a.company-name, a.partner-chip { text-decoration: none; color: inherit; }
 }
 
 /* FORSIDE-DASHBOARD (A+) — terminal-densitet, guld reserveret til nøgletal */
-:root { --font-mono: 'Roboto Mono', monospace; }
+:root { --font-mono: 'IBM Plex Mono', monospace; }
 .num-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
 /* Global søgning (⌘K) i headeren */
@@ -918,7 +940,7 @@ a.company-name, a.partner-chip { text-decoration: none; color: inherit; }
   border-radius: 8px;
   padding: 0 12px;
 }
-.global-search:focus-within { border-color: rgba(201,168,76,0.5); }
+.global-search:focus-within { border-color: rgba(138,106,40,0.5); }
 .global-search input {
   flex: 1;
   min-width: 0;
@@ -935,7 +957,7 @@ a.company-name, a.partner-chip { text-decoration: none; color: inherit; }
   font-size: 0.65rem;
   color: #555;
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 0;
   padding: 1px 6px;
 }
 .search-results {
@@ -946,7 +968,7 @@ a.company-name, a.partner-chip { text-decoration: none; color: inherit; }
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 8px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  box-shadow: 4px 4px 0 rgba(35,28,16,0.14);
   overflow: hidden;
   z-index: 50;
 }
@@ -962,7 +984,7 @@ a.company-name, a.partner-chip { text-decoration: none; color: inherit; }
   border-bottom: 1px solid var(--hairline, #1d1d1d);
 }
 .sr-item:last-child { border-bottom: none; }
-.sr-item:hover, .sr-item.active { background: rgba(201,168,76,0.1); }
+.sr-item:hover, .sr-item.active { background: rgba(138,106,40,0.1); }
 .sr-item .sr-type { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .sr-empty { padding: 12px 14px; font-size: 0.8rem; color: var(--muted); }
 
@@ -1011,9 +1033,9 @@ a.company-name, a.partner-chip { text-decoration: none; color: inherit; }
 /* Sæsongraf (genbruger strip-mønstret fra profilerne) */
 .strip-bars { display: flex; gap: var(--space-2); align-items: flex-end; height: 96px; }
 .strip-col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; gap: var(--space-2); cursor: default; }
-.strip-fill { background: linear-gradient(180deg, rgba(201,168,76,0.75), rgba(201,168,76,0.25)); border-radius: 3px 3px 0 0; transition: background 0.2s; }
-.strip-fill.latest { background: linear-gradient(180deg, var(--gold-light), rgba(201,168,76,0.5)); }
-.strip-col:hover .strip-fill { background: linear-gradient(180deg, var(--gold-light), rgba(201,168,76,0.45)); }
+.strip-fill { background: linear-gradient(180deg, rgba(138,106,40,0.75), rgba(138,106,40,0.25)); border-radius: 0; transition: background 0.2s; }
+.strip-fill.latest { background: linear-gradient(180deg, var(--gold-light), rgba(138,106,40,0.5)); }
+.strip-col:hover .strip-fill { background: linear-gradient(180deg, var(--gold-light), rgba(138,106,40,0.45)); }
 .strip-col span { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--muted); text-align: center; }
 .strip-col span.latest { color: var(--gold); font-weight: 500; }
 .strip-col .val { font-family: var(--font-mono); font-size: 0.62rem; color: var(--muted); text-align: center; }
@@ -1030,7 +1052,7 @@ a.company-name, a.partner-chip { text-decoration: none; color: inherit; }
 .mini-table td { padding: 11px 12px 11px 0; border-bottom: 1px solid #1d1d1d; white-space: nowrap; }
 .mini-table tr:last-child td { border-bottom: none; }
 .mini-table td.co { font-weight: 500; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
-.mini-table td .ep { font-family: var(--font-mono); font-size: 0.66rem; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 7px; }
+.mini-table td .ep { font-family: var(--font-mono); font-size: 0.66rem; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 0; padding: 1px 7px; }
 .mini-table td.amt { font-family: var(--font-mono); color: var(--gold-light); font-weight: 500; text-align: right; }
 .mini-table td.inv { color: var(--muted); font-size: 0.74rem; max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
 
@@ -1051,10 +1073,10 @@ a.company-name, a.partner-chip { text-decoration: none; color: inherit; }
 .lion:last-child { border-bottom: none; }
 .lion:hover .n, .lion:focus-visible .n { color: var(--gold-light); }
 .lion:focus { outline: none; }
-.lion:focus-visible { outline: 1px solid rgba(201,168,76,0.55); outline-offset: 2px; border-radius: 4px; }
+.lion:focus-visible { outline: 1px solid rgba(138,106,40,0.55); outline-offset: 2px; border-radius: 0; }
 .lion .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
 .lion .n { font-weight: 500; font-size: 0.82rem; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lion .bar { height: 4px; border-radius: 2px; background: rgba(201,168,76,0.55); flex-shrink: 0; }
+.lion .bar { height: 4px; border-radius: 2px; background: rgba(138,106,40,0.55); flex-shrink: 0; }
 .lion .d { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); width: 74px; text-align: right; flex-shrink: 0; }
 
 /* Dashboard-footer */
@@ -1079,3 +1101,65 @@ a.company-name, a.partner-chip { text-decoration: none; color: inherit; }
   .mini-table td.inv { display: none; }
   .mini-table th:last-child { display: none; }
 }
+
+/* ═══ KARTOTEKET-HUD (designretning 2026-07-13) ═══
+   Konsoliderede materiale-overrides oven på token-laget. Kartotekskortets
+   klassiske anatomi: rød hovedlinje øverst, maskinskrevet journalnummer,
+   blæk-hairlines, stempler i seglrød. */
+
+/* Læsesalens masthead: kraftig blæklinje under headeren */
+.site-header { border-bottom: 2px solid var(--text); background: var(--surface); }
+.site-header .wordmark { color: var(--text); letter-spacing: 0.01em; }
+.site-header .wordmark span { color: var(--stempel); }
+.site-nav a:hover, .site-nav a.active {
+  color: var(--text);
+  background: transparent;
+  box-shadow: inset 0 -2px 0 var(--stempel);
+}
+
+/* Kartotekskort: rød hovedlinje + journalnummer i skrivemaskine */
+.co-card, .investor-card, .chart-card {
+  border-top: 2px solid var(--stempel);
+}
+.kort-journal {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: var(--space-2);
+}
+.kort-journal b { color: var(--stempel); font-weight: 500; }
+
+/* Sagens hoved på profilen */
+.sag-journal {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: var(--text-sm);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--stempel);
+  margin-bottom: var(--space-2);
+}
+
+/* Stempler: seglrød med let blæk-udflydning; kun EXIT beholder messing */
+.status-stamp { border-color: var(--stempel); color: var(--stempel); text-shadow: 0 0 0.5px currentColor; }
+.status-stamp.gold { border-color: var(--gold-light); color: var(--gold-light); }
+.fs-outcome.deal { color: var(--surface); background: var(--gold-light); border-color: var(--gold-light); }
+
+/* Registerark: linjeret papir frem for zebra-paneler */
+.table-wrap, .profile-panel, .kpi, .chart-card { background: var(--surface); }
+thead tr { background: var(--surface2); border-bottom: 2px solid var(--text); }
+tbody tr:hover { background: rgba(138,106,40,0.07); }
+
+/* Efterlivs-markører: stempelrøde kanter, arkivets anden tidsalder */
+.ae-marker { border-color: var(--stempel); }
+.fs-marker.deal { box-shadow: none; }
+.aftermath-divider b { color: var(--stempel); }
+.ae-date { color: var(--stempel); }
+
+/* Statusprikker: kvadratiske registermærker */
+.co-status-dot { border-radius: 0; }
+.co-status-dot.aktiv { box-shadow: none; }
+
+/* Fraunces' blødere skæringer til navne */
+.profile-name, .co-name, .inv-name, .page-title, .sag-name { font-weight: 600; }

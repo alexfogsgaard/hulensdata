@@ -18,6 +18,7 @@ var SEASON_YEARS = {};
 // læses af companyUrl() i helpers.js og slug-opslag på companies.html.
 var COMPANY_SLUGS = {};   // name → slug
 var COMPANY_NAMES = {};   // slug → name
+var COMPANY_IDS = {};     // name → id (journalnummer: "Sag № 022")
 
 // Læsestien går gennem det trykte arkiv (/data/arkiv.json fra seneste
 // build) — Supabase er redaktionsdatabase, CDN'en er publikationen.
@@ -53,13 +54,14 @@ async function loadDeals() {
     sbFetch('deals?select=id,saeson,afsnit,soeger,andel_tilbudt,beloeb_modtaget,andel_solgt,aftale,company:companies(name,slug,category,status),deal_investors(investor:investors(canonical_name))&order=saeson.asc,afsnit.asc&limit=1000'),
     sbFetch('investor_status?select=canonical_name,slug,status,first_season,last_season,panel_seasons'),
     sbFetch('seasons?select=season_number,year'),
-    sbFetch('companies?select=name,slug&limit=1000'),
+    sbFetch('companies?select=id,name,slug&limit=1000'),
   ]);
 
   INVESTOR_STATUS = Object.fromEntries(statuses.map(s => [s.canonical_name, s]));
   SEASON_YEARS = Object.fromEntries(seasons.map(s => [s.season_number, s.year]));
   COMPANY_SLUGS = Object.fromEntries(companies.map(c => [c.name, c.slug]));
   COMPANY_NAMES = Object.fromEntries(companies.map(c => [c.slug, c.name]));
+  COMPANY_IDS = Object.fromEntries(companies.map(c => [c.name, c.id]));
 
   return rows.map(row => {
     const investorList = row.deal_investors.map(di => di.investor.canonical_name).sort();

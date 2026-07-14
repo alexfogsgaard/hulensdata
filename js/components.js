@@ -34,7 +34,8 @@ function renderCompanyCard(name, deals) {
   const investors = [...new Set(deals.flatMap(d => d.investorList))];
   const statusRaw = (latest.status || '').toLowerCase();
   return `
-    <div class="co-card" data-name="${esc(name)}" tabindex="0" role="link" aria-label="${esc(name)} — åbn virksomhed">
+    <div class="co-card" data-name="${esc(name)}" tabindex="0" role="link" aria-label="${esc(name)} — åbn sagen">
+      ${sagsNr(name) ? `<div class="kort-journal">Sag <b>№ ${sagsNr(name)}</b> · Bind ${romertal(deals[0].season)}</div>` : ''}
       <div class="co-card-top">
         <div class="co-status-dot ${esc(statusRaw) || 'ukendt'}"></div>
         <div class="co-name">${esc(name)}</div>
@@ -231,6 +232,7 @@ function renderCompanyProfile(p) {
         </span>
         <span class="inv-span">${p.seasonSpan}</span>
       </div>
+      ${sagsNr(p.name) ? `<div class="sag-journal">Sag № ${sagsNr(p.name)} · Bind ${romertal(p.dealList[0].season)}</div>` : ''}
       ${p.stamp ? `<span class="status-stamp${p.stamp.gold ? ' gold' : ''}">${esc(p.stamp.text)}</span>` : ''}
       <h1 class="profile-name">${esc(p.name)}</h1>
       <div class="profile-metrics">
