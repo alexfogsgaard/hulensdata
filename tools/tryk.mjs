@@ -205,7 +205,102 @@ ${kald(`renderKpiTile('Investeret', 'kr ${(sum / 1e6).toFixed(1).replace('.', ',
 }
 console.log(`saesoner: ${arkiv.seasons.length} bind`);
 
-/* ── 7. Sitemap ── */
+/* ── 7. Registrene (/arkiv/) — tematiske opslag over efterlivet.
+       Genereres KUN af dokumenterede events/kilder (hændelser, ikke
+       narrativer); tomme registre trykkes ikke. ── */
+const REGISTRE = [
+  { slug: 'konkurser', titel: 'Konkurser', types: ['bankruptcy', 'closed'],
+    sideTitel: 'Løvens Hule-virksomheder der gik konkurs — registret',
+    intro: 'Virksomheder fra Løvens Hule, hvor arkivet har dokumenteret konkurs eller lukning — med dato, TV-dealens tal og kilder.' },
+  { slug: 'exits', titel: 'Exits', types: ['exit'],
+    sideTitel: 'Exits fra Løvens Hule — solgte virksomheder — registret',
+    intro: 'Virksomheder fra Løvens Hule, der siden er blevet solgt — dokumenteret med kilder.' },
+  { slug: 'kollapsede-deals', titel: 'Kollapsede deals', types: ['cancelled', 'renegotiated'],
+    sideTitel: 'Løvens Hule-deals der kollapsede eller blev genforhandlet — registret',
+    intro: 'TV-deals der blev genforhandlet eller aldrig blev til virkelighed, efter kameraerne slukkede — med kilder.' },
+];
+
+const coAfSlug = Object.fromEntries(arkiv.companies.map(c => [c.slug, c]));
+const kilderFor = (type, id) => arkiv.sources.filter(s => s.entity_type === type && s.entity_id === id);
+const dealResume = (name) => {
+  const ds = allDeals.filter(d => d.name === name);
+  if (!ds.length) return '';
+  const d = ds[ds.length - 1];
+  return d.received
+    ? `TV-deal S${d.season} (${arkiv.seasons.find(s => s.season_number === d.season)?.year ?? ''}): kr ${Number(d.received).toLocaleString('da-DK')} for ${d.shareSold} % — ${[...new Set(ds.flatMap(x => x.investorList))].join(', ')}`
+    : `Pitchede S${d.season} uden aftale`;
+};
+
+const registerStier = [];
+for (const reg of REGISTRE) {
+  const events = arkiv.company_events
+    .filter(e => reg.types.includes(e.event_type))
+    .sort((a, b) => b.event_date.localeCompare(a.event_date));
+  // Konkurs-registret medtager også registerfakta uden kurateret event:
+  // companies m. status=inaktiv og kildebelagt status-felt (CVR/presse)
+  const eventSlugs = new Set(events.map(e => e.company.slug));
+  const registerFakta = reg.slug === 'konkurser'
+    ? arkiv.sources.filter(s => s.entity_type === 'company' && s.field_name === 'status')
+        .map(s => ({ ...s, co: arkiv.companies.find(c => c.id === s.entity_id) }))
+        .filter(x => x.co && x.co.status === 'inaktiv' && !eventSlugs.has(x.co.slug))
+    : [];
+  if (!events.length && !registerFakta.length) continue;
+
+  const poster = events.map(e => {
+    const co = coAfSlug[e.company.slug];
+    ctx.__ev = { ...e, sources: kilderFor('company_event', e.id) };
+    return `
+<div class="profile-panel">
+  <div class="panel-label"><a href="/virksomheder/${co.slug}/">${esc(co.name)}</a></div>
+  <div class="fs-ctx">${esc(dealResume(co.name))}</div>
+  <div class="funding-timeline" style="margin-top:12px">${kald('renderArchiveEvent(__ev)')}</div>
+</div>`;
+  }).join('\n');
+
+  const faktaListe = registerFakta.length ? `
+<div class="profile-panel">
+  <div class="panel-label">Ophørte selskaber iflg. registerdata (endnu uden kurateret sagsforløb)</div>
+  <ol class="journal">${registerFakta.map(x => `
+    <li class="journal-linje"><a class="jl-navn" href="/virksomheder/${x.co.slug}/">${esc(x.co.name)}</a><span class="jl-prikker"></span><span class="jl-beloeb">${esc(x.source_name)}</span></li>`).join('')}
+  </ol>
+</div>` : '';
+
+  const sti = `/arkiv/${reg.slug}/`;
+  const antal = events.length + registerFakta.length;
+  const krop = `<a class="back-btn" href="/arkiv/">← Alle registre</a>
+<h1 class="page-title">Registret <span>·</span> ${reg.titel}</h1>
+<p class="tb-under" style="margin:0 0 24px">${reg.intro} Registret rummer <b class="num">${antal}</b> dokumenterede tilfælde og vokser i takt med kurateringen.</p>
+${poster}
+${faktaListe}`;
+  const jsonld = [
+    { '@context': 'https://schema.org', '@type': 'CollectionPage', name: reg.sideTitel, url: HOST + sti },
+    { '@context': 'https://schema.org', ...brodkrumme(reg.titel, sti) },
+  ];
+  skriv(sti.slice(1), side({ sti, titel: `${reg.sideTitel} | Hulens Data`,
+    beskrivelse: `${reg.intro} ${antal} dokumenterede tilfælde pr. ${TRYKT.split('-').reverse().join('.')}.`, jsonld, krop }));
+  registerStier.push({ sti, titel: reg.titel, antal });
+  stier.push(sti);
+}
+
+// Registrenes forside (/arkiv/)
+if (registerStier.length) {
+  const krop = `<a class="back-btn" href="/">← Kartoteket</a>
+<h1 class="page-title">Registrene <span>·</span> tematiske opslag</h1>
+<p class="tb-under" style="margin:0 0 24px">Hvad der skete, efter kameraerne slukkede — på tværs af sagerne. Kun dokumenterede hændelser med kilder.</p>
+<div class="kartei">${registerStier.map(r => `
+  <a class="kartei-kort" href="${r.sti}">
+    <span class="kk-kant"><span class="kk-nr num">${String(r.antal).padStart(2, '0')}</span><span class="kk-navn">${r.titel}</span><span class="kk-spaend num">tilfælde</span></span>
+  </a>`).join('')}
+</div>`;
+  skriv('arkiv/', side({ sti: '/arkiv/', titel: 'Registrene — konkurser, exits og kollapsede deals fra Løvens Hule | Hulens Data',
+    beskrivelse: 'Tematiske registre over efterlivet i Løvens Hule: konkurser, exits og kollapsede deals — dokumenteret med kilder.',
+    jsonld: [{ '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Registrene', url: HOST + '/arkiv/' },
+             { '@context': 'https://schema.org', ...brodkrumme('Registrene', '/arkiv/') }], krop }));
+  stier.push('/arkiv/');
+  console.log(`registre: ${registerStier.length} opslag (${registerStier.map(r => `${r.titel.toLowerCase()}=${r.antal}`).join(' ')})`);
+}
+
+/* ── 8. Sitemap ── */
 const faste = ['/', '/deals.html', '/companies.html', '/investors.html', '/charts.html'];
 writeFileSync(join(ROD, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +

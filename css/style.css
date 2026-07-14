@@ -1359,3 +1359,7 @@ tbody tr:hover { background: rgba(138,106,40,0.07); }
 }
 .table-wrap td, .table-wrap th { border-left: 1px solid var(--border); }
 .table-wrap td:first-child, .table-wrap th:first-child { border-left: none; }
+
+/* Registrene: sagshenvisninger i blæk, ikke browser-blå */
+.panel-label a { color: inherit; text-decoration: underline; text-decoration-color: var(--stempel); text-underline-offset: 3px; }
+.panel-label a:hover { color: var(--stempel); }
