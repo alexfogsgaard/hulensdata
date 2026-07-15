@@ -131,7 +131,8 @@ function updateUrl() {
   });
   if (sortKey !== 'season') params.set('sort', sortKey);
   if (sortDir !== 1) params.set('dir', 'desc');
-  history.replaceState({}, '', `${location.pathname}${params.size ? '?' + params : ''}`);
+  const query = params.toString();
+  history.replaceState({}, '', `${location.pathname}${query ? '?' + query : ''}`);
 }
 
 function renderTable() {
@@ -139,7 +140,7 @@ function renderTable() {
     let av = a[sortKey], bv = b[sortKey];
     if (av == null) av = -Infinity;
     if (bv == null) bv = -Infinity;
-    if (typeof av === 'string') return av.localeCompare(bv) * sortDir;
+    if (typeof av === 'string') return av.localeCompare(bv, 'da') * sortDir;
     return (av - bv) * sortDir;
   });
 
