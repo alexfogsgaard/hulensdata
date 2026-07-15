@@ -119,7 +119,7 @@ function renderComparison(deals, seasons, pushState = false) {
     ['Kendt søgt beløb', coverage(first.knownAsked, first.pitches), coverage(second.knownAsked, second.pitches)],
     ['Kendt TV-beløb', coverage(first.knownReceived, first.closed), coverage(second.knownReceived, second.closed)],
     ['Kendt ejerandel', coverage(first.knownShare, first.closed), coverage(second.knownShare, second.closed)],
-    ['Dokumenterede efterlivshændelser', first.events, second.events],
+    ['Efterlivshændelser for sæsonens virksomheder', first.events, second.events],
     ['Virksomheder med CVR', coverage(first.cvr, first.companies), coverage(second.cvr, second.companies)],
   ].map(([label, valueA, valueB]) => `<tr><th scope="row">${esc(label)}</th><td class="num">${esc(valueA)}</td><td class="num">${esc(valueB)}</td></tr>`));
   document.getElementById('comparison-status').textContent = `Viser sæson ${a} og sæson ${b}.`;
