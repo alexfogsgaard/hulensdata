@@ -53,15 +53,30 @@ Et roligt, dansk redaktionelt dataarkiv: varm papirbaggrund, mørk tekst, dyb r�
 5. Trykpresseparitet og statiske sider.
 6. Build-, link-, browser-, mobil-, tilgængeligheds- og SEO-verifikation.
 
-## Fase 1 og overgangstilstanden
+## Fase 1 — historisk overgangstilstand
 
 Fase 1 redesigner forsiden, den fælles navigation og virksomhedssiderne. Trykpressen, snapshot-arkitekturen, URL-rummet og datamodellen bevares. Investorprofiler, sæsonsider og enkelte registre kan endnu have kartei-, mappe- eller protokolpræg fra den tidligere retning. Det blandede design er en bevidst, midlertidig overgangstilstand — ikke slutresultatet.
 
-Næste fase samler investorprofiler, sæsonsider, registre og analyser i samme redaktionelle system og fjerner den resterende Kartoteket-CSS, når alle dens forbrugere er migreret. Nye komponenter må ikke afhænge af de gamle dekorative klasser.
+Fase 2 samler investorprofiler, sæsonsider, registre og analyser i samme redaktionelle system. Overgangstilstanden afsluttes, når fase-2-PR'en merges; nye komponenter må ikke afhænge af de gamle dekorative klasser.
+
+## Fase 2 — samlet redaktionelt system (implementeret på fase-2-branchen)
+
+Fase 2 harmoniserer de resterende sidetyper med fase 1 uden at ændre produktidentiteten eller arkitekturen. Arbejdet omfatter:
+
+1. Investoroversigt og investorprofiler med tydelig skelnen mellem registrerede TV-aftaler, panelhistorik og ikke-dokumenteret realisering efter udsendelsen.
+2. Sæsonsider med pitches, TV-aftaler, ingen-aftaler, panel, virksomheder, dokumenteret efterliv og navigation mellem sæsoner.
+3. Redaktionelle registre, hvor konkurs, lukning, exit, ejerskifte og ændrede TV-aftaler beholder deres præcise hændelsestype.
+4. Pitchoversigt med almindelige begreber, tastaturbetjente filtre, forståelig sortering og URL-bevaret filtertilstand.
+5. Analyser med spørgsmål, enheder, datagrundlag og begrænsninger ved hver graf.
+6. Fælles footer, brødkrummer, metadata og fagligt korrekte strukturerede data.
+
+Trykpressen, DOM-frie renderfunktioner, snapshot-læsestien, danske URL'er, Chart.js og databasen bevares. Fase 2 indfører ingen nye domænefakta og ingen databaseændringer.
+
+Alle tidligere forbrugere er migreret. En forbrugsanalyse har verificeret og fjernet de døde kartei-, mappe-, journal-, protokol- og dashboardklasser samt deres ubrugte render-funktioner. Historiske designnoter bevares uændret.
 
 ## Kendt kildegrænse
 
-REST-fallbackens `limit=10000` på `sources` kan stadig blive begrænset af Supabase-projektets servermæssige max-rows. Produktion bruger normalt `data/arkiv.json`, og snapshot'et rummer aktuelt cirka 61 kilder, så kompleks pagination er ikke en fase 1-opgave. Indfør pagination, før kildemængden nærmer sig servergrænsen.
+REST-fallbackens `limit=10000` på `sources` kan stadig blive begrænset af Supabase-projektets servermæssige max-rows. Produktion bruger normalt `data/arkiv.json`, og snapshot'et rummer aktuelt cirka 61 kilder, så kompleks pagination er ikke en fase-2-opgave. Indfør pagination, før kildemængden nærmer sig servergrænsen.
 
 ## Risici og testkrav
 

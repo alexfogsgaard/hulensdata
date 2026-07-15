@@ -75,7 +75,7 @@ const kald = (udtryk) => runInContext(udtryk, ctx);
 /* ── 3. Sideskabelonen (head/chrome/foot — kroppen kommer fra komponenterne) ── */
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-function side({ sti, titel, beskrivelse, jsonld, krop }) {
+function side({ sti, titel, beskrivelse, jsonld, krop, aktiv = null, type = 'article' }) {
   const url = HOST + sti;
   return `<!DOCTYPE html>
 <html lang="da">
@@ -87,7 +87,7 @@ function side({ sti, titel, beskrivelse, jsonld, krop }) {
 <link rel="canonical" href="${url}">
 <meta property="og:site_name" content="Hulens Data">
 <meta property="og:locale" content="da_DK">
-<meta property="og:type" content="article">
+<meta property="og:type" content="${type}">
 <meta property="og:title" content="${esc(titel)}">
 <meta property="og:description" content="${esc(beskrivelse)}">
 <meta property="og:url" content="${url}">
@@ -98,11 +98,11 @@ function side({ sti, titel, beskrivelse, jsonld, krop }) {
 </head>
 <body>
 <header class="site-header"></header>
-<script>renderSiteHeader(null);</script>
+<script>renderSiteHeader(${JSON.stringify(aktiv)});</script>
 <main id="main-content" class="page-main">
 ${krop}
-<footer class="tryk-kolofon">Hulens Data · uofficielt dataarkiv · snapshot ${TRYKT.split('-').reverse().join('.')} · <a href="/#metode">Metode og kilder</a></footer>
 </main>
+<footer class="site-footer"><span>Hulens Data · uofficielt dataarkiv · snapshot ${TRYKT.split('-').reverse().join('.')}</span><a href="/#metode">Metode og kilder</a></footer>
 <script src="/js/helpers.js"></script>
 <script src="/js/supabase.js"></script>
 <script>loadDeals().then(renderHeaderStats).catch(function(){});</script>
@@ -143,7 +143,7 @@ for (const co of arkiv.companies) {
       ...(co.cvr_nummer ? { identifier: { '@type': 'PropertyValue', propertyID: 'CVR', value: co.cvr_nummer } } : {}) },
     { '@context': 'https://schema.org', ...brodkrumme(co.name, sti) },
   ];
-  skriv(sti.slice(1), side({ sti, titel: `${co.name} — Løvens Hule S${d.season} | Hulens Data`, beskrivelse, jsonld, krop }));
+  skriv(sti.slice(1), side({ sti, titel: `${co.name} — Løvens Hule S${d.season} | Hulens Data`, beskrivelse, jsonld, krop, aktiv: 'companies' }));
   stier.push(sti);
 }
 console.log(`virksomheder: ${arkiv.companies.length} bind`);
@@ -157,12 +157,12 @@ for (const m of idx.investors) {
   ctx.__m = m; ctx.__latest = idx.latestSeason;
   const krop = `<a class="back-btn" href="/investors.html">← Alle løver</a>\n` +
     kald('renderInvestorProfile(buildInvestorProfile(__m, __deals), __latest)');
-  const beskrivelse = `${m.name} i Løvens Hule: ${m.deals} deals, kr ${Number(m.received).toLocaleString('da-DK')} investeret, sæson ${m.panelSeasons.join(', ')}. Se alle investeringer, partnere og mønstre.`;
+  const beskrivelse = `${m.name} i Løvens Hule: ${m.deals} registrerede TV-aftaler og kr ${Number(m.received).toLocaleString('da-DK')} i registreret TV-beløb på tværs af sæson ${m.panelSeasons.join(', ')}.`;
   const jsonld = [
     { '@context': 'https://schema.org', '@type': 'Person', name: m.name, url: HOST + sti, jobTitle: 'Investor, Løvens Hule (DR)' },
     { '@context': 'https://schema.org', ...brodkrumme(m.name, sti) },
   ];
-  skriv(sti.slice(1), side({ sti, titel: `${m.name} — investeringer i Løvens Hule | Hulens Data`, beskrivelse, jsonld, krop }));
+  skriv(sti.slice(1), side({ sti, titel: `${m.name} — TV-aftaler i Løvens Hule | Hulens Data`, beskrivelse, jsonld, krop, aktiv: 'investors' }));
   stier.push(sti);
 }
 console.log(`loever: ${idx.investors.length} bind`);
@@ -178,31 +178,37 @@ for (const s of arkiv.seasons) {
   const panel = arkiv.panel_memberships.filter(pm => pm.season_number === n)
     .map(pm => ({ ...invAfId[pm.investor_id], role: pm.role }))
     .sort((a, b) => a.canonical_name.localeCompare(b.canonical_name, 'da'));
-  ctx.__rows = sd;
-  const tabel = kald('__rows.map(renderLatestDealRow).join("")');
-  const krop = `
-<a class="back-btn" href="/">← Arkivet</a>
-<h1 class="page-title">Løvens Hule sæson ${n} <span>·</span> ${s.year}</h1>
-<div class="kpi-grid">
-${kald(`renderKpiTile('Pitches', '${sd.length}', 'sæson ${n}')`)}
-${kald(`renderKpiTile('Deals', '${lukket.length}', 'deal-rate ${sd.length ? Math.round(lukket.length / sd.length * 100) : 0}%')`)}
-${kald(`renderKpiTile('Investeret', 'kr ${(sum / 1e6).toFixed(1).replace('.', ',')}M', '${s.year}')`)}
-</div>
-<div class="profile-panel">
-  <div class="panel-label">Panelet i sæson ${n}</div>
-  <div class="partner-chips">${panel.map(p => `<a class="partner-chip" href="/loever/${p.slug}/">${esc(p.canonical_name)}${p.role === 'gaest' ? ' <span class="chip-count">gæst</span>' : ''}</a>`).join('')}</div>
-</div>
-<div class="profile-panel">
-  <div class="panel-label">Alle ${sd.length} pitches</div>
-  <table class="latest-deals-table"><thead><tr><th>Virksomhed</th><th>Afsnit</th><th>Modtaget</th><th>Investorer</th></tr></thead><tbody>${tabel}</tbody></table>
-</div>`;
+  const dealNames = new Set(sd.map(d => d.name));
+  const seasonEvents = arkiv.company_events
+    .filter(e => dealNames.has(arkiv.companies.find(c => c.slug === e.company.slug)?.name))
+    .sort((a, b) => b.event_date.localeCompare(a.event_date))
+    .map(event => ({
+      companyName: arkiv.companies.find(c => c.slug === event.company.slug).name,
+      event: { ...event, sources: arkiv.sources.filter(src => src.entity_type === 'company_event' && src.entity_id === event.id) },
+    }));
+  const eventCounts = seasonEvents.reduce((counts, item) => {
+    counts[item.companyName] = (counts[item.companyName] || 0) + 1;
+    return counts;
+  }, {});
+  ctx.__seasonProfile = {
+    season: n,
+    year: s.year,
+    deals: sd.map(deal => ({ ...deal, afterlifeCount: eventCounts[deal.name] || 0 })),
+    closedCount: lukket.length,
+    amount: sum,
+    panel: panel.map(person => ({ name: person.canonical_name, slug: person.slug, role: person.role })),
+    events: seasonEvents,
+    previous: arkiv.seasons.some(item => item.season_number === n - 1) ? n - 1 : null,
+    next: arkiv.seasons.some(item => item.season_number === n + 1) ? n + 1 : null,
+  };
+  const krop = `<a class="back-btn" href="/#saesoner">← Alle sæsoner</a>\n` + kald('renderSeasonProfile(__seasonProfile)');
   const jsonld = [
     { '@context': 'https://schema.org', '@type': 'TVSeason', name: `Løvens Hule sæson ${n}`, seasonNumber: n,
       partOfSeries: { '@type': 'TVSeries', name: 'Løvens Hule' }, url: HOST + sti },
     { '@context': 'https://schema.org', ...brodkrumme(`Sæson ${n}`, sti) },
   ];
   skriv(sti.slice(1), side({ sti, titel: `Løvens Hule sæson ${n} (${s.year}): alle deals og investeringer | Hulens Data`,
-    beskrivelse: `Sæson ${n} af Løvens Hule (${s.year}): ${sd.length} pitches, ${lukket.length} deals, kr ${(sum / 1e6).toFixed(1).replace('.', ',')} mio. investeret. Panelet, alle virksomheder og beløb.`, jsonld, krop }));
+    beskrivelse: `Sæson ${n} af Løvens Hule (${s.year}): ${sd.length} registrerede pitches, ${lukket.length} TV-aftaler og kr ${Number(sum).toLocaleString('da-DK')} i registreret TV-beløb.`, jsonld, krop, aktiv: 'seasons' }));
   stier.push(sti);
 }
 console.log(`saesoner: ${arkiv.seasons.length} bind`);
@@ -211,7 +217,7 @@ console.log(`saesoner: ${arkiv.seasons.length} bind`);
        Genereres KUN af dokumenterede events/kilder (hændelser, ikke
        narrativer); tomme registre trykkes ikke. ── */
 const REGISTRE = [
-  { slug: 'konkurser', titel: 'Konkurser', types: ['bankruptcy', 'closed'],
+  { slug: 'konkurser', titel: 'Konkurser og lukninger', types: ['bankruptcy', 'closed'],
     sideTitel: 'Løvens Hule-virksomheder der gik konkurs — registret',
     intro: 'Virksomheder fra Løvens Hule, hvor arkivet har dokumenteret konkurs eller lukning — med dato, TV-dealens tal og kilder.' },
   { slug: 'exits', titel: 'Exits', types: ['exit'],
@@ -250,36 +256,28 @@ for (const reg of REGISTRE) {
 
   const poster = events.map(e => {
     const co = coAfSlug[e.company.slug];
-    ctx.__ev = { ...e, sources: kilderFor('company_event', e.id) };
-    return `
-<div class="profile-panel">
-  <div class="panel-label"><a href="/virksomheder/${co.slug}/">${esc(co.name)}</a></div>
-  <div class="fs-ctx">${esc(dealResume(co.name))}</div>
-  <div class="funding-timeline" style="margin-top:12px">${kald('renderArchiveEvent(__ev)')}</div>
-</div>`;
+    ctx.__registerItem = { companyName: co.name, dealSummary: dealResume(co.name), event: { ...e, sources: kilderFor('company_event', e.id) } };
+    return kald('renderRegisterEntry(__registerItem)');
   }).join('\n');
 
   const faktaListe = registerFakta.length ? `
-<div class="profile-panel">
-  <div class="panel-label">Ophørte selskaber iflg. registerdata (endnu uden kurateret sagsforløb)</div>
-  <ol class="journal">${registerFakta.map(x => `
-    <li class="journal-linje"><a class="jl-navn" href="/virksomheder/${x.co.slug}/">${esc(x.co.name)}</a><span class="jl-prikker"></span><span class="jl-beloeb">${esc(x.source_name)}</span></li>`).join('')}
-  </ol>
-</div>` : '';
+<section class="profile-section register-facts">
+  <div class="section-heading"><span class="section-kicker">Registerstatus uden hændelsesklassifikation</span><h2>Inaktive selskaber i kildedata</h2><p>Disse selskaber har en kildebelagt inaktiv status, men arkivet har endnu ikke en kurateret konkurs- eller lukningshændelse. De tælles derfor ikke som dokumenterede hændelser ovenfor.</p></div>
+  <div class="register-links">${registerFakta.map(x => `<a href="/virksomheder/${x.co.slug}/"><span>${esc(x.co.name)}</span><small>${esc(x.source_name)}</small><strong aria-hidden="true">→</strong></a>`).join('')}</div>
+</section>` : '';
 
   const sti = `/arkiv/${reg.slug}/`;
-  const antal = events.length + registerFakta.length;
+  const antal = events.length;
   const krop = `<a class="back-btn" href="/arkiv/">← Alle registre</a>
-<h1 class="page-title">Registret <span>·</span> ${reg.titel}</h1>
-<p class="tb-under" style="margin:0 0 24px">${reg.intro} Registret rummer <b class="num">${antal}</b> dokumenterede tilfælde og vokser i takt med kurateringen.</p>
-${poster}
+<header class="index-header"><p class="section-kicker">Tematisk register</p><h1 class="page-title">${reg.titel}</h1><p>${reg.intro} Registret rummer <b class="num">${antal}</b> dokumenterede hændelser og vokser i takt med kurateringen.</p></header>
+<div class="register-entries">${poster}</div>
 ${faktaListe}`;
   const jsonld = [
     { '@context': 'https://schema.org', '@type': 'CollectionPage', name: reg.sideTitel, url: HOST + sti },
     { '@context': 'https://schema.org', ...brodkrumme(reg.titel, sti) },
   ];
   skriv(sti.slice(1), side({ sti, titel: `${reg.sideTitel} | Hulens Data`,
-    beskrivelse: `${reg.intro} ${antal} dokumenterede tilfælde pr. ${TRYKT.split('-').reverse().join('.')}.`, jsonld, krop }));
+    beskrivelse: `${reg.intro} ${antal} dokumenterede hændelser pr. ${TRYKT.split('-').reverse().join('.')}.`, jsonld, krop, aktiv: 'archive' }));
   registerStier.push({ sti, titel: reg.titel, antal });
   stier.push(sti);
 }
@@ -287,17 +285,12 @@ ${faktaListe}`;
 // Registrenes forside (/arkiv/)
 if (registerStier.length) {
   const krop = `<a class="back-btn" href="/">← Forsiden</a>
-<h1 class="page-title">Registrene <span>·</span> tematiske opslag</h1>
-<p class="tb-under" style="margin:0 0 24px">Hvad der skete, efter kameraerne slukkede — på tværs af sagerne. Kun dokumenterede hændelser med kilder.</p>
-<div class="kartei">${registerStier.map(r => `
-  <a class="kartei-kort" href="${r.sti}">
-    <span class="kk-kant"><span class="kk-nr num">${String(r.antal).padStart(2, '0')}</span><span class="kk-navn">${r.titel}</span><span class="kk-spaend num">tilfælde</span></span>
-  </a>`).join('')}
-</div>`;
+<header class="index-header"><p class="section-kicker">Efter kameraerne</p><h1 class="page-title">Tematiske registre</h1><p>Hvad der skete efter udsendelsen, på tværs af virksomhederne. Kun dokumenterede hændelser med synlige kilder.</p></header>
+<div class="register-links">${registerStier.map(r => `<a href="${r.sti}"><span>${r.titel}</span><small>Dokumenterede hændelser</small><strong class="num">${r.antal}</strong></a>`).join('')}</div>`;
   skriv('arkiv/', side({ sti: '/arkiv/', titel: 'Registrene — konkurser, exits og kollapsede deals fra Løvens Hule | Hulens Data',
     beskrivelse: 'Tematiske registre over efterlivet i Løvens Hule: konkurser, exits og kollapsede deals — dokumenteret med kilder.',
     jsonld: [{ '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Registrene', url: HOST + '/arkiv/' },
-             { '@context': 'https://schema.org', ...brodkrumme('Registrene', '/arkiv/') }], krop }));
+             { '@context': 'https://schema.org', ...brodkrumme('Registrene', '/arkiv/') }], krop, aktiv: 'archive', type: 'website' }));
   stier.push('/arkiv/');
   console.log(`registre: ${registerStier.length} opslag (${registerStier.map(r => `${r.titel.toLowerCase()}=${r.antal}`).join(' ')})`);
 }

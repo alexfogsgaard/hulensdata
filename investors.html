@@ -6,9 +6,12 @@
 <title>Investorer i Løvens Hule — Hulens Data</title>
 <meta name="description" content="Se investorer fra Løvens Hule, deres panelperioder, TV-aftaler, medinvestorer og porteføljer.">
 <link rel="canonical" href="https://hulensdata.dk/investors.html">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Hulens Data"><meta property="og:locale" content="da_DK">
+<meta property="og:title" content="Investorer i Løvens Hule — Hulens Data"><meta property="og:description" content="Panelperioder, registrerede TV-aftaler, medinvestorer og porteføljer."><meta property="og:url" content="https://hulensdata.dk/investors.html">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <script src="js/layout.js"></script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Investorer i Løvens Hule","url":"https://hulensdata.dk/investors.html","description":"Panelperioder, registrerede TV-aftaler, medinvestorer og porteføljer."}</script>
 </head>
 <body>
 
@@ -20,7 +23,7 @@
   <!-- Grid view -->
   <div id="grid-view">
     <header class="index-header"><p class="section-kicker">Investorregister</p><h1 class="page-title">Investorer i Løvens Hule</h1><p>Porteføljer, panelperioder, medinvestorer og registrerede TV-aftaler.</p></header>
-    <div id="investor-grid"></div>
+    <div id="investor-grid" class="investor-groups"></div>
   </div>
 
   <!-- Detail view -->
@@ -30,6 +33,7 @@
   </div>
 
 </main>
+<footer class="site-footer"><span>Hulens Data · uofficielt dataarkiv</span><a href="/#metode">Metode og kilder</a></footer>
 
 <script src="js/helpers.js"></script>
 <script src="js/supabase.js"></script>
@@ -53,15 +57,17 @@ function renderGrid() {
     { title: 'Tidligere løver', items: investors.filter(m => m.status === 'tidligere').sort(byDeals) },
   ];
 
-  document.getElementById('investor-grid').innerHTML = '<div class="kartei">' + groups
+  document.getElementById('investor-grid').innerHTML = groups
     .filter(g => g.items.length > 0)
     .map(g => `
-      <div class="kartei-fane"><span>${g.title}</span><span class="kf-antal num">${g.items.length}</span></div>
-      ${g.items.map(m => renderInvestorCard(m, latestSeason)).join('')}
-    `).join('') + '</div>';
+      <section class="entity-group">
+        <h2 class="entity-index-letter"><span>${g.title}</span><small class="num">${g.items.length}</small></h2>
+        <div class="entity-list">${g.items.map(m => renderInvestorCard(m, latestSeason)).join('')}</div>
+      </section>
+    `).join('');
 }
 
-// Kartei-kortene er ægte links (<a>) — ingen delegation nødvendig.
+// Registerkortene er ægte links (<a>) — ingen delegation nødvendig.
 
 function showDetail(name, push = true) {
   // Profilen er et mini-dashboard — markup ejes af renderInvestorProfile() i components.js
@@ -78,15 +84,6 @@ function showDetail(name, push = true) {
 
   if (push) window.history.pushState({}, '', '?name=' + encodeURIComponent(name));
 }
-
-// Exploration loops i profilen: partner-chips → anden investorprofil,
-// virksomhedsnavne → companies-siden
-document.getElementById('detail-body').addEventListener('click', e => {
-  const chip = e.target.closest('.partner-chip');
-  if (chip) { showDetail(chip.dataset.name); return; }
-  const co = e.target.closest('.company-name');
-  if (co) window.location = companyUrl(co.dataset.company);
-});
 
 function showGrid(push = true) {
   document.getElementById('grid-view').style.display = 'block';
