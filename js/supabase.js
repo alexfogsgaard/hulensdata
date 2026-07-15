@@ -106,6 +106,7 @@ async function loadCompanyArchive() {
   try {
     const [events, sources] = await Promise.all([
       sbFetch('company_events?select=id,event_date,date_precision,event_type,title,description,amount,created_at,updated_at,company:companies(slug)&order=event_date.asc&limit=1000'),
+      // Supabase kan stadig håndhæve projektets server-side max-rows; se docs/redesign-plan.md.
       sbFetch('sources?select=id,entity_type,entity_id,field_name,source_name,source_url,note,confidence&limit=10000'),
     ]);
     ARCHIVE_EVENTS = events;

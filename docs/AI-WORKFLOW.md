@@ -2,6 +2,13 @@
 
 Denne fil er den fælles arbejdsregel for Codex, Claude og andre implementører i hulensdata-repository'et. Læs den før ændringer.
 
+## Dokumentationshierarki
+
+1. Projektets kanoniske produkt-, data- og arkitekturbeslutninger ligger i den eksisterende Obsidian-vault (`Projekter/_Aktive/Hulensdata/`).
+2. Denne fil er den fælles arbejds- og sikkerhedsprocedure for AI-agenter.
+3. `AGENTS.md` og `CLAUDE.md` peger på begge lag og må ikke gøre workflow-filen til erstatning for projektets kanoniske dokumentation.
+4. Ved reel konflikt mellem en produktbeslutning og agentworkflowet skal konflikten synliggøres og afklares. Den må ikke stiltiende overskrives.
+
 ## Dataprincipper
 
 - Dokumentér hændelser, ikke narrativer. Beskriv daterbare fakta, kildebelagte citater og tydeligt attribuerede partsudsagn.
@@ -25,6 +32,7 @@ Denne fil er den fælles arbejdsregel for Codex, Claude og andre implementører 
 - Gamle URL'er skal fortsat virke eller have redirects. Eksisterende canonical URLs må ikke brydes tavst.
 - Supabase-ændringer kræver en dokumenteret migration, før-/efterkontrol og et reelt behov. Ingen destruktive produktionsændringer uden eksplicit godkendelse.
 - Genererede mapper og filer håndteres efter `.gitignore` og Trykpressens eksisterende proces. Commit ikke genererede artefakter, der normalt bygges ved deploy.
+- REST-forespørgslens `limit=10000` på `sources` er et klientønske, ikke en garanti for at omgå Supabase-projektets servermæssige max-rows. Normal produktion læser det statiske snapshot, og datasættet har cirka 61 kilder, så fase 1 indfører ikke pagination. Pagination skal planlægges, før kildemængden nærmer sig projektets servergrænse.
 
 ## Verifikation før review
 
@@ -33,4 +41,3 @@ Denne fil er den fælles arbejdsregel for Codex, Claude og andre implementører 
 - Test desktop og mobil, tastaturnavigation, global søgning, fokus, reduceret bevægelse, tomme/ukendte tilstande, 404, interne links og browserkonsol.
 - Test virksomhed med og uden aftale, ukendt afsnit, flere investorer, efterliv og kilder samt profil uden efterliv.
 - En ændring er ikke klar til merge, før build og relevante tests er grønne, og en anden part har reviewet den.
-

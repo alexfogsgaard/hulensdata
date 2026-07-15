@@ -1,5 +1,7 @@
 # Redesignplan: redaktionelt dataarkiv
 
+> **Produktbeslutning 2026-07-15:** Denne retning er gældende. PR #2 er fase 1 af redesignet; den bogstavelige Kartoteket-metafor er historisk kontekst, ikke længere styrende informationsarkitektur.
+
 ## Brugerproblemer
 
 Den nuværende kartotekmetafor skjuler de vigtigste opgaver bag skuffer, bind og møbelnavne. Forsiden forklarer ikke hurtigt nok, hvad arkivet kan besvare. Virksomhedsprofilen blander identitet, TV-forløb og efterliv i én visuel fortælling, og ukendte værdier fremstår flere steder som tankestreger. Navigationen bruger også interne metaforer som "Protokollen" og "Tavlerne".
@@ -50,6 +52,16 @@ Et roligt, dansk redaktionelt dataarkiv: varm papirbaggrund, mørk tekst, dyb r�
 4. Virksomhedsprofil med identitet, TV-lag, efterliv, kilder og ukendte tilstande.
 5. Trykpresseparitet og statiske sider.
 6. Build-, link-, browser-, mobil-, tilgængeligheds- og SEO-verifikation.
+
+## Fase 1 og overgangstilstanden
+
+Fase 1 redesigner forsiden, den fælles navigation og virksomhedssiderne. Trykpressen, snapshot-arkitekturen, URL-rummet og datamodellen bevares. Investorprofiler, sæsonsider og enkelte registre kan endnu have kartei-, mappe- eller protokolpræg fra den tidligere retning. Det blandede design er en bevidst, midlertidig overgangstilstand — ikke slutresultatet.
+
+Næste fase samler investorprofiler, sæsonsider, registre og analyser i samme redaktionelle system og fjerner den resterende Kartoteket-CSS, når alle dens forbrugere er migreret. Nye komponenter må ikke afhænge af de gamle dekorative klasser.
+
+## Kendt kildegrænse
+
+REST-fallbackens `limit=10000` på `sources` kan stadig blive begrænset af Supabase-projektets servermæssige max-rows. Produktion bruger normalt `data/arkiv.json`, og snapshot'et rummer aktuelt cirka 61 kilder, så kompleks pagination er ikke en fase 1-opgave. Indfør pagination, før kildemængden nærmer sig servergrænsen.
 
 ## Risici og testkrav
 
