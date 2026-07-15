@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Virksomheder — Hulens Data</title>
+<title>Virksomheder fra Løvens Hule — Hulens Data</title>
+<meta name="description" content="Søg og filtrér virksomheder fra Løvens Hule. Se pitch, TV-aftale, dokumenteret efterliv, CVR og kilder.">
+<link rel="canonical" href="https://hulensdata.dk/companies.html">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <script src="js/layout.js"></script>
@@ -13,30 +15,26 @@
 <header class="site-header"></header>
 <script>renderSiteHeader('companies');</script>
 
-<main class="page-main">
+<main id="main-content" class="page-main">
 
   <!-- Grid view -->
   <div id="grid-view">
-    <h1 class="page-title">Skuffen <span>·</span> Virksomhederne A–Å</h1>
-    <nav class="ryttere" id="ryttere" aria-label="Spring til bogstav"></nav>
+    <header class="index-header">
+      <p class="section-kicker">Virksomhedsregister</p>
+      <h1 class="page-title">Virksomheder fra Løvens Hule</h1>
+      <p>Find en virksomhed og se identitet, pitch, TV-aftale, dokumenterede efterlivshændelser og kilder. Manglende oplysninger vises som ikke dokumenteret.</p>
+    </header>
+    <nav class="alphabet-nav" id="ryttere" aria-label="Spring til bogstav"></nav>
 
-    <div class="filters">
-      <label>Sæson</label>
-      <select id="filter-season">
-        <option value="">Alle</option>
-      </select>
-      <label>Status</label>
-      <select id="filter-status">
-        <option value="">Alle</option>
-        <option value="Aktiv">Aktiv</option>
-        <option value="Inaktiv">Inaktiv</option>
-        <option value="Ukendt">Ukendt</option>
-      </select>
-      <input type="text" id="filter-search" placeholder="Søg virksomhed…" style="min-width:160px">
+    <div class="filters" aria-label="Filtrér virksomheder">
+      <label><span>Sæson</span><select id="filter-season"><option value="">Alle sæsoner</option></select></label>
+      <label><span>Status</span><select id="filter-status"><option value="">Alle statusser</option><option value="aktiv">Aktiv</option><option value="inaktiv">Inaktiv</option><option value="ukendt">Ukendt</option></select></label>
+      <label><span>Kategori</span><select id="filter-category"><option value="">Alle kategorier</option></select></label>
+      <label class="filter-search"><span>Navn</span><input type="search" id="filter-search" placeholder="Søg virksomhed…" autocomplete="off" aria-controls="co-grid"></label>
     </div>
 
-    <div class="kartei" id="co-grid"></div>
-    <p class="table-count" id="co-count"></p>
+    <div class="entity-list" id="co-grid"></div>
+    <p class="table-count" id="co-count" aria-live="polite"></p>
   </div>
 
   <!-- Detail view -->
@@ -61,11 +59,20 @@ function populateFilters() {
     opt.value = s; opt.textContent = 'Sæson ' + s;
     sel.appendChild(opt);
   });
+  const categories = [...new Set(allDeals.map(d => d.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'da'));
+  const categorySelect = document.getElementById('filter-category');
+  categories.forEach(category => {
+    const opt = document.createElement('option');
+    opt.value = category;
+    opt.textContent = category;
+    categorySelect.appendChild(opt);
+  });
 }
 
 function getFilteredCompanies() {
   const season = document.getElementById('filter-season').value;
   const status = document.getElementById('filter-status').value;
+  const category = document.getElementById('filter-category').value;
   const search = document.getElementById('filter-search').value.toLowerCase();
 
   const byName = {};
@@ -76,15 +83,14 @@ function getFilteredCompanies() {
 
   return Object.entries(byName).filter(([name, deals]) => {
     if (season && !deals.some(d => d.season == season)) return false;
-    if (status && !deals.some(d => (d.status || '').toLowerCase() === status.toLowerCase())) return false;
+    if (status && !deals.some(d => (d.status || '').toLowerCase() === status)) return false;
+    if (category && !deals.some(d => d.category === category)) return false;
     if (search && !name.toLowerCase().includes(search)) return false;
     return true;
   });
 }
 
 function renderGrid() {
-  // Karteien: kort grupperet under bogstav-faner, som i en rigtig skuffe.
-  // Kort-markup ejes af renderCompanyCard() i components.js.
   const companies = getFilteredCompanies()
     .sort((a, b) => a[0].localeCompare(b[0], 'da'));
   const grupper = new Map();
@@ -94,17 +100,19 @@ function renderGrid() {
     grupper.get(bogstav).push([name, deals]);
   });
   document.getElementById('co-grid').innerHTML = [...grupper.entries()].map(([b, liste]) =>
-    `<div class="kartei-fane" id="fane-${encodeURIComponent(b)}"><span>${b}</span><span class="kf-antal num">${liste.length}</span></div>` +
+    `<h2 class="entity-index-letter" id="fane-${encodeURIComponent(b)}"><span>${b}</span><small class="num">${liste.length}</small></h2>` +
     liste.map(([name, deals]) => renderCompanyCard(name, deals)).join('')
   ).join('');
   document.getElementById('ryttere').innerHTML = [...grupper.keys()].map(b =>
     `<a href="#fane-${encodeURIComponent(b)}">${b}</a>`).join('');
-  document.getElementById('co-count').textContent = `${companies.length} sager i skuffen`;
+  const total = new Set(allDeals.map(deal => deal.name)).size;
+  document.getElementById('co-count').textContent = `Viser ${companies.length} af ${total} virksomheder`;
 }
 
 // Event-wiring — ingen inline handlers i markup
 document.getElementById('filter-season').addEventListener('change', renderGrid);
 document.getElementById('filter-status').addEventListener('change', renderGrid);
+document.getElementById('filter-category').addEventListener('change', renderGrid);
 document.getElementById('filter-search').addEventListener('input', renderGrid);
 
 // Kartei-kortene er ægte links (<a>) — ingen delegation nødvendig.

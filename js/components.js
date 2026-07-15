@@ -13,14 +13,14 @@ function renderDealRow(d) {
   return `
     <tr>
       <td><a class="company-name" href="${companyUrl(d.name)}">${esc(d.name)}</a></td>
-      <td><span class="season-badge">S${d.season}${d.episode ? `E` + d.episode : ``}</span></td>
-      <td class="num">${fmt(d.asked)}</td>
-      <td class="num dim col-secondary">${pct(d.shareOffered)}</td>
-      <td class="num dim col-secondary">${fmt(d.valBefore)}</td>
-      <td class="num${d.received ? ' received' : ''}">${fmt(d.received)}</td>
-      <td class="num dim col-secondary">${pct(d.shareSold)}</td>
-      <td class="num dim col-secondary">${fmt(d.valAfter)}</td>
-      <td class="num col-secondary ${change == null ? '' : change >= 0 ? 'val-up' : 'val-down'}">${change == null ? '—' : (change >= 0 ? '+' : '') + fmt(change)}</td>
+      <td><span class="season-badge">S${d.season}${d.episode == null ? '' : ` · Afsnit ${d.episode}`}</span></td>
+      <td class="num${d.asked == null ? ' unknown' : ''}">${d.asked == null ? 'Ikke dokumenteret' : fmt(d.asked)}</td>
+      <td class="num dim col-secondary${d.shareOffered == null ? ' unknown' : ''}">${d.shareOffered == null ? 'Ikke dokumenteret' : pct(d.shareOffered)}</td>
+      <td class="num dim col-secondary${d.valBefore == null ? ' unknown' : ''}">${d.valBefore == null ? 'Ikke dokumenteret' : fmt(d.valBefore)}</td>
+      <td class="num${d.received ? ' received' : ''}">${d.aftale ? knownMoney(d.received) : 'Ingen aftale'}</td>
+      <td class="num dim col-secondary${d.shareSold == null ? ' unknown' : ''}">${d.aftale ? knownPercent(d.shareSold) : 'Ikke relevant'}</td>
+      <td class="num dim col-secondary${d.valAfter == null ? ' unknown' : ''}">${d.aftale && d.valAfter != null ? fmt(d.valAfter) : d.aftale ? 'Ikke dokumenteret' : 'Ikke relevant'}</td>
+      <td class="num col-secondary ${change == null ? 'unknown' : change >= 0 ? 'val-up' : 'val-down'}">${change == null ? 'Ikke dokumenteret' : (change >= 0 ? '+' : '') + fmt(change)}</td>
       <td class="investors-cell" title="${esc(d.investors)}">${esc(d.investorList.slice(0,2).join(', '))}${d.investorList.length > 2 ? ' +' + (d.investorList.length - 2) : ''}</td>
     </tr>`;
 }
@@ -35,22 +35,22 @@ function renderCompanyCard(name, deals) {
   const totalReceived = deals.reduce((s, d) => s + (d.received || 0), 0);
   const investors = [...new Set(deals.flatMap(d => d.investorList))];
   const statusRaw = (latest.status || '').toLowerCase();
-  const nr = sagsNr(name);
+  const company = typeof COMPANIES !== 'undefined' ? COMPANIES[name] : null;
   return `
-    <a class="kartei-kort" href="${companyUrl(name)}" data-name="${esc(name)}" aria-label="${esc(name)} — træk sagen frem">
-      <span class="kk-kant">
-        <span class="kk-nr num">${nr ? '№ ' + nr : '—'}</span>
-        <span class="kk-navn">${esc(name)}</span>
-        <span class="kk-spaend num">${[...new Set(deals.map(d => 'S' + d.season))].join('·')}</span>
-        <span class="kk-maerke ${esc(statusRaw) || 'ukendt'}${hasDeal ? '' : ' ingen'}" title="${hasDeal ? 'aftale i hulen' : 'ingen aftale'}"></span>
-      </span>
-      <span class="kk-front">
-        <span class="kk-linje">${hasDeal
-          ? `Aftale <b class="num">${fmt(totalReceived)}</b> — ${esc(investors.join(', '))}`
+    <a class="entity-card" href="${companyUrl(name)}">
+      <span class="entity-card-main">
+        <span class="entity-card-kicker">${esc(latest.category || 'Kategori ikke dokumenteret')}</span>
+        <strong>${esc(name)}</strong>
+        <span class="entity-card-summary">${hasDeal
+          ? `${fmt(totalReceived)} på TV · ${esc(investors.join(', '))}`
           : 'Pitchede uden aftale'}</span>
-        <span class="kk-linje dim">${latest.category ? esc(latest.category) + ' · ' : ''}${deals.map(d => `S${d.season}${d.episode ? `E` + d.episode : ``}`).join(', ')} · Bind ${romertal(deals[0].season)}</span>
-        <span class="kk-traek">træk sagen frem →</span>
       </span>
+      <span class="entity-card-meta">
+        <span>${deals.map(d => `S${d.season}${d.episode == null ? '' : ` · Afsnit ${d.episode}`}`).join(' / ')}</span>
+        <span class="status-label status-${esc(statusRaw) || 'ukendt'}">${latest.status ? esc(latest.status) : 'Ukendt status'}</span>
+        <span>${company && company.cvr_nummer ? `CVR ${esc(company.cvr_nummer)}` : 'CVR ikke dokumenteret'}</span>
+      </span>
+      <span class="entity-card-action" aria-hidden="true">Se virksomhed →</span>
     </a>`;
 }
 
@@ -148,7 +148,7 @@ const EVENT_TYPE_LABELS = {
   follow_on_investment: 'Opfølgende investering', exit: 'Exit',
   bankruptcy: 'Konkurs', closed: 'Lukket', comeback: 'Comeback',
   rebrand: 'Rebranding', funding_round: 'Fundingrunde',
-  milestone: 'Milepæl', other: 'Hændelse',
+  milestone: 'Milepæl', other: 'Anden hændelse',
 };
 
 // SourceFootnote: kildeliste under et tidslinje-punkt. Kun http(s)-links
@@ -156,118 +156,143 @@ const EVENT_TYPE_LABELS = {
 function renderSourceList(sources) {
   if (!sources.length) return '';
   const items = sources.map(s => {
-    const label = esc(s.source_name) + (s.confidence === 'uncertain' ? ' (usikker)' : '');
-    const t = s.note ? ` title="${esc(s.note)}"` : '';
-    return s.source_url && /^https?:\/\//i.test(s.source_url)
-      ? `<a href="${esc(s.source_url)}" target="_blank" rel="noopener"${t}>${label}</a>`
-      : `<span${t}>${label}</span>`;
-  }).join(' · ');
-  return `<div class="ae-sources">Kilde${sources.length === 1 ? '' : 'r'}: ${items}</div>`;
+    const confidence = s.confidence === 'uncertain' ? 'Usikker kilde' : s.confidence === 'likely' ? 'Sandsynlig' : 'Bekræftet';
+    const sourceName = s.source_url && /^https?:\/\//i.test(s.source_url)
+      ? `<a href="${esc(s.source_url)}" target="_blank" rel="noopener">${esc(s.source_name)}</a>`
+      : `<span>${esc(s.source_name)}</span>`;
+    return `<li>${sourceName}<span class="source-confidence confidence-${esc(s.confidence || 'confirmed')}">${confidence}</span>${s.note ? `<span class="source-note">${esc(s.note)}</span>` : ''}</li>`;
+  }).join('');
+  return `<div class="source-list"><span class="source-list-label">Kilde${sources.length === 1 ? '' : 'r'}</span><ul>${items}</ul></div>`;
 }
 
 // EventItem: ét efterlivs-punkt — dato (med præcisionsærlighed), type, titel,
 // beskrivelse (hændelser, ikke narrativer — se decisions), kilder
 function renderArchiveEvent(e) {
   return `
-    <div class="funding-step archive-event">
-      <div class="fs-marker ae-marker${e.event_type === 'exit' ? ' deal' : ''}"></div>
-      <div class="fs-head">
-        <span class="ae-date num">${fmtEventDate(e.event_date, e.date_precision)}</span>
-        <span class="fs-outcome${e.event_type === 'exit' ? ' deal' : ''}">${EVENT_TYPE_LABELS[e.event_type] || 'Hændelse'}</span>
+    <article class="timeline-entry archive-event" data-event-type="${esc(e.event_type)}">
+      <div class="timeline-meta">
+        <time class="num" datetime="${esc(e.event_date)}">${fmtEventDate(e.event_date, e.date_precision)}</time>
+        <span class="event-type">${EVENT_TYPE_LABELS[e.event_type] || 'Hændelse'}</span>
       </div>
-      <div class="fs-row">${esc(e.title)}</div>
-      ${e.description ? `<div class="ae-desc">${esc(e.description)}</div>` : ''}
+      <h3>${esc(e.title)}</h3>
+      ${e.description ? `<p>${esc(e.description)}</p>` : ''}
       ${renderSourceList(e.sources)}
-    </div>`;
+    </article>`;
 }
 
 // delegation: .related-chip → anden virksomhed, .partner-chip → investorprofil.
 function renderCompanyProfile(p) {
-  const statusRaw = (p.latest.status || '').toLowerCase();
-  const hasDeal = p.totalReceived > 0;
+  const company = p.company || {};
+  const status = company.status || p.latest.status || 'ukendt';
+  const statusLabel = status === 'aktiv' ? 'Aktiv' : status === 'inaktiv' ? 'Inaktiv' : 'Ukendt status';
 
-  // Kapitalhistorik: ét trin pr. optræden i hulen
-  const steps = p.dealList.map((d, i) => {
-    const ctx = p.seasonContext[i];
-    const valDelta = (d.valBefore && d.valAfter)
-      ? Math.round((d.valAfter - d.valBefore) / d.valBefore * 100)
-      : null;
+  const appearances = p.dealList.map((deal, index) => {
+    const context = p.seasonContext[index];
+    const investors = deal.investorList.length
+      ? deal.investorList.map(name => `<a href="${investorUrl(name)}">${esc(name)}</a>`).join(', ')
+      : 'Ingen investorer — ingen aftale dokumenteret';
     return `
-      <div class="funding-step">
-        <div class="fs-marker${d.received ? ' deal' : ''}"></div>
-        <div class="fs-head">
-          <span class="season-badge">S${d.season}${d.episode ? `E` + d.episode : ``}</span>
-          ${d.received
-            ? '<span class="fs-outcome deal">Deal ✓</span>'
-            : '<span class="fs-outcome">Ingen aftale</span>'}
-          ${valDelta != null ? `<span class="num fs-delta ${valDelta >= 0 ? 'val-up' : 'val-down'}">${valDelta >= 0 ? '▲' : '▼'} ${Math.abs(valDelta)}% val.</span>` : ''}
-        </div>
-        <div class="fs-row">Søgte <span class="num">${fmt(d.asked)}</span> for <span class="num">${pct(d.shareOffered)}</span>${d.valBefore ? ` · val. <span class="num">${fmt(d.valBefore)}</span>` : ''}</div>
-        ${d.received ? `<div class="fs-row">Fik <span class="num gold">${fmt(d.received)}</span> for <span class="num">${pct(d.shareSold)}</span>${d.valAfter ? ` · val. <span class="num">${fmt(d.valAfter)}</span>` : ''}</div>` : ''}
-        ${ctx ? `<div class="fs-ctx">#${ctx.rank} af ${ctx.total} deals i S${d.season} · sæsonmedian ${fmtShort(ctx.median)}</div>` : ''}
-        ${renderSourceList(sourcesFor('deal', d.id))}
-      </div>`;
+      <article class="tv-appearance">
+        <header>
+          <span class="section-kicker">${episodeLabel(deal)}</span>
+          <span class="deal-outcome ${deal.aftale ? 'has-deal' : 'no-deal'}">${deal.aftale ? 'Aftale på TV' : 'Ingen aftale på TV'}</span>
+        </header>
+        <dl class="fact-grid fact-grid-tv">
+          <div><dt>Søgte</dt><dd class="num${deal.asked == null ? ' unknown' : ''}">${knownMoney(deal.asked)}</dd></div>
+          <div><dt>Tilbudt andel</dt><dd class="num${deal.shareOffered == null ? ' unknown' : ''}">${knownPercent(deal.shareOffered)}</dd></div>
+          <div><dt>Resultat på TV</dt><dd>${deal.aftale ? `${knownMoney(deal.received)} for ${knownPercent(deal.shareSold)}` : 'Ingen aftale dokumenteret'}</dd></div>
+          <div><dt>Investorer</dt><dd>${investors}</dd></div>
+        </dl>
+        ${context ? `<p class="context-note">Aftalen var nr. ${context.rank} af ${context.total} i sæsonen målt på TV-beløb. Sæsonmedian: ${fmt(context.median)}.</p>` : ''}
+        ${renderSourceList(sourcesFor('deal', deal.id))}
+      </article>`;
   }).join('');
 
-  // Efterlivet: tidslinjen fortsætter efter TV-øjeblikket ("kameraerne slukker")
-  const aftermath = p.events.length ? `
-      <div class="aftermath-divider"><span>— kameraerne slukker · <b>efterlivet</b> —</span></div>
-      ${p.events.map(renderArchiveEvent).join('')}` : '';
-
-  const revisionInfo = p.revised
-    ? `<div class="archive-revision">Sagen revideret ${p.revised.split('-').reverse().join('.')}</div>` : '';
-
-  const investorChips = p.investors.map(n =>
-    `<a class="partner-chip" href="${investorUrl(n)}">${esc(n)}</a>`).join('')
-    || '<span class="profile-dim">Ingen investorer — fik ikke en aftale</span>';
-
-  const relatedChips = p.related.map(r =>
-    `<a class="partner-chip related-chip" href="${companyUrl(r.name)}">${esc(r.name)} <span class="chip-count">${r.count}</span></a>`).join('')
-    || '<span class="profile-dim">Ingen fælles investorer med andre virksomheder</span>';
+  const investorLinks = p.investors.length
+    ? p.investors.map(name => `<a class="text-link" href="${investorUrl(name)}">${esc(name)}</a>`).join('')
+    : '<span class="empty-value">Ingen investorer — ingen aftale dokumenteret</span>';
+  const relatedLinks = p.related.length
+    ? p.related.map(item => `<a class="text-link" href="${companyUrl(item.name)}">${esc(item.name)}</a>`).join('')
+    : '<span class="empty-value">Ingen relaterede virksomheder via fælles investorer</span>';
+  const registerNames = { exits: 'Exits', konkurser: 'Konkurser og lukninger', 'kollapsede-deals': 'Kollapsede deals' };
+  const registerLinks = p.registers.length
+    ? p.registers.map(slug => `<a class="text-link" href="/arkiv/${slug}/">${registerNames[slug]}</a>`).join('')
+    : '<span class="empty-value">Ingen tematiske registre knyttet til sagen</span>';
 
   return `
-    <div class="mappe">
-    <div class="mappe-fane"><span class="num">${sagsNr(p.name) ? 'SAG № ' + sagsNr(p.name) : 'SAG'}</span> ${esc(p.name)} <span class="mf-bind num">BIND ${romertal(p.dealList[0].season)}</span></div>
-    <div class="mappe-indhold">
-    <div class="profile-hero dokument">
-      <div class="inv-topline">
-        <span class="co-status-line">
-          <span class="co-status-dot ${esc(statusRaw) || 'ukendt'}"></span>
-          <span class="inv-badge">${p.latest.status ? esc(p.latest.status[0].toUpperCase() + p.latest.status.slice(1)) : 'Ukendt status'}</span>
-          ${p.latest.category ? `<span class="co-badge">${esc(p.latest.category)}</span>` : ''}
-        </span>
-        <span class="inv-span">${p.seasonSpan}</span>
-      </div>
-      ${p.stamp ? `<span class="status-stamp${p.stamp.gold ? ' gold' : ''}">${esc(p.stamp.text)}</span>` : ''}
-      <h1 class="profile-name">${esc(p.name)}</h1>
-      <div class="profile-metrics">
-        <div class="pm"><span class="k">Modtaget</span><span class="v num">${hasDeal ? fmtShort(p.totalReceived) : '—'}</span></div>
-        <div class="pm"><span class="k">Søgte</span><span class="v num">${fmtShort(p.totalAsked)}</span></div>
-        <div class="pm"><span class="k">Solgt andel</span><span class="v num">${hasDeal && p.totalShareSold ? p.totalShareSold + '%' : '—'}</span></div>
-        <div class="pm"><span class="k">Seneste valuation</span><span class="v num">${p.lastValAfter ? fmtShort(p.lastValAfter) : '—'}</span></div>
-        <div class="pm"><span class="k">Pitches</span><span class="v num">${p.dealList.length}</span></div>
-      </div>
-    </div>
+    <article class="company-profile">
+      <header class="company-profile-header">
+        <div class="profile-eyebrow">Virksomhed fra Løvens Hule · ${esc(p.seasonSpan)}</div>
+        <h1>${esc(p.name)}</h1>
+        <p>TV-pitch, dokumenteret aftale og virksomhedens efterliv holdes adskilt, så det er tydeligt, hvad kilderne faktisk viser.</p>
+        <div class="profile-status-row">
+          <span class="status-label status-${esc(status)}">${statusLabel}</span>
+          <span>${esc(company.category || 'Kategori ikke dokumenteret')}</span>
+          <span class="num">${company.cvr_nummer ? `CVR ${esc(company.cvr_nummer)}` : 'CVR ikke dokumenteret'}</span>
+        </div>
+        ${p.revised ? `<p class="revision-note">Senest revideret ${p.revised.split('-').reverse().join('.')} · ${p.allSources.length} kilder knyttet til sagen</p>` : `<p class="revision-note">Ingen efterlivsrevision dokumenteret · ${p.allSources.length} kilder knyttet til sagen</p>`}
+      </header>
 
-    <div class="profile-grid">
-      <div class="profile-panel">
-        <div class="panel-label">Kapitalhistorik${p.events.length ? ' & efterliv' : ''}</div>
-        <div class="funding-timeline">${steps}${aftermath}</div>
-        ${revisionInfo}
-      </div>
-      <div class="profile-stack">
-        <div class="profile-panel">
-          <div class="panel-label">Investor${p.investors.length === 1 ? '' : 'er'} (${p.investors.length})</div>
-          <div class="partner-chips">${investorChips}</div>
+      <nav class="profile-nav" aria-label="På denne side">
+        <a href="#identitet">Identitet</a>
+        <a href="#tv-forloeb">Pitch og TV-aftale</a>
+        <a href="#efterliv">Efterliv</a>
+        <a href="#kilder">Kilder og relationer</a>
+      </nav>
+
+      <section class="profile-section" id="identitet">
+        <div class="section-heading"><span class="section-kicker">01 · Identitet</span><h2>Virksomheden</h2></div>
+        <dl class="fact-grid">
+          <div><dt>Navn</dt><dd>${esc(p.name)}</dd></div>
+          <div><dt>Status</dt><dd>${statusLabel}</dd></div>
+          <div><dt>Kategori</dt><dd class="${company.category ? '' : 'unknown'}">${esc(company.category || 'Ikke dokumenteret')}</dd></div>
+          <div><dt>CVR</dt><dd class="num ${company.cvr_nummer ? '' : 'unknown'}">${esc(company.cvr_nummer || 'Ikke dokumenteret')}</dd></div>
+          <div><dt>Optrædener</dt><dd class="num">${p.dealList.length}</dd></div>
+          <div><dt>Dokumenterede efterlivshændelser</dt><dd class="num">${p.events.length}</dd></div>
+        </dl>
+        ${renderSourceList(p.companySources)}
+      </section>
+
+      <section class="profile-section" id="tv-forloeb">
+        <div class="section-heading"><span class="section-kicker">02 · TV-forløb</span><h2>Pitch og aftale</h2><p>Vilkår fra udsendelsen. Senere ændringer vises først under efterliv.</p></div>
+        <div class="tv-appearances">${appearances}</div>
+      </section>
+
+      <section class="profile-section" id="efterliv">
+        <div class="section-heading"><span class="section-kicker">03 · Efter kameraerne</span><h2>Dokumenteret efterliv</h2><p>Kun daterede hændelser med synlige kilder.</p></div>
+        <div class="timeline">${p.events.length
+          ? p.events.map(renderArchiveEvent).join('')
+          : '<div class="empty-state"><strong>Intet efterliv er dokumenteret endnu.</strong><span>Det betyder ikke, at der ikke er sket noget — kun at arkivet ikke har en tilstrækkelig kilde.</span></div>'}
         </div>
-        <div class="profile-panel">
-          <div class="panel-label">Relaterede virksomheder · samme investorer</div>
-          <div class="partner-chips">${relatedChips}</div>
+      </section>
+
+      <section class="profile-section" id="kilder">
+        <div class="section-heading"><span class="section-kicker">04 · Dokumentation</span><h2>Kilder og relationer</h2></div>
+        <div class="documentation-grid">
+          <div><h3>Alle kilder i sagen</h3>${p.allSources.length ? renderSourceList(p.allSources) : '<p class="empty-value">Ingen særskilte kilder er knyttet til sagen endnu.</p>'}</div>
+          <div class="relation-groups">
+            <div><h3>Investorer</h3><div class="text-links">${investorLinks}</div></div>
+            <div><h3>Relaterede virksomheder</h3><div class="text-links">${relatedLinks}</div></div>
+            <div><h3>Registre</h3><div class="text-links">${registerLinks}</div></div>
+          </div>
         </div>
-      </div>
-    </div>
-    </div>
-    </div>`;
+      </section>
+    </article>`;
+}
+
+function renderHomepageEvent(event, company) {
+  const sources = event.sources || [];
+  return `
+    <article class="story-card">
+      <div class="story-card-meta"><span>${EVENT_TYPE_LABELS[event.event_type] || 'Hændelse'}</span><time class="num" datetime="${esc(event.event_date)}">${fmtEventDate(event.event_date, event.date_precision)}</time></div>
+      <h3><a href="${companyUrl(company.name)}">${esc(company.name)}</a></h3>
+      <p>${esc(event.title)}</p>
+      <div class="story-card-source">${sources.length} ${sources.length === 1 ? 'kilde' : 'kilder'} · <a href="${companyUrl(company.name)}#efterliv">Se dokumentationen</a></div>
+    </article>`;
+}
+
+function renderEditorialStat(label, value, note) {
+  return `<div class="editorial-stat"><dt>${esc(label)}</dt><dd class="num">${esc(value)}</dd><span>${esc(note)}</span></div>`;
 }
 
 /* ── Forside-dashboard (A+) ── */

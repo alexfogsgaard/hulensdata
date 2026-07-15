@@ -1,93 +1,181 @@
-/* ═══════════════════════════════════════════════════════════════
-   js/layout.js — fælles layout-elementer (header/nav + global søgning)
-   ═══════════════════════════════════════════════════════════════ */
+/* Fælles header, navigation og statisk søgning. */
 
-// Absolutte stier: headeren bruges også på de trykte bind (/virksomheder/…)
 const NAV_PAGES = [
-  { id: 'deals',     href: '/deals.html',     label: 'Deals' },
-  { id: 'investors', href: '/investors.html', label: 'Investorer' },
   { id: 'companies', href: '/companies.html', label: 'Virksomheder' },
-  { id: 'charts',    href: '/charts.html',    label: 'Grafer' },
+  { id: 'deals', href: '/deals.html', label: 'Pitches & aftaler' },
+  { id: 'investors', href: '/investors.html', label: 'Investorer' },
+  { id: 'seasons', href: '/#saesoner', label: 'Sæsoner' },
+  { id: 'archive', href: '/arkiv/', label: 'Arkiv' },
+  { id: 'charts', href: '/charts.html', label: 'Analyser' },
 ];
 
-// Udfylder <header class="site-header"> med wordmark, nav, global søgning
-// og stats-container. Kaldes synkront i et <script> lige efter header-
-// elementet — ingen FOUC. #header-stats udfyldes bagefter af renderHeaderStats().
+const layoutEsc = value => String(value ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;');
+
 function renderSiteHeader(activePage) {
   const host = document.querySelector('.site-header');
   if (!host) return;
+
+  if (!document.querySelector('.skip-link')) {
+    host.insertAdjacentHTML('beforebegin', '<a class="skip-link" href="#main-content">Spring til indhold</a>');
+  }
+
   host.innerHTML = `
-    <a class="wordmark" href="/">Hulens <span>Data</span></a>
-    <nav class="site-nav">
-      ${NAV_PAGES.map(p =>
-        `<a href="${p.href}"${p.id === activePage ? ' class="active"' : ''}>${p.label}</a>`
-      ).join('\n      ')}
-    </nav>
-    <div class="global-search">
-      <input id="global-search-input" type="text" placeholder="Søg virksomhed eller løve…" autocomplete="off" spellcheck="false" aria-label="Global søgning">
-      <span class="kbd">⌘K</span>
-      <div class="search-results" id="search-results" hidden></div>
+    <div class="header-bar">
+      <a class="wordmark" href="/" aria-label="Hulens Data, forside">
+        <span class="wordmark-name">Hulens Data</span>
+        <span class="wordmark-description">Uofficielt dataarkiv</span>
+      </a>
+      <div class="header-tools">
+        <div class="global-search site-search" role="search" data-search>
+          <label class="sr-only" for="global-search-input">Søg i arkivet</label>
+          <input id="global-search-input" type="search" placeholder="Søg virksomhed eller investor" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="global-search-results" aria-expanded="false">
+          <span class="search-shortcut" aria-hidden="true">⌘K</span>
+          <div class="search-results" id="global-search-results" role="listbox" hidden></div>
+        </div>
+        <div class="header-stats" id="header-stats" aria-live="polite"></div>
+      </div>
     </div>
-    <div class="header-stats" id="header-stats"></div>
-  `;
-  initGlobalSearch();
+    <nav class="site-nav" aria-label="Primær navigation">
+      ${NAV_PAGES.map(page =>
+        `<a href="${page.href}"${page.id === activePage ? ' class="active" aria-current="page"' : ''}>${page.label}</a>`
+      ).join('')}
+    </nav>`;
+
+  initArchiveSearch(host.querySelector('[data-search]'));
 }
 
-/* ── Global søgning (⌘K) — søger på tværs af løver og virksomheder.
-     Indekset hentes lazy fra de normaliserede tabeller (første fokus). ── */
 let SEARCH_INDEX = null;
-let searchActiveIdx = -1;
+
+function normalizeSearch(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('da-DK');
+}
 
 async function ensureSearchIndex() {
   if (SEARCH_INDEX) return SEARCH_INDEX;
-  const [invs, cos] = await Promise.all([
+  const [investors, companies] = await Promise.all([
     sbFetch('investor_status?select=canonical_name,slug,status&order=canonical_name.asc'),
-    sbFetch('companies?select=name,slug&order=name.asc'),
+    sbFetch('companies?select=name,slug,status,category&order=name.asc'),
   ]);
   SEARCH_INDEX = [
-    ...invs.map(i => ({ type: 'Løve', name: i.canonical_name, url: i.slug ? '/loever/' + encodeURIComponent(i.slug) + '/' : 'investors.html?name=' + encodeURIComponent(i.canonical_name) })),
-    ...cos.map(c => ({ type: 'Virksomhed', name: c.name, url: c.slug ? '/virksomheder/' + encodeURIComponent(c.slug) + '/' : 'companies.html?name=' + encodeURIComponent(c.name) })),
-  ];
+    ...companies.map(company => ({
+      type: 'Virksomhed',
+      name: company.name,
+      detail: company.category || 'Kategori ikke dokumenteret',
+      url: company.slug ? `/virksomheder/${encodeURIComponent(company.slug)}/` : `/companies.html?name=${encodeURIComponent(company.name)}`,
+    })),
+    ...investors.map(investor => ({
+      type: 'Investor',
+      name: investor.canonical_name,
+      detail: investor.status === 'aktiv' ? 'Aktiv investor' : investor.status === 'gaest' ? 'Gæsteinvestor' : 'Tidligere investor',
+      url: investor.slug ? `/loever/${encodeURIComponent(investor.slug)}/` : `/investors.html?name=${encodeURIComponent(investor.canonical_name)}`,
+    })),
+  ].map(item => ({ ...item, searchName: normalizeSearch(item.name) }));
   return SEARCH_INDEX;
 }
 
-function initGlobalSearch() {
-  const input = document.getElementById('global-search-input');
-  const box = document.getElementById('search-results');
-  if (!input || !box) return;
+function initArchiveSearch(root) {
+  if (!root || root.dataset.searchReady === 'true') return;
+  root.dataset.searchReady = 'true';
+  const input = root.querySelector('input[type="search"], input[type="text"]');
+  const results = root.querySelector('.search-results');
+  if (!input || !results) return;
 
-  const hide = () => { box.hidden = true; searchActiveIdx = -1; };
+  let hits = [];
+  let activeIndex = -1;
 
-  const renderResults = hits => {
-    if (!hits.length) { box.innerHTML = '<div class="sr-empty">Ingen resultater</div>'; box.hidden = false; return; }
-    box.innerHTML = hits.map((h, i) =>
-      `<a class="sr-item${i === searchActiveIdx ? ' active' : ''}" href="${esc(h.url)}"><span class="sr-name">${esc(h.name)}</span><span class="sr-type">${h.type}</span></a>`
-    ).join('');
-    box.hidden = false;
+  const close = () => {
+    results.hidden = true;
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+    activeIndex = -1;
   };
 
-  let lastHits = [];
-  input.addEventListener('input', async () => {
-    const q = input.value.trim().toLowerCase();
-    if (q.length < 2) { hide(); return; }
-    const idx = await ensureSearchIndex();
-    searchActiveIdx = -1;
-    lastHits = idx.filter(x => x.name.toLowerCase().includes(q)).slice(0, 8);
-    renderResults(lastHits);
-  });
+  const paint = () => {
+    if (!hits.length) {
+      results.innerHTML = '<div class="search-empty">Ingen resultater. Prøv et andet navn.</div>';
+    } else {
+      results.innerHTML = hits.map((hit, index) => `
+        <a id="search-option-${input.id}-${index}" class="search-result${index === activeIndex ? ' active' : ''}" href="${layoutEsc(hit.url)}" role="option" aria-selected="${index === activeIndex}">
+          <span><strong>${layoutEsc(hit.name)}</strong><small>${layoutEsc(hit.detail)}</small></span>
+          <span class="search-result-type">${hit.type}</span>
+        </a>`).join('');
+    }
+    results.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+    if (activeIndex >= 0) input.setAttribute('aria-activedescendant', `search-option-${input.id}-${activeIndex}`);
+    else input.removeAttribute('aria-activedescendant');
+  };
 
-  input.addEventListener('keydown', e => {
-    if (box.hidden || !lastHits.length) return;
-    if (e.key === 'ArrowDown') { e.preventDefault(); searchActiveIdx = Math.min(searchActiveIdx + 1, lastHits.length - 1); renderResults(lastHits); }
-    if (e.key === 'ArrowUp')   { e.preventDefault(); searchActiveIdx = Math.max(searchActiveIdx - 1, 0); renderResults(lastHits); }
-    if (e.key === 'Enter' && searchActiveIdx >= 0) { e.preventDefault(); window.location = lastHits[searchActiveIdx].url; }
-  });
+  const update = async () => {
+    const query = normalizeSearch(input.value.trim());
+    if (query.length < 2) {
+      hits = [];
+      close();
+      return;
+    }
+    try {
+      const index = await ensureSearchIndex();
+      hits = index
+        .filter(item => item.searchName.includes(query))
+        .sort((a, b) => {
+          const aStarts = a.searchName.startsWith(query) ? 0 : 1;
+          const bStarts = b.searchName.startsWith(query) ? 0 : 1;
+          return aStarts - bStarts || a.name.localeCompare(b.name, 'da');
+        })
+        .slice(0, 8);
+      activeIndex = -1;
+      paint();
+    } catch (error) {
+      console.error('Søgeindekset kunne ikke indlæses:', error);
+      results.innerHTML = '<div class="search-empty">Søgningen kunne ikke indlæses. Prøv igen.</div>';
+      results.hidden = false;
+      input.setAttribute('aria-expanded', 'true');
+    }
+  };
 
-  input.addEventListener('focus', () => ensureSearchIndex());
-  input.addEventListener('blur', () => setTimeout(hide, 150)); // lad klik i dropdown nå frem
-
-  document.addEventListener('keydown', e => {
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); input.focus(); input.select(); }
-    if (e.key === 'Escape') { hide(); input.blur(); }
+  input.addEventListener('input', update);
+  input.addEventListener('focus', () => {
+    ensureSearchIndex().catch(() => {});
+    if (input.value.trim().length >= 2) update();
   });
+  input.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      close();
+      input.blur();
+      return;
+    }
+    if (results.hidden || !hits.length) return;
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      activeIndex = Math.min(activeIndex + 1, hits.length - 1);
+      paint();
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      activeIndex = Math.max(activeIndex - 1, 0);
+      paint();
+    }
+    if (event.key === 'Enter' && activeIndex >= 0) {
+      event.preventDefault();
+      window.location.assign(hits[activeIndex].url);
+    }
+  });
+  input.addEventListener('blur', () => window.setTimeout(close, 150));
 }
+
+document.addEventListener('keydown', event => {
+  if ((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase('da-DK') === 'k') {
+    const input = document.getElementById('global-search-input');
+    if (!input) return;
+    event.preventDefault();
+    input.focus();
+    input.select();
+  }
+});

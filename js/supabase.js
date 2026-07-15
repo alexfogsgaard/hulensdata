@@ -19,6 +19,7 @@ var SEASON_YEARS = {};
 var COMPANY_SLUGS = {};   // name → slug
 var COMPANY_NAMES = {};   // slug → name
 var COMPANY_IDS = {};     // name → id (journalnummer: "Sag № 022")
+var COMPANIES = {};       // name → fuld virksomhedsidentitet
 
 // Læsestien går gennem det trykte arkiv (/data/arkiv.json fra seneste
 // build) — Supabase er redaktionsdatabase, CDN'en er publikationen.
@@ -54,7 +55,7 @@ async function loadDeals() {
     sbFetch('deals?select=id,saeson,afsnit,soeger,andel_tilbudt,beloeb_modtaget,andel_solgt,aftale,company:companies(name,slug,category,status),deal_investors(investor:investors(canonical_name))&order=saeson.asc,afsnit.asc&limit=1000'),
     sbFetch('investor_status?select=canonical_name,slug,status,first_season,last_season,panel_seasons'),
     sbFetch('seasons?select=season_number,year'),
-    sbFetch('companies?select=id,name,slug&limit=1000'),
+    sbFetch('companies?select=id,name,slug,category,status,cvr_nummer&limit=1000'),
   ]);
 
   INVESTOR_STATUS = Object.fromEntries(statuses.map(s => [s.canonical_name, s]));
@@ -62,6 +63,7 @@ async function loadDeals() {
   COMPANY_SLUGS = Object.fromEntries(companies.map(c => [c.name, c.slug]));
   COMPANY_NAMES = Object.fromEntries(companies.map(c => [c.slug, c.name]));
   COMPANY_IDS = Object.fromEntries(companies.map(c => [c.name, c.id]));
+  COMPANIES = Object.fromEntries(companies.map(c => [c.name, c]));
 
   return rows.map(row => {
     const investorList = row.deal_investors.map(di => di.investor.canonical_name).sort();
@@ -98,13 +100,16 @@ async function loadDeals() {
 // arkivlaget er berigelse — profilen skal kunne vises uden.
 var COMPANY_EVENTS = {};  // company-slug → [events, kronologisk]
 var SOURCES = {};         // 'entity_type:entity_id' → [kilder]
+var ARCHIVE_EVENTS = [];  // flad liste til forsiden og registre
 
 async function loadCompanyArchive() {
   try {
     const [events, sources] = await Promise.all([
       sbFetch('company_events?select=id,event_date,date_precision,event_type,title,description,amount,created_at,updated_at,company:companies(slug)&order=event_date.asc&limit=1000'),
-      sbFetch('sources?select=id,entity_type,entity_id,field_name,source_name,source_url,note,confidence&limit=1000'),
+      // Supabase kan stadig håndhæve projektets server-side max-rows; se docs/redesign-plan.md.
+      sbFetch('sources?select=id,entity_type,entity_id,field_name,source_name,source_url,note,confidence&limit=10000'),
     ]);
+    ARCHIVE_EVENTS = events;
     COMPANY_EVENTS = {};
     events.forEach(e => {
       (COMPANY_EVENTS[e.company.slug] = COMPANY_EVENTS[e.company.slug] || []).push(e);
