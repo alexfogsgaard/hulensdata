@@ -154,9 +154,9 @@ Auditplanens P0–P3 er gennemført på `agent/product-quality-phase-3` uden dat
 - Analysesiden viser observationer, udeladte NULL-værdier og tilgængelige datatabeller ved seks analyser samt en enkel to-sæson-sammenligning. Chart.js er SRI-pinnet og har blød fallback.
 - Trykpresse og REST-fallback bruger generisk `Range`-pagination; en test med 2.300 rækker og en simuleret servergrænse på 500 gav alle rækker over fem requests.
 - Trykte sider får headerstatistik ved build og undgår snapshot-request alene for layout. Cache-/sikkerhedsheaders og font-preconnect er tilføjet.
-- Browser-QA er gennemført lokalt på 375, 768 og 1280 px, inklusive søgning, filtre, historik, profiler med relevante NULL-/relationsvarianter, reduceret bevægelse, canonical/JSON-LD og fejlfri konsol. Fysisk Tab-sekvens kunne ikke automatiseres stabilt i browserdriveren; de enkelte fokusmål, fokusstil og tastaturhandlinger er verificeret. En fuld manuel Tab-/assistive-technology-runde anbefales i previewet.
+- Browser-QA er gennemført lokalt og på Netlify-previewet på 375, 768 og 1280 px, inklusive søgning, filtre, historik, profiler med relevante NULL-/relationsvarianter, reduceret bevægelse, canonical/JSON-LD og fejlfri konsol. Den fulde fysiske Tab-rækkefølge er gennemgået i Chrome på forsiden (46 fokusmål), pitchoversigten (362), metode (19) og analyser (20); alle endte ved footerlinket uden positiv `tabindex`. Chrome accessibility-træet eksponerer navngivne søgegrupper, filtre, tabeller, grafer og statusbeskeder.
 
-Netlify-preview-QA afventer branchens push og den efterfølgende draft-PR/deploy. Det er en bevidst sekvensgrænse, ikke et grønt preview-resultat.
+Netlify-preview-QA er gennemført på `https://deploy-preview-4--velvety-piroshki-d57bf9.netlify.app`. QA fandt og rettede to konkrete fejl i separate commits: parallelle datakald delte ikke snapshot-requesten (`9d4bffb`), og søgeresultatgrupper var ikke semantisk knyttet til deres options (`f24a02e`). Normal CDN-læsning, blokeret snapshot med pagineret REST-fallback, 329 renderede pitches og seks REST-svar med status 200 er efterverificeret på previewet.
 
 ## Resterende begrænsninger og næste fase
 
@@ -165,4 +165,5 @@ Netlify-preview-QA afventer branchens push og den efterfølgende draft-PR/deploy
 - Chart.js og Google Fonts er fortsat eksterne afhængigheder; Chart.js er SRI-pinnet, og analyserne har tabeller/fallback.
 - Der er ingen analytics. Et eventuelt senere valg skal være privacy-bevidst og særskilt besluttet.
 - Resterende historisk CSS må kun fjernes efter konkret forbrugsanalyse; fase 3 laver ingen risikabel totaloprydning.
-- Næste fase bør fokusere på preview-/assistive-technology-QA, fortsat datakuratering og evidensbaseret oprydning — ikke en ny visuel retning.
+- En supplerende audit med en konkret skærmlæser som VoiceOver/NVDA kan stadig give brugeroplevelsesfeedback ud over den gennemførte Chrome accessibility-tree- og tastaturkontrol.
+- Næste fase bør fokusere på fortsat datakuratering og evidensbaseret oprydning — ikke en ny visuel retning.
