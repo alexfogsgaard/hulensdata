@@ -32,12 +32,11 @@ Denne fil er den fælles arbejdsregel for Codex, Claude og andre implementører 
 - Gamle URL'er skal fortsat virke eller have redirects. Eksisterende canonical URLs må ikke brydes tavst.
 - Supabase-ændringer kræver en dokumenteret migration, før-/efterkontrol og et reelt behov. Ingen destruktive produktionsændringer uden eksplicit godkendelse.
 - Genererede mapper og filer håndteres efter `.gitignore` og Trykpressens eksisterende proces. Commit ikke genererede artefakter, der normalt bygges ved deploy.
-- REST-forespørgslens `limit=10000` på `sources` er et klientønske, ikke en garanti for at omgå Supabase-projektets servermæssige max-rows. Normal produktion læser det statiske snapshot, og datasættet har cirka 61 kilder, så fase 2 indfører ikke pagination. Pagination skal planlægges, før kildemængden nærmer sig projektets servergrænse.
+- REST-fallback og Trykpressens datakald skal bruge den fælles, generiske `Range`-pagination. Et stort `limit` er ikke en garanti mod Supabase-projektets servermæssige max-rows. Normal produktion læser fortsat det statiske snapshot; paginationen beskytter build og fallback mod tavs afkortning.
 
 ## Verifikation før review
 
-- Kør JavaScript-syntakskontrol og repository'ets eksisterende tests.
-- Kør `node tools/tryk.mjs`, og kontrollér sitemap, centrale genererede sider, metadata, canonical URLs og strukturerede data.
+- Kør `npm run verify`. Den samlede publiceringskontrol omfatter JavaScript-syntaks, simuleret REST-pagination, dataintegritet, deterministisk snapshot-build, interne links, redirects, sitemap, canonical URLs, strukturerede data og statiske tilgængelighedsregler.
 - Test desktop og mobil, tastaturnavigation, global søgning, fokus, reduceret bevægelse, tomme/ukendte tilstande, 404, interne links og browserkonsol.
 - Test virksomhed med og uden aftale, ukendt afsnit, flere investorer, efterliv og kilder samt profil uden efterliv.
 - En ændring er ikke klar til merge, før build og relevante tests er grønne, og en anden part har reviewet den.

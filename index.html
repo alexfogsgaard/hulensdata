@@ -12,6 +12,8 @@
 <meta property="og:title" content="Hulens Data — uofficielt dataarkiv om Løvens Hule">
 <meta property="og:description" content="Søg virksomheder, pitches, TV-aftaler, investorer og dokumenterede efterlivshændelser.">
 <meta property="og:url" content="https://hulensdata.dk/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <script src="js/layout.js"></script>
@@ -19,6 +21,7 @@
 </head>
 <body>
 
+<a class="skip-link" href="#main-content">Spring til indhold</a>
 <header class="site-header"></header>
 <script>renderSiteHeader(null);</script>
 
@@ -32,7 +35,7 @@
     <div class="home-search site-search" role="search" data-search>
       <label for="home-search-input">Find en virksomhed eller investor</label>
       <div class="home-search-field">
-        <input id="home-search-input" type="search" placeholder="Søg f.eks. MuteBox, Stori eller Jesper Buch" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="home-search-results" aria-expanded="false">
+        <input id="home-search-input" type="search" placeholder="Søg f.eks. MuteBox, Stori eller Jesper Buch" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-controls="home-search-results" aria-expanded="false">
         <span aria-hidden="true">Søg</span>
       </div>
       <div class="search-results" id="home-search-results" role="listbox" hidden></div>
@@ -56,7 +59,7 @@
       <a href="/investors.html"><span>Investorer</span><strong>Porteføljer, partnere og sæsoner</strong><small id="destination-investors">Alle investorer</small></a>
       <a href="#saesoner"><span>Sæsoner</span><strong>Paneler og alle optrædener</strong><small id="destination-seasons">Sæson 1–11</small></a>
       <a href="/arkiv/"><span>Arkiv</span><strong>Exits, konkurser og kollaps</strong><small id="destination-events">Dokumenterede hændelser</small></a>
-      <a href="/charts.html"><span>Analyser</span><strong>Udvikling på tværs af sæsoner</strong><small>Fire datavisninger</small></a>
+      <a href="/charts.html"><span>Analyser</span><strong>Udvikling på tværs af sæsoner</strong><small>Seks analyser og sæsonsammenligning</small></a>
     </div>
   </section>
 
@@ -99,11 +102,11 @@
       <p><strong>Kilderne</strong> vises ved den oplysning, de understøtter. Confidence markeres som bekræftet, sandsynlig eller usikker.</p>
       <p><strong>Ukendt betyder ukendt.</strong> Arkivet gætter ikke afsnit, beløb, ejerandele, CVR eller status.</p>
     </div>
-    <p class="unofficial-note">Hulens Data er et uofficielt, uafhængigt arkiv og er ikke tilknyttet DR eller programmets producenter.</p>
+    <p class="unofficial-note">Hulens Data er et uofficielt, uafhængigt arkiv og er ikke tilknyttet DR eller programmets producenter. <a href="/metode/">Læs den fulde metode og aktuelle datadækning.</a></p>
   </section>
 </main>
 
-<footer class="site-footer"><span>Hulens Data · uofficielt dataarkiv</span><a href="#metode">Metode og kilder</a></footer>
+<footer class="site-footer"><span>Hulens Data · uofficielt dataarkiv</span><a href="/metode/">Metode og datadækning</a></footer>
 
 <script src="js/helpers.js"></script>
 <script src="js/supabase.js"></script>
@@ -123,7 +126,7 @@ async function init() {
 
   document.getElementById('editorial-stats').innerHTML = [
     renderEditorialStat('Pitches', String(stats.pitches), `${stats.dealsClosed} endte med en aftale på TV`),
-    renderEditorialStat('TV-investeringer', stats.totalReceived.toLocaleString('da-DK') + ' kr.', 'Registreret beløb i udsendelserne'),
+    renderEditorialStat('Registreret TV-beløb', stats.totalReceived.toLocaleString('da-DK') + ' kr.', 'Vilkår i udsendelserne — ikke nødvendigvis realiseret'),
     renderEditorialStat('Virksomheder', String(archiveStats.companies), `${archiveStats.cvr} med dokumenteret CVR`),
     renderEditorialStat('Efterlivshændelser', String(archiveStats.events), `${archiveStats.sources} synlige kilder i arkivet`),
     renderEditorialStat('Investorer', String(stats.investors), `${stats.seasons} sæsoner dækket`),

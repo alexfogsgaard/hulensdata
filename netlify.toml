@@ -1,8 +1,33 @@
 # Trykpressen: Supabase → tools/tryk.mjs → statisk HTML → Netlify CDN.
 # Fejler buildet, bliver sidste succesfulde trykning stående (fail-safe).
 [build]
-  command = "node tools/tryk.mjs"
+  command = "npm run verify"
   publish = "."
 
 [build.environment]
   NODE_VERSION = "22"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Filnavnene er stabile på tværs af deploys. Kræv derfor revalidering, så et
+# nyt atomisk Netlify-deploy ikke blandes med et ældre snapshot i browsercachen.
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

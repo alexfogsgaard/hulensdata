@@ -851,6 +851,8 @@ a:hover { color: #62211c; }
 .search-result strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9rem; }
 .search-result small { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .72rem; }
 .search-result-type { flex: 0 0 auto; color: var(--muted); font: .66rem var(--font-mono); text-transform: uppercase; letter-spacing: .06em; }
+.search-group { padding: 9px 10px 4px; color: var(--muted); border-top: 1px solid var(--border); font: .62rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.search-results > .search-result-group:first-child .search-group { border-top: 0; }
 .search-empty { color: var(--muted); padding: 14px; font-size: .82rem; }
 
 /* Shared layout and type */
@@ -1015,6 +1017,7 @@ a:hover { color: #62211c; }
 .profile-panel { margin-bottom: var(--space-4); }
 .profile-panel .timeline-entry { padding-bottom: var(--space-5); }
 .table-wrap { max-height: 72vh; border-color: var(--border); border-radius: var(--radius); background: var(--surface); }
+.table-wrap[tabindex]:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 thead tr { background: var(--surface2); }
 thead th { color: var(--muted); }
 tbody tr:hover { background: #f4f0e8; }
@@ -1118,7 +1121,7 @@ tbody tr:hover { background: #f4f0e8; }
 .register-entry .archive-event { max-width: 760px; margin-left: 28px; padding-bottom: 0; }
 .register-facts { margin-top: var(--space-7); }
 .chart-grid { align-items: stretch; }
-.chart-card { display: flex; flex-direction: column; padding: var(--space-5); }
+.chart-card { display: flex; min-width: 0; flex-direction: column; padding: var(--space-5); }
 .chart-card h2 { margin: 8px 0 12px; font-family: var(--font-display); font-size: clamp(1.35rem, 2.4vw, 2rem); line-height: 1.15; }
 .chart-card > p:not(.section-kicker) { color: var(--muted); font-size: .84rem; }
 .chart-card .chart-container { margin: var(--space-5) 0; }
@@ -1128,14 +1131,64 @@ thead th[data-sort] { padding: 0; }
 thead th[data-sort] button { width: 100%; min-height: 44px; display: flex; align-items: center; justify-content: inherit; gap: 6px; padding: 10px 12px; color: inherit; border: 0; background: transparent; font: inherit; text-align: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; }
 thead th[data-sort] button:focus-visible { outline: 2px solid var(--red); outline-offset: -3px; }
 .deals-filters { grid-template-columns: repeat(3, minmax(160px, 1fr)); }
+.filter-reset { min-height: 42px; align-self: end; padding: 8px 12px; color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface); font: 600 .78rem var(--font-body); cursor: pointer; }
+.filter-reset:hover { color: var(--red); border-color: var(--red); }
+.filter-summary { margin: calc(-1 * var(--space-4)) 0 var(--space-4); color: var(--muted); font-size: .75rem; }
+.filters select:disabled { color: var(--muted); cursor: not-allowed; opacity: .7; }
+
+/* Fase 3 · metode og aktuel datadækning */
+.method-header h1 { max-width: 10ch; }
+.method-definition-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); }
+.method-definition-grid > div { padding-top: 16px; border-top: 2px solid var(--text); }
+.method-definition-grid h3 { margin-bottom: 8px; font-family: var(--font-display); font-size: 1.2rem; }
+.method-definition-grid p, .method-source-grid p { color: var(--muted); font-size: .84rem; }
+.method-source-grid > div { min-width: 0; }
+.method-source-grid p + p { margin-top: 12px; }
+.method-confidence { display: grid; gap: 0; margin: 0; border-top: 1px solid var(--border-strong); }
+.method-confidence > div { display: grid; grid-template-columns: minmax(100px, .35fr) 1fr; gap: var(--space-4); padding: 12px 0; border-bottom: 1px solid var(--border); }
+.method-confidence dt { font-weight: 600; }
+.method-confidence dd { margin: 0; color: var(--muted); font-size: .8rem; }
+.method-coverage-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; border-top: 1px solid var(--border-strong); border-left: 1px solid var(--border); }
+.method-coverage-grid > div { min-height: 158px; padding: var(--space-4); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.method-coverage-grid dt { color: var(--muted); font-size: .68rem; font-weight: 600; letter-spacing: .055em; text-transform: uppercase; }
+.method-coverage-grid dd { margin: var(--space-5) 0 6px; color: var(--text); font-size: 1rem; font-weight: 600; }
+.method-coverage-grid span { color: var(--muted); font-size: .72rem; line-height: 1.4; }
+.method-table { max-height: none; margin-top: var(--space-5); overflow-x: auto; }
+.method-table table { min-width: 680px; }
+.method-table caption { padding: 12px; color: var(--muted); border-bottom: 1px solid var(--border); font: .68rem var(--font-mono); letter-spacing: .04em; text-align: left; text-transform: uppercase; }
+.method-table th small { display: block; margin-top: 3px; color: var(--muted); font-weight: 400; }
+
+/* Fase 3 · deskriptive analyser og sæsonsammenligning */
+.analysis-compare { margin-bottom: var(--space-7); padding: var(--space-6); background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--text); }
+.analysis-compare .section-heading { margin-bottom: var(--space-5); }
+.comparison-controls { display: grid; grid-template-columns: repeat(2, minmax(180px, 1fr)); gap: var(--space-4); max-width: 680px; }
+.comparison-controls label { display: flex; flex-direction: column; gap: 6px; color: var(--muted); font-size: .68rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.comparison-controls select { min-height: 44px; padding: 9px 12px; background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius); color: var(--text); font: .84rem var(--font-body); }
+.comparison-status { min-height: 1.4em; margin: var(--space-4) 0 8px; color: var(--muted); font: .72rem var(--font-mono); }
+.analysis-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.analysis-meta { min-height: 3em; margin-top: var(--space-4); padding: 10px 12px; background: var(--surface2); border-left: 3px solid var(--gold); font: .7rem var(--font-mono) !important; line-height: 1.45; }
+.analysis-table { max-height: none; margin-bottom: var(--space-5); overflow-x: auto; }
+.analysis-table table { min-width: 520px; }
+.analysis-table caption { padding: 10px 12px; color: var(--muted); border-bottom: 1px solid var(--border); font: .66rem var(--font-mono); letter-spacing: .04em; text-align: left; text-transform: uppercase; }
+.analysis-table th, .analysis-table td { padding: 8px 10px; font-size: .7rem; }
+.analysis-table:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+.chart-runtime-status { display: grid; min-height: 100%; place-items: center; padding: var(--space-5); color: var(--muted); border: 1px dashed var(--border-strong); text-align: center; }
+.chart-runtime-status[hidden] { display: none; }
 
 @media (max-width: 760px) {
   .deals-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .register-entry > header { flex-direction: column; }
   .register-entry .archive-event { margin-left: 22px; }
+  .method-definition-grid, .method-coverage-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .analysis-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 520px) {
   .deals-filters { grid-template-columns: 1fr; }
   .season-strip { min-height: 160px; padding: 18px 10px; overflow-x: auto; }
+  .method-definition-grid, .method-coverage-grid { grid-template-columns: 1fr; }
+  .method-confidence > div { grid-template-columns: 1fr; gap: 4px; }
+  .analysis-compare { padding: var(--space-4); }
+  .comparison-controls { grid-template-columns: 1fr; }
+  .chart-container { height: 250px; }
 }

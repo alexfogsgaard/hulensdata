@@ -24,37 +24,87 @@ var COMPANIES = {};       // name → fuld virksomhedsidentitet
 // build) — Supabase er redaktionsdatabase, CDN'en er publikationen.
 // Fallback til live REST når arkivet ikke findes (lokal udvikling uden tryk).
 var ARKIV = null;
+var ARKIV_PROMISE = null;
+const REST_PAGE_SIZE = 1000;
+const REST_MAX_PAGES = 1000;
+
+async function sbFetchRestAll(path) {
+  const cleanPath = path
+    .replace(/([?&])(?:limit|offset)=[^&]*&?/g, '$1')
+    .replace(/[?&]$/, '');
+  const rows = [];
+  let offset = 0;
+  for (let page = 0; page < REST_MAX_PAGES; page++) {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/${cleanPath}`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'count=exact',
+        'Range': `${offset}-${offset + REST_PAGE_SIZE - 1}`,
+        'Range-Unit': 'items',
+      }
+    });
+    if (!response.ok) {
+      console.error('Supabase fejl:', response.status, await response.text());
+      throw new Error('Supabase svarede med status ' + response.status);
+    }
+    const pageRows = await response.json();
+    if (!Array.isArray(pageRows)) throw new Error('Supabase-svaret er ikke en liste');
+    if (!pageRows.length) return rows;
+
+    const contentRange = response.headers.get('content-range');
+    const rangeMatch = contentRange && contentRange.trim().match(/^(\d+)-(\d+)\/(\d+|\*)$/);
+    if (contentRange && !rangeMatch) throw new Error(`Supabase returnerede ugyldig Content-Range: ${contentRange}`);
+    if (rangeMatch && Number(rangeMatch[1]) !== offset) {
+      throw new Error(`Supabase-pagination gentog eller sprang et interval over: forventede start ${offset}, fik ${rangeMatch[1]}`);
+    }
+    if (rangeMatch && Number(rangeMatch[2]) - Number(rangeMatch[1]) + 1 !== pageRows.length) {
+      throw new Error('Supabase-paginationens Content-Range matcher ikke svarets rækkeantal');
+    }
+
+    rows.push(...pageRows);
+    offset += pageRows.length;
+    const total = rangeMatch && rangeMatch[3] !== '*' ? Number(rangeMatch[3]) : null;
+    if (total != null && offset >= total) return rows;
+  }
+  throw new Error(`Supabase-pagination overskred ${REST_MAX_PAGES} sider`);
+}
+
 async function sbFetch(path) {
   if (ARKIV === null) {
-    try {
-      const r = await fetch('/data/arkiv.json');
-      ARKIV = r.ok ? await r.json() : false;
-    } catch (e) { ARKIV = false; }
+    if (!ARKIV_PROMISE) {
+      ARKIV_PROMISE = (async () => {
+        try {
+          const r = await fetch('/data/arkiv.json');
+          ARKIV = r.ok ? await r.json() : false;
+        } catch (e) {
+          ARKIV = false;
+        } finally {
+          ARKIV_PROMISE = null;
+        }
+        return ARKIV;
+      })();
+    }
+    await ARKIV_PROMISE;
   }
   const key = path.split('?')[0];
-  if (ARKIV && ARKIV[key]) return ARKIV[key];
-
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
+  if (ARKIV) {
+    if (!Object.prototype.hasOwnProperty.call(ARKIV, key) || !Array.isArray(ARKIV[key])) {
+      throw new Error(`Arkivsnapshot mangler den forventede tabel ${key}`);
     }
-  });
-  if (!res.ok) {
-    console.error('Supabase fejl:', res.status, await res.text());
-    throw new Error('Supabase svarede med status ' + res.status);
+    return ARKIV[key];
   }
-  return res.json();
+  return sbFetchRestAll(path);
 }
 
 // Henter alle deals (med investor-relationer via deal_investors) samt
 // investor-status, og returnerer deals i det format resten af koden forventer
 async function loadDeals() {
   const [rows, statuses, seasons, companies] = await Promise.all([
-    sbFetch('deals?select=id,saeson,afsnit,soeger,andel_tilbudt,beloeb_modtaget,andel_solgt,aftale,company:companies(name,slug,category,status),deal_investors(investor:investors(canonical_name))&order=saeson.asc,afsnit.asc&limit=1000'),
-    sbFetch('investor_status?select=canonical_name,slug,status,first_season,last_season,panel_seasons'),
-    sbFetch('seasons?select=season_number,year'),
-    sbFetch('companies?select=id,name,slug,category,status,cvr_nummer&limit=1000'),
+    sbFetch('deals?select=id,saeson,afsnit,soeger,andel_tilbudt,beloeb_modtaget,andel_solgt,aftale,company:companies(name,slug,category,status),deal_investors(investor:investors(canonical_name))&order=saeson.asc,afsnit.asc,id.asc'),
+    sbFetch('investor_status?select=canonical_name,slug,status,first_season,last_season,panel_seasons&order=canonical_name.asc'),
+    sbFetch('seasons?select=season_number,year&order=season_number.asc'),
+    sbFetch('companies?select=id,name,slug,category,status,cvr_nummer&order=name.asc,id.asc'),
   ]);
 
   INVESTOR_STATUS = Object.fromEntries(statuses.map(s => [s.canonical_name, s]));
@@ -99,13 +149,13 @@ async function loadDeals() {
 var COMPANY_EVENTS = {};  // company-slug → [events, kronologisk]
 var SOURCES = {};         // 'entity_type:entity_id' → [kilder]
 var ARCHIVE_EVENTS = [];  // flad liste til forsiden og registre
+var ARCHIVE_AVAILABLE = false;
 
 async function loadCompanyArchive() {
   try {
     const [events, sources] = await Promise.all([
-      sbFetch('company_events?select=id,event_date,date_precision,event_type,title,description,amount,created_at,updated_at,company:companies(slug)&order=event_date.asc&limit=1000'),
-      // Supabase kan stadig håndhæve projektets server-side max-rows; se docs/redesign-plan.md.
-      sbFetch('sources?select=id,entity_type,entity_id,field_name,source_name,source_url,note,confidence&limit=10000'),
+      sbFetch('company_events?select=id,event_date,date_precision,event_type,title,description,amount,created_at,updated_at,company:companies(slug)&order=event_date.asc,id.asc'),
+      sbFetch('sources?select=id,entity_type,entity_id,field_name,source_name,source_url,note,confidence&order=id.asc'),
     ]);
     ARCHIVE_EVENTS = events;
     COMPANY_EVENTS = {};
@@ -117,7 +167,9 @@ async function loadCompanyArchive() {
       const k = s.entity_type + ':' + s.entity_id;
       (SOURCES[k] = SOURCES[k] || []).push(s);
     });
+    ARCHIVE_AVAILABLE = true;
   } catch (err) {
+    ARCHIVE_AVAILABLE = false;
     console.error('Arkiv-data kunne ikke hentes (profilen vises uden efterliv):', err);
   }
 }

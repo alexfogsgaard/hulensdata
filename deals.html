@@ -8,6 +8,8 @@
 <link rel="canonical" href="https://hulensdata.dk/deals.html">
 <meta property="og:type" content="website"><meta property="og:site_name" content="Hulens Data"><meta property="og:locale" content="da_DK">
 <meta property="og:title" content="Pitches og aftaler fra Løvens Hule — Hulens Data"><meta property="og:description" content="Filtrér registrerede pitches og TV-aftaler efter sæson, investor, udfald, kategori og status."><meta property="og:url" content="https://hulensdata.dk/deals.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <script src="js/layout.js"></script>
@@ -15,13 +17,14 @@
 </head>
 <body>
 
+<a class="skip-link" href="#main-content">Spring til indhold</a>
 <header class="site-header"></header>
 <script>renderSiteHeader('deals');</script>
 
 <main id="main-content" class="page-main">
   <header class="index-header"><p class="section-kicker">TV-laget</p><h1 class="page-title">Pitches & aftaler</h1><p>Registrerede vilkår og udfald fra udsendelserne. En TV-aftale er ikke nødvendigvis en endelig investering.</p></header>
 
-  <div class="filters deals-filters">
+  <div class="filters deals-filters" id="deal-filters" role="group" aria-label="Filtre til pitchoversigten">
     <label>Sæson
     <select id="filter-season">
       <option value="">Alle</option>
@@ -34,10 +37,19 @@
     <label>Kategori<select id="filter-category"><option value="">Alle</option></select></label>
     <label>Virksomhedsstatus<select id="filter-status"><option value="">Alle</option></select></label>
     <label>Søg virksomhed<input type="search" id="filter-search" placeholder="Skriv et navn…"></label>
+    <label>Dokumenteret efterliv<select id="filter-afterlife"><option value="">Alle</option><option value="yes">Har efterliv</option><option value="no">Uden dokumenteret efterliv</option><option value="exit">Exit</option><option value="closure">Konkurs eller lukning</option><option value="collapsed">Ændret eller ophørt aftale</option><option value="other">Anden hændelse</option></select></label>
+    <label>Afsnit<select id="filter-episode"><option value="">Alle</option><option value="known">Afsnit dokumenteret</option><option value="unknown">Afsnit ikke dokumenteret</option></select></label>
+    <label>Søgt beløb<select id="filter-asked"><option value="">Alle</option><option value="known">Beløb dokumenteret</option><option value="unknown">Beløb ikke dokumenteret</option></select></label>
+    <label>CVR<select id="filter-cvr"><option value="">Alle</option><option value="known">CVR dokumenteret</option><option value="unknown">CVR ikke dokumenteret</option></select></label>
+    <label>Investorantal<select id="filter-investors"><option value="">Alle</option><option value="one">Én investor</option><option value="multiple">Flere investorer</option><option value="none">Ingen investorer</option></select></label>
+    <button type="button" class="filter-reset" id="reset-filters">Nulstil filtre</button>
   </div>
 
-  <div class="table-wrap">
+  <p class="filter-summary" id="filter-summary">Ingen filtre er aktive.</p>
+
+  <div class="table-wrap" role="region" tabindex="0" aria-label="Registrerede pitches og TV-aftaler">
     <table>
+      <caption class="sr-only">Registrerede pitches og TV-aftaler</caption>
       <thead>
         <tr>
           <th data-sort="name"><button type="button">Virksomhed <span aria-hidden="true">↕</span></button></th>
@@ -55,9 +67,9 @@
       <tbody id="deals-tbody"></tbody>
     </table>
   </div>
-  <p class="table-count" id="table-count"></p>
+  <p class="table-count" id="table-count" role="status" aria-live="polite"></p>
 </main>
-<footer class="site-footer"><span>Hulens Data · uofficielt dataarkiv</span><a href="/#metode">Metode og kilder</a></footer>
+<footer class="site-footer"><span>Hulens Data · uofficielt dataarkiv</span><a href="/metode/">Metode og datadækning</a></footer>
 
 <script src="js/helpers.js"></script>
 <script src="js/supabase.js"></script>
@@ -66,6 +78,21 @@
 let allDeals = [];
 let sortKey = 'season';
 let sortDir = 1;
+let afterlifeBySlug = {};
+
+const FILTER_FIELDS = {
+  season: 'filter-season',
+  investor: 'filter-investor',
+  outcome: 'filter-outcome',
+  category: 'filter-category',
+  status: 'filter-status',
+  q: 'filter-search',
+  afterlife: 'filter-afterlife',
+  episode: 'filter-episode',
+  asked: 'filter-asked',
+  cvr: 'filter-cvr',
+  investors: 'filter-investors',
+};
 
 function populateFilters() {
   const seasons = [...new Set(allDeals.map(d => d.season))].sort((a,b) => a-b);
@@ -96,13 +123,39 @@ function populateFilters() {
   addOptions('filter-status', [...new Set(allDeals.map(d => d.status))]);
 }
 
+function buildAfterlifeIndex() {
+  afterlifeBySlug = {};
+  ARCHIVE_EVENTS.forEach(event => {
+    const slug = event.company && event.company.slug;
+    if (!slug) return;
+    (afterlifeBySlug[slug] = afterlifeBySlug[slug] || []).push(event.event_type);
+  });
+}
+
+function matchesAfterlife(deal, filter) {
+  if (!filter) return true;
+  const types = afterlifeBySlug[deal.slug] || [];
+  if (filter === 'yes') return types.length > 0;
+  if (filter === 'no') return types.length === 0;
+  if (filter === 'exit') return types.includes('exit');
+  if (filter === 'closure') return types.some(type => ['bankruptcy', 'closed'].includes(type));
+  if (filter === 'collapsed') return types.some(type => ['cancelled', 'renegotiated'].includes(type));
+  if (filter === 'other') return types.some(type => !['exit', 'bankruptcy', 'closed', 'cancelled', 'renegotiated'].includes(type));
+  return true;
+}
+
 function getFiltered() {
   const season   = document.getElementById('filter-season').value;
   const investor = document.getElementById('filter-investor').value;
-  const search   = document.getElementById('filter-search').value.toLowerCase();
+  const search   = normalizeSearch(document.getElementById('filter-search').value);
   const outcome  = document.getElementById('filter-outcome').value;
   const category = document.getElementById('filter-category').value;
   const status   = document.getElementById('filter-status').value;
+  const afterlife = document.getElementById('filter-afterlife').value;
+  const episode = document.getElementById('filter-episode').value;
+  const asked = document.getElementById('filter-asked').value;
+  const cvr = document.getElementById('filter-cvr').value;
+  const investors = document.getElementById('filter-investors').value;
 
   return allDeals.filter(d => {
     if (season   && d.season != season) return false;
@@ -111,31 +164,60 @@ function getFiltered() {
     if (outcome === 'ingen' && d.aftale) return false;
     if (category && d.category !== category) return false;
     if (status && d.status !== status) return false;
-    if (search   && !d.name.toLowerCase().includes(search)) return false;
+    if (!matchesAfterlife(d, afterlife)) return false;
+    if (episode === 'known' && d.episode == null) return false;
+    if (episode === 'unknown' && d.episode != null) return false;
+    if (asked === 'known' && d.asked == null) return false;
+    if (asked === 'unknown' && d.asked != null) return false;
+    const hasCvr = Boolean(COMPANIES[d.name] && COMPANIES[d.name].cvr_nummer);
+    if (cvr === 'known' && !hasCvr) return false;
+    if (cvr === 'unknown' && hasCvr) return false;
+    if (investors === 'one' && d.investorList.length !== 1) return false;
+    if (investors === 'multiple' && d.investorList.length < 2) return false;
+    if (investors === 'none' && d.investorList.length !== 0) return false;
+    if (search && !normalizeSearch(d.name).includes(search)) return false;
     return true;
   });
 }
 
-function sortBy(key) {
+function sortBy(key, historyMode = 'push') {
   if (sortKey === key) sortDir *= -1;
   else { sortKey = key; sortDir = 1; }
-  renderTable();
+  renderTable({ historyMode });
 }
 
-function updateUrl() {
+function updateUrl(mode) {
   const params = new URLSearchParams();
-  const fields = { season: 'filter-season', investor: 'filter-investor', outcome: 'filter-outcome', category: 'filter-category', status: 'filter-status', q: 'filter-search' };
-  Object.entries(fields).forEach(([key, id]) => {
+  Object.entries(FILTER_FIELDS).forEach(([key, id]) => {
     const value = document.getElementById(id).value.trim();
     if (value) params.set(key, value);
   });
   if (sortKey !== 'season') params.set('sort', sortKey);
   if (sortDir !== 1) params.set('dir', 'desc');
   const query = params.toString();
-  history.replaceState({}, '', `${location.pathname}${query ? '?' + query : ''}`);
+  const next = `${location.pathname}${query ? '?' + query : ''}`;
+  const current = `${location.pathname}${location.search}`;
+  if (next === current) return;
+  history[mode === 'push' ? 'pushState' : 'replaceState']({}, '', next);
 }
 
-function renderTable() {
+function renderFilterSummary() {
+  const active = [];
+  Object.entries(FILTER_FIELDS).forEach(([, id]) => {
+    const control = document.getElementById(id);
+    if (!control.value) return;
+    const label = control.closest('label')?.childNodes[0]?.textContent.trim() || 'Filter';
+    const value = control.tagName === 'SELECT'
+      ? control.options[control.selectedIndex].textContent
+      : `“${control.value.trim()}”`;
+    active.push(`${label}: ${value}`);
+  });
+  document.getElementById('filter-summary').textContent = active.length
+    ? `Aktive filtre: ${active.join(' · ')}`
+    : 'Ingen filtre er aktive.';
+}
+
+function renderTable({ historyMode = null } = {}) {
   const data = getFiltered().sort((a, b) => {
     let av = a[sortKey], bv = b[sortKey];
     if (av == null) av = -Infinity;
@@ -157,24 +239,50 @@ function renderTable() {
     });
 
   document.getElementById('table-count').textContent = `Viser ${data.length} af ${allDeals.length} pitches`;
-  updateUrl();
+  renderFilterSummary();
+  if (historyMode) updateUrl(historyMode);
+}
+
+function applyUrlState() {
+  const params = new URLSearchParams(location.search);
+  Object.entries(FILTER_FIELDS).forEach(([key, id]) => {
+    const control = document.getElementById(id);
+    const value = params.get(key) || '';
+    if (control.disabled) {
+      control.value = '';
+      return;
+    }
+    if (control.tagName === 'SELECT') {
+      control.value = [...control.options].some(option => option.value === value) ? value : '';
+    } else {
+      control.value = value;
+    }
+  });
+  const allowedSorts = new Set(['name', 'season', 'aftale', 'asked', 'shareOffered', 'received', 'shareSold', 'category', 'status']);
+  sortKey = allowedSorts.has(params.get('sort')) ? params.get('sort') : 'season';
+  sortDir = params.get('dir') === 'desc' ? -1 : 1;
 }
 
 // Event-wiring — ingen inline handlers i markup
-document.getElementById('filter-season').addEventListener('change', renderTable);
-document.getElementById('filter-investor').addEventListener('change', renderTable);
-document.getElementById('filter-outcome').addEventListener('change', renderTable);
-document.getElementById('filter-category').addEventListener('change', renderTable);
-document.getElementById('filter-status').addEventListener('change', renderTable);
-document.getElementById('filter-search').addEventListener('input', renderTable);
+document.querySelectorAll('#deal-filters select').forEach(select => {
+  select.addEventListener('change', () => renderTable({ historyMode: 'push' }));
+});
+document.getElementById('filter-search').addEventListener('input', () => renderTable({ historyMode: 'replace' }));
+document.getElementById('reset-filters').addEventListener('click', () => {
+  Object.values(FILTER_FIELDS).forEach(id => { document.getElementById(id).value = ''; });
+  sortKey = 'season';
+  sortDir = 1;
+  renderTable({ historyMode: 'push' });
+  document.getElementById('filter-season').focus();
+});
 
 document.querySelector('thead').addEventListener('click', e => {
   const th = e.target.closest('th[data-sort]');
   if (th) sortBy(th.dataset.sort);
 });
 
-// Gør tastaturkontrakten eksplicit, så sortering ikke afhænger af om
-// browseren syntetiserer et click-event for knapper ved Enter/Space.
+// Nogle browser-/hjælpemiddelkombinationer syntetiserer ikke click på den
+// native knap. preventDefault forhindrer samtidig en efterfølgende dobbeltaktivering.
 document.querySelector('thead').addEventListener('keydown', e => {
   const button = e.target.closest('button');
   if (!button || !['Enter', ' '].includes(e.key)) return;
@@ -184,21 +292,26 @@ document.querySelector('thead').addEventListener('keydown', e => {
   sortBy(th.dataset.sort);
 });
 
+window.addEventListener('popstate', () => {
+  applyUrlState();
+  renderTable();
+});
+
 async function init() {
   document.getElementById('deals-tbody').innerHTML = renderSkeletonRows(8, 10);
-  allDeals = await loadDeals();
+  const [deals] = await Promise.all([loadDeals(), loadCompanyArchive()]);
+  allDeals = deals;
   renderHeaderStats(allDeals);
   populateFilters();
-  const params = new URLSearchParams(location.search);
-  const fields = { season: 'filter-season', investor: 'filter-investor', outcome: 'filter-outcome', category: 'filter-category', status: 'filter-status', q: 'filter-search' };
-  Object.entries(fields).forEach(([key, id]) => {
-    const value = params.get(key);
-    if (value) document.getElementById(id).value = value;
-  });
-  const allowedSorts = new Set(['name', 'season', 'aftale', 'asked', 'shareOffered', 'received', 'shareSold', 'category', 'status']);
-  if (allowedSorts.has(params.get('sort'))) sortKey = params.get('sort');
-  sortDir = params.get('dir') === 'desc' ? -1 : 1;
-  renderTable();
+  buildAfterlifeIndex();
+  if (!ARCHIVE_AVAILABLE) {
+    const filter = document.getElementById('filter-afterlife');
+    filter.value = '';
+    filter.disabled = true;
+    filter.title = 'Efterlivsdata kunne ikke indlæses';
+  }
+  applyUrlState();
+  renderTable({ historyMode: 'replace' });
 }
 
 init().catch(err => { console.error(err); showLoadError(); });
