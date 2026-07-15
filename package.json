@@ -4,6 +4,7 @@
   "scripts": {
     "check:syntax": "node tools/check-syntax.mjs",
     "test:pagination": "node tools/test-pagination.mjs",
+    "test:data-loading": "node tools/test-data-loading.mjs",
     "prepare:data": "node tools/tryk.mjs --data-only",
     "validate:data": "node tools/validate-data.mjs",
     "build": "node tools/tryk.mjs --from-snapshot",
@@ -11,6 +12,6 @@
     "check:links": "node tools/check-links.mjs",
     "check:seo": "node tools/check-seo.mjs",
     "check:a11y": "node tools/check-a11y.mjs",
-    "verify": "npm run check:syntax && npm run test:pagination && npm run prepare:data && npm run validate:data && npm run build && npm run validate:build && npm run check:links && npm run check:seo && npm run check:a11y"
+    "verify": "npm run check:syntax && npm run test:pagination && npm run test:data-loading && npm run prepare:data && npm run validate:data && npm run build && npm run validate:build && npm run check:links && npm run check:seo && npm run check:a11y"
   }
 }

@@ -24,6 +24,7 @@ var COMPANIES = {};       // name → fuld virksomhedsidentitet
 // build) — Supabase er redaktionsdatabase, CDN'en er publikationen.
 // Fallback til live REST når arkivet ikke findes (lokal udvikling uden tryk).
 var ARKIV = null;
+var ARKIV_PROMISE = null;
 const REST_PAGE_SIZE = 1000;
 const REST_MAX_PAGES = 1000;
 
@@ -62,10 +63,20 @@ async function sbFetchRestAll(path) {
 
 async function sbFetch(path) {
   if (ARKIV === null) {
-    try {
-      const r = await fetch('/data/arkiv.json');
-      ARKIV = r.ok ? await r.json() : false;
-    } catch (e) { ARKIV = false; }
+    if (!ARKIV_PROMISE) {
+      ARKIV_PROMISE = (async () => {
+        try {
+          const r = await fetch('/data/arkiv.json');
+          ARKIV = r.ok ? await r.json() : false;
+        } catch (e) {
+          ARKIV = false;
+        } finally {
+          ARKIV_PROMISE = null;
+        }
+        return ARKIV;
+      })();
+    }
+    await ARKIV_PROMISE;
   }
   const key = path.split('?')[0];
   if (ARKIV && ARKIV[key]) return ARKIV[key];
