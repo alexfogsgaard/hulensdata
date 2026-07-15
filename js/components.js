@@ -148,7 +148,7 @@ const EVENT_TYPE_LABELS = {
   follow_on_investment: 'Opfølgende investering', exit: 'Exit',
   bankruptcy: 'Konkurs', closed: 'Lukket', comeback: 'Comeback',
   rebrand: 'Rebranding', funding_round: 'Fundingrunde',
-  milestone: 'Milepæl', other: 'Ejerskifte eller anden hændelse',
+  milestone: 'Milepæl', other: 'Anden hændelse',
 };
 
 // SourceFootnote: kildeliste under et tidslinje-punkt. Kun http(s)-links

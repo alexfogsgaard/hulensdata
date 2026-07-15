@@ -32,7 +32,7 @@ function renderSiteHeader(activePage) {
       <div class="header-tools">
         <div class="global-search site-search" role="search" data-search>
           <label class="sr-only" for="global-search-input">Søg i arkivet</label>
-          <input id="global-search-input" type="search" placeholder="Søg virksomhed eller investor" autocomplete="off" spellcheck="false" aria-autocomplete="list" aria-controls="global-search-results" aria-expanded="false">
+          <input id="global-search-input" type="search" placeholder="Søg virksomhed eller investor" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="global-search-results" aria-expanded="false">
           <span class="search-shortcut" aria-hidden="true">⌘K</span>
           <div class="search-results" id="global-search-results" role="listbox" hidden></div>
         </div>
