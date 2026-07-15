@@ -1,7 +1,7 @@
 # Trykpressen: Supabase → tools/tryk.mjs → statisk HTML → Netlify CDN.
 # Fejler buildet, bliver sidste succesfulde trykning stående (fail-safe).
 [build]
-  command = "node tools/tryk.mjs"
+  command = "npm run verify"
   publish = "."
 
 [build.environment]

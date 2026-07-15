@@ -15,7 +15,7 @@
    Kør: node tools/tryk.mjs   (output: virksomheder/ loever/ saesoner/
    data/arkiv.json sitemap.xml — alle gitignorede build-artefakter)
    ═══════════════════════════════════════════════════════════════════ */
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { createContext, runInContext } from 'node:vm';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,6 +25,8 @@ const HOST = 'https://hulensdata.dk';
 const SUPABASE = 'https://upaxzfytumsijnbhjihd.supabase.co/rest/v1';
 const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwYXh6Znl0dW1zaWpuYmhqaWhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjEwMzIsImV4cCI6MjA5MDczNzAzMn0.GOB9cg8CWmC2Qn73Wg2A9AEoDrOKjB7IXZwndXwfKSk';
 const TRYKT = new Date().toISOString().slice(0, 10);
+const DATA_ONLY = process.argv.includes('--data-only');
+const FROM_SNAPSHOT = process.argv.includes('--from-snapshot');
 
 /* ── 1. Hent datagrundlaget (samme queries som klienten — arkiv.json
        skal kunne svare på præcis de kald, sbFetch stiller) ── */
@@ -49,12 +51,24 @@ const QUERIES = {
   investors: 'investors?select=id,canonical_name,slug',
 };
 
-const arkiv = { trykt: TRYKT };
-for (const [navn, q] of Object.entries(QUERIES)) arkiv[navn] = await hent(q);
+let arkiv;
+if (FROM_SNAPSHOT) {
+  arkiv = JSON.parse(readFileSync(join(ROD, 'data', 'arkiv.json'), 'utf8'));
+} else {
+  arkiv = { trykt: TRYKT };
+  for (const [navn, q] of Object.entries(QUERIES)) arkiv[navn] = await hent(q);
+}
 if (arkiv.deals.length < 300) throw new Error('deals ser afkortet ud — trykning afbrudt');
 mkdirSync(join(ROD, 'data'), { recursive: true });
 writeFileSync(join(ROD, 'data', 'arkiv.json'), JSON.stringify(arkiv));
 console.log(`arkiv.json: ${Object.entries(QUERIES).map(([n]) => `${n}=${arkiv[n].length}`).join(' ')}`);
+if (DATA_ONLY) process.exit(0);
+
+// En lokal mappe kan rumme gamle, gitignorede profilsider efter slugskift.
+// Ryd kun Trykpressens egne outputmapper, så lokal og ren Netlify-build er ens.
+for (const outputDir of ['virksomheder', 'loever', 'saesoner']) {
+  rmSync(join(ROD, outputDir), { recursive: true, force: true });
+}
 
 /* ── 2. Sandkassen: kør produktionskoden på build-data ── */
 const ctx = createContext({ console });
@@ -98,6 +112,7 @@ function side({ sti, titel, beskrivelse, jsonld, krop, aktiv = null, type = 'art
 <script type="application/ld+json">${JSON.stringify(jsonld)}</script>
 </head>
 <body>
+<a class="skip-link" href="#main-content">Spring til indhold</a>
 <header class="site-header"></header>
 <script>renderSiteHeader(${JSON.stringify(aktiv)});</script>
 <main id="main-content" class="page-main">
