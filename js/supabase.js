@@ -52,11 +52,20 @@ async function sbFetchRestAll(path) {
     if (!Array.isArray(pageRows)) throw new Error('Supabase-svaret er ikke en liste');
     if (!pageRows.length) return rows;
 
+    const contentRange = response.headers.get('content-range');
+    const rangeMatch = contentRange && contentRange.trim().match(/^(\d+)-(\d+)\/(\d+|\*)$/);
+    if (contentRange && !rangeMatch) throw new Error(`Supabase returnerede ugyldig Content-Range: ${contentRange}`);
+    if (rangeMatch && Number(rangeMatch[1]) !== offset) {
+      throw new Error(`Supabase-pagination gentog eller sprang et interval over: forventede start ${offset}, fik ${rangeMatch[1]}`);
+    }
+    if (rangeMatch && Number(rangeMatch[2]) - Number(rangeMatch[1]) + 1 !== pageRows.length) {
+      throw new Error('Supabase-paginationens Content-Range matcher ikke svarets rækkeantal');
+    }
+
     rows.push(...pageRows);
     offset += pageRows.length;
-    const totalRaw = response.headers.get('content-range')?.split('/')[1];
-    const total = Number(totalRaw);
-    if (Number.isFinite(total) && offset >= total) return rows;
+    const total = rangeMatch && rangeMatch[3] !== '*' ? Number(rangeMatch[3]) : null;
+    if (total != null && offset >= total) return rows;
   }
   throw new Error(`Supabase-pagination overskred ${REST_MAX_PAGES} sider`);
 }
@@ -79,7 +88,12 @@ async function sbFetch(path) {
     await ARKIV_PROMISE;
   }
   const key = path.split('?')[0];
-  if (ARKIV && ARKIV[key]) return ARKIV[key];
+  if (ARKIV) {
+    if (!Object.prototype.hasOwnProperty.call(ARKIV, key) || !Array.isArray(ARKIV[key])) {
+      throw new Error(`Arkivsnapshot mangler den forventede tabel ${key}`);
+    }
+    return ARKIV[key];
+  }
   return sbFetchRestAll(path);
 }
 
@@ -88,8 +102,8 @@ async function sbFetch(path) {
 async function loadDeals() {
   const [rows, statuses, seasons, companies] = await Promise.all([
     sbFetch('deals?select=id,saeson,afsnit,soeger,andel_tilbudt,beloeb_modtaget,andel_solgt,aftale,company:companies(name,slug,category,status),deal_investors(investor:investors(canonical_name))&order=saeson.asc,afsnit.asc,id.asc'),
-    sbFetch('investor_status?select=canonical_name,slug,status,first_season,last_season,panel_seasons'),
-    sbFetch('seasons?select=season_number,year'),
+    sbFetch('investor_status?select=canonical_name,slug,status,first_season,last_season,panel_seasons&order=canonical_name.asc'),
+    sbFetch('seasons?select=season_number,year&order=season_number.asc'),
     sbFetch('companies?select=id,name,slug,category,status,cvr_nummer&order=name.asc,id.asc'),
   ]);
 

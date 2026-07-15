@@ -1,10 +1,16 @@
 const DEFAULT_PAGE_SIZE = 1000;
 const MAX_PAGES = 1000;
 
-function totalFromContentRange(value) {
-  const raw = String(value || '').split('/')[1];
-  const total = Number(raw);
-  return Number.isFinite(total) ? total : null;
+function parseContentRange(value) {
+  if (!value) return null;
+  const match = String(value).trim().match(/^(\d+)-(\d+)\/(\d+|\*)$/);
+  if (!match) throw new Error(`Ugyldig Content-Range fra REST: ${value}`);
+  const [, rawStart, rawEnd, rawTotal] = match;
+  return {
+    start: Number(rawStart),
+    end: Number(rawEnd),
+    total: rawTotal === '*' ? null : Number(rawTotal),
+  };
 }
 
 export async function fetchAllPages(url, {
@@ -33,9 +39,17 @@ export async function fetchAllPages(url, {
     if (!Array.isArray(pageRows)) throw new Error(`REST-svaret på ${url} er ikke en liste`);
     if (!pageRows.length) return rows;
 
+    const range = parseContentRange(response.headers?.get?.('content-range'));
+    if (range && range.start !== offset) {
+      throw new Error(`REST-pagination gentog eller sprang et interval over på ${url}: forventede start ${offset}, fik ${range.start}`);
+    }
+    if (range && range.end - range.start + 1 !== pageRows.length) {
+      throw new Error(`REST-paginationens Content-Range matcher ikke svarets rækkeantal på ${url}`);
+    }
+
     rows.push(...pageRows);
     offset += pageRows.length;
-    const total = totalFromContentRange(response.headers?.get?.('content-range'));
+    const total = range?.total ?? null;
     if (total != null && offset >= total) return rows;
   }
   throw new Error(`REST-pagination overskred ${MAX_PAGES} sider på ${url}`);
