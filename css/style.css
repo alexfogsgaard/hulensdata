@@ -1157,11 +1157,29 @@ thead th[data-sort] button:focus-visible { outline: 2px solid var(--red); outlin
 .method-table caption { padding: 12px; color: var(--muted); border-bottom: 1px solid var(--border); font: .68rem var(--font-mono); letter-spacing: .04em; text-align: left; text-transform: uppercase; }
 .method-table th small { display: block; margin-top: 3px; color: var(--muted); font-weight: 400; }
 
+/* Fase 3 · deskriptive analyser og sæsonsammenligning */
+.analysis-compare { margin-bottom: var(--space-7); padding: var(--space-6); background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--text); }
+.analysis-compare .section-heading { margin-bottom: var(--space-5); }
+.comparison-controls { display: grid; grid-template-columns: repeat(2, minmax(180px, 1fr)); gap: var(--space-4); max-width: 680px; }
+.comparison-controls label { display: flex; flex-direction: column; gap: 6px; color: var(--muted); font-size: .68rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.comparison-controls select { min-height: 44px; padding: 9px 12px; background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius); color: var(--text); font: .84rem var(--font-body); }
+.comparison-status { min-height: 1.4em; margin: var(--space-4) 0 8px; color: var(--muted); font: .72rem var(--font-mono); }
+.analysis-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.analysis-meta { min-height: 3em; margin-top: var(--space-4); padding: 10px 12px; background: var(--surface2); border-left: 3px solid var(--gold); font: .7rem var(--font-mono) !important; line-height: 1.45; }
+.analysis-table { max-height: none; margin-bottom: var(--space-5); overflow-x: auto; }
+.analysis-table table { min-width: 520px; }
+.analysis-table caption { padding: 10px 12px; color: var(--muted); border-bottom: 1px solid var(--border); font: .66rem var(--font-mono); letter-spacing: .04em; text-align: left; text-transform: uppercase; }
+.analysis-table th, .analysis-table td { padding: 8px 10px; font-size: .7rem; }
+.analysis-table:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+.chart-runtime-status { display: grid; min-height: 100%; place-items: center; padding: var(--space-5); color: var(--muted); border: 1px dashed var(--border-strong); text-align: center; }
+.chart-runtime-status[hidden] { display: none; }
+
 @media (max-width: 760px) {
   .deals-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .register-entry > header { flex-direction: column; }
   .register-entry .archive-event { margin-left: 22px; }
   .method-definition-grid, .method-coverage-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .analysis-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 520px) {
@@ -1169,4 +1187,7 @@ thead th[data-sort] button:focus-visible { outline: 2px solid var(--red); outlin
   .season-strip { min-height: 160px; padding: 18px 10px; overflow-x: auto; }
   .method-definition-grid, .method-coverage-grid { grid-template-columns: 1fr; }
   .method-confidence > div { grid-template-columns: 1fr; gap: 4px; }
+  .analysis-compare { padding: var(--space-4); }
+  .comparison-controls { grid-template-columns: 1fr; }
+  .chart-container { height: 250px; }
 }
