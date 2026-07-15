@@ -33,7 +33,7 @@ function renderSiteHeader(activePage, statsText = '') {
       <div class="header-tools">
         <div class="global-search site-search" role="search" data-search>
           <label class="sr-only" for="global-search-input">Søg i arkivet</label>
-          <input id="global-search-input" type="search" placeholder="Søg i arkivet" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="global-search-results" aria-expanded="false">
+          <input id="global-search-input" type="search" placeholder="Søg i arkivet" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-controls="global-search-results" aria-expanded="false">
           <span class="search-shortcut" aria-hidden="true">⌘K</span>
           <div class="search-results" id="global-search-results" role="listbox" hidden></div>
         </div>
@@ -130,8 +130,10 @@ function initArchiveSearch(root) {
 
   const paint = () => {
     if (!hits.length) {
+      results.setAttribute('role', 'status');
       results.innerHTML = '<div class="search-empty">Ingen resultater. Prøv et navn, CVR, en sæson, kategori eller hændelse.</div>';
     } else {
+      results.setAttribute('role', 'listbox');
       let lastGroup = null;
       results.innerHTML = hits.map((hit, index) => {
         const group = hit.group !== lastGroup
@@ -139,7 +141,7 @@ function initArchiveSearch(root) {
           : '';
         lastGroup = hit.group;
         return `${group}
-        <a id="search-option-${input.id}-${index}" class="search-result${index === activeIndex ? ' active' : ''}" href="${layoutEsc(hit.url)}" role="option" aria-selected="${index === activeIndex}">
+        <a id="search-option-${input.id}-${index}" class="search-result${index === activeIndex ? ' active' : ''}" href="${layoutEsc(hit.url)}" role="option" tabindex="-1" aria-selected="${index === activeIndex}">
           <span><strong>${layoutEsc(hit.name)}</strong><small>${layoutEsc(hit.detail)}</small></span>
           <span class="search-result-type">${hit.type}</span>
         </a>`;
@@ -173,6 +175,7 @@ function initArchiveSearch(root) {
       paint();
     } catch (error) {
       console.error('Søgeindekset kunne ikke indlæses:', error);
+      results.setAttribute('role', 'status');
       results.innerHTML = '<div class="search-empty">Søgningen kunne ikke indlæses. Prøv igen.</div>';
       results.hidden = false;
       input.setAttribute('aria-expanded', 'true');
@@ -199,6 +202,16 @@ function initArchiveSearch(root) {
     if (event.key === 'ArrowUp') {
       event.preventDefault();
       activeIndex = Math.max(activeIndex - 1, 0);
+      paint();
+    }
+    if (event.key === 'Home') {
+      event.preventDefault();
+      activeIndex = 0;
+      paint();
+    }
+    if (event.key === 'End') {
+      event.preventDefault();
+      activeIndex = hits.length - 1;
       paint();
     }
     if (event.key === 'Enter' && activeIndex >= 0) {

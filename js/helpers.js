@@ -250,6 +250,7 @@ function showLoadError() {
   const host = document.querySelector('.page-main') || document.body;
   const div = document.createElement('div');
   div.className = 'load-error';
+  div.setAttribute('role', 'alert');
   div.innerHTML = `<strong>Data kunne ikke hentes.</strong> Prøv at genindlæse siden — fortsætter problemet, er databasen midlertidigt utilgængelig.`;
   host.prepend(div);
 }

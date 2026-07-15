@@ -47,7 +47,7 @@
 
   <p class="filter-summary" id="filter-summary">Ingen filtre er aktive.</p>
 
-  <div class="table-wrap">
+  <div class="table-wrap" role="region" tabindex="0" aria-label="Registrerede pitches og TV-aftaler">
     <table>
       <caption class="sr-only">Registrerede pitches og TV-aftaler</caption>
       <thead>
@@ -279,17 +279,6 @@ document.getElementById('reset-filters').addEventListener('click', () => {
 document.querySelector('thead').addEventListener('click', e => {
   const th = e.target.closest('th[data-sort]');
   if (th) sortBy(th.dataset.sort);
-});
-
-// Gør tastaturkontrakten eksplicit, så sortering ikke afhænger af om
-// browseren syntetiserer et click-event for knapper ved Enter/Space.
-document.querySelector('thead').addEventListener('keydown', e => {
-  const button = e.target.closest('button');
-  if (!button || !['Enter', ' '].includes(e.key)) return;
-  const th = button.closest('th[data-sort]');
-  if (!th) return;
-  e.preventDefault();
-  sortBy(th.dataset.sort);
 });
 
 window.addEventListener('popstate', () => {

@@ -1017,6 +1017,7 @@ a:hover { color: #62211c; }
 .profile-panel { margin-bottom: var(--space-4); }
 .profile-panel .timeline-entry { padding-bottom: var(--space-5); }
 .table-wrap { max-height: 72vh; border-color: var(--border); border-radius: var(--radius); background: var(--surface); }
+.table-wrap[tabindex]:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 thead tr { background: var(--surface2); }
 thead th { color: var(--muted); }
 tbody tr:hover { background: #f4f0e8; }

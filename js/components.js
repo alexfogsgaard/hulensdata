@@ -105,7 +105,7 @@ function renderInvestorProfile(p, latestSeason) {
       </section>
       <section class="profile-section" id="aftaler">
         <div class="section-heading"><span class="section-kicker">03 · TV-aftaler</span><h2>${p.dealList.length} registrerede aftaler</h2><p>Alle beløb og andele er de registrerede vilkår fra udsendelsen. Ukendte værdier markeres eksplicit.</p></div>
-        <div class="table-wrap"><table><thead><tr><th>Virksomhed</th><th>Sæson</th><th>Udfald</th><th class="num">Søgte</th><th class="num">Tilbudt andel</th><th class="num">TV-beløb</th><th class="num">Andel i TV-aftale</th><th>Investorer</th><th>Kategori</th><th>Status</th></tr></thead><tbody>${p.dealList.map(renderDealRow).join('')}</tbody></table></div>
+        <div class="table-wrap" role="region" tabindex="0" aria-label="${esc(m.name)}s registrerede TV-aftaler"><table><caption class="sr-only">${esc(m.name)}s registrerede TV-aftaler</caption><thead><tr><th>Virksomhed</th><th>Sæson</th><th>Udfald</th><th class="num">Søgte</th><th class="num">Tilbudt andel</th><th class="num">TV-beløb</th><th class="num">Andel i TV-aftale</th><th>Investorer</th><th>Kategori</th><th>Status</th></tr></thead><tbody>${p.dealList.map(renderDealRow).join('')}</tbody></table></div>
       </section>
       <section class="profile-section" id="relationer">
         <div class="section-heading"><span class="section-kicker">04 · Relationer og metode</span><h2>Medinvestorer og datagrænser</h2></div>
@@ -338,7 +338,7 @@ function renderSeasonProfile(p) {
       <section class="profile-section" id="panel"><div class="section-heading"><span class="section-kicker">02 · Panel</span><h2>Investorer i sæsonen</h2></div><div class="text-links">${panelLinks}</div></section>
       <section class="profile-section" id="pitches">
         <div class="section-heading"><span class="section-kicker">03 · TV-laget</span><h2>Alle registrerede pitches</h2><p>Efterlivskolonnen tæller kun kildebelagte hændelser i arkivet.</p></div>
-        <div class="table-wrap"><table><thead><tr><th>Virksomhed</th><th class="num">Afsnit</th><th>Udfald</th><th class="num">TV-beløb</th><th>Investorer</th><th class="num">Efterliv</th></tr></thead><tbody>${rows}</tbody></table></div>
+        <div class="table-wrap" role="region" tabindex="0" aria-label="Registrerede pitches i sæson ${p.season}"><table><caption class="sr-only">Registrerede pitches i sæson ${p.season}</caption><thead><tr><th>Virksomhed</th><th class="num">Afsnit</th><th>Udfald</th><th class="num">TV-beløb</th><th>Investorer</th><th class="num">Efterliv</th></tr></thead><tbody>${rows}</tbody></table></div>
       </section>
       <section class="profile-section" id="efterliv"><div class="section-heading"><span class="section-kicker">04 · Efter kameraerne</span><h2>Dokumenteret efterliv</h2><p>Hændelserne sorteres efter dato og viser kildernes confidence.</p></div><div class="timeline season-timeline">${events}</div></section>
       <nav class="adjacent-nav" aria-label="Andre sæsoner">${p.previous ? `<a href="/saesoner/${p.previous}/">← Sæson ${p.previous}</a>` : '<span></span>'}${p.next ? `<a href="/saesoner/${p.next}/">Sæson ${p.next} →</a>` : ''}</nav>

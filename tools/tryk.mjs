@@ -468,7 +468,7 @@ const methodBody = `<a class="back-btn" href="/">← Forsiden</a>
         <p>En oplysning publiceres ikke, når identiteten er tvetydig, kilden ikke kan efterprøves, eller påstanden kræver en årsagsforklaring, kilden ikke bærer.</p>
       </div>
     </div>
-    <div class="table-wrap method-table"><table><caption>Kilder fordelt på confidence</caption><thead><tr><th>Confidence</th><th class="num">Kilder</th><th class="num">Andel</th></tr></thead><tbody>${confidenceRows}</tbody></table></div>
+    <div class="table-wrap method-table" role="region" tabindex="0" aria-label="Kilder fordelt på confidence"><table><caption>Kilder fordelt på confidence</caption><thead><tr><th>Confidence</th><th class="num">Kilder</th><th class="num">Andel</th></tr></thead><tbody>${confidenceRows}</tbody></table></div>
   </section>
 
   <section class="profile-section" id="daekning">
@@ -478,7 +478,7 @@ const methodBody = `<a class="back-btn" href="/">← Forsiden</a>
 
   <section class="profile-section" id="saesoner">
     <div class="section-heading"><span class="section-kicker">04 · Sæsoner</span><h2>Dækning pr. sæson</h2><p>Sæson 1–4 mangler systematisk flere afviste pitches. Antal og aftaleandele kan derfor ikke sammenlignes direkte med senere sæsoner.</p></div>
-    <div class="table-wrap method-table"><table><caption>Datadækning pr. sæson</caption><thead><tr><th>Sæson</th><th class="num">Pitches</th><th class="num">Kendt afsnit</th><th class="num">Kendt søgt beløb</th><th class="num">Kendt aftaleandel</th><th class="num">CVR</th><th class="num">Efterliv</th></tr></thead><tbody>${seasonCoverageRows}</tbody></table></div>
+    <div class="table-wrap method-table" role="region" tabindex="0" aria-label="Datadækning pr. sæson"><table><caption>Datadækning pr. sæson</caption><thead><tr><th>Sæson</th><th class="num">Pitches</th><th class="num">Kendt afsnit</th><th class="num">Kendt søgt beløb</th><th class="num">Kendt aftaleandel</th><th class="num">CVR</th><th class="num">Efterliv</th></tr></thead><tbody>${seasonCoverageRows}</tbody></table></div>
     <p class="context-note">CVR og efterliv beregnes på unikke virksomheder i sæsonen. En virksomhed med flere pitches tæller én gang i disse to kolonner.</p>
   </section>
 
