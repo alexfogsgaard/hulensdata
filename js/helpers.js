@@ -21,6 +21,13 @@ const fmtShort = n => n == null ? '—' : n >= 1000000 ? `kr ${(n/1000000).toFix
 // Formatér procent
 const pct = n => n == null ? '—' : n + '%';
 
+// Ukendte domæneværdier skal forklares, ikke skjules bag en tankestreg.
+const knownMoney = n => n == null ? 'Ikke dokumenteret' : fmt(n);
+const knownPercent = n => n == null ? 'Ikke dokumenteret' : pct(n);
+const episodeLabel = deal => deal.episode == null
+  ? `Sæson ${deal.season} · Afsnit ikke dokumenteret`
+  : `Sæson ${deal.season} · Afsnit ${deal.episode}`;
+
 // URL'er til profilerne = de statisk trykte bind (/virksomheder/, /loever/).
 // Navne-param kun som fallback hvis slug mangler (bør ikke ske).
 function companyUrl(name) {
@@ -181,23 +188,56 @@ function buildCompanyProfile(name, allDeals) {
   const stamp = stampEvent
     ? { text: STAMP_TYPES[stampEvent.event_type], gold: stampEvent.event_type === 'exit' }
     : null;
-  const revised = events.length
-    ? events.map(e => e.updated_at).sort().pop().slice(0, 10)
-    : null;
+  const revisionDates = events.map(event => event.updated_at).filter(Boolean).sort();
+  const revised = revisionDates.length ? revisionDates[revisionDates.length - 1].slice(0, 10) : null;
 
-  return { name, dealList, latest, totalReceived, totalAsked, totalShareSold, lastValAfter, investors, seasonSpan, related, seasonContext, events, stamp, revised };
+  const company = (typeof COMPANIES !== 'undefined' && COMPANIES[name]) || {
+    id: typeof COMPANY_IDS !== 'undefined' ? COMPANY_IDS[name] : null,
+    name,
+    slug,
+    category: latest.category || null,
+    status: latest.status || 'ukendt',
+    cvr_nummer: null,
+  };
+  const companySources = company.id ? sourcesFor('company', company.id) : [];
+  const dealSources = dealList.flatMap(deal => sourcesFor('deal', deal.id));
+  const eventSources = events.flatMap(event => event.sources || []);
+  const allSources = [...new Map(
+    [...companySources, ...dealSources, ...eventSources].map(source => [source.id, source])
+  ).values()];
+  const registers = [...new Set(events.flatMap(event => {
+    if (event.event_type === 'exit') return ['exits'];
+    if (['bankruptcy', 'closed'].includes(event.event_type)) return ['konkurser'];
+    if (['cancelled', 'renegotiated'].includes(event.event_type)) return ['kollapsede-deals'];
+    return [];
+  }))];
+
+  return { name, company, dealList, latest, totalReceived, totalAsked, totalShareSold, lastValAfter, investors, seasonSpan, related, seasonContext, events, companySources, allSources, registers, revised };
 }
 
 // Globale nøgletal — beregnes ét sted; bruges af header-stats og forsiden
 function getGlobalStats(deals) {
   const withDeal = deals.filter(d => d.received);
   return {
-    deals: deals.length,                                       // alle pitches
+    pitches: deals.length,
+    deals: deals.length,                                      // legacy-alias
     dealsClosed: withDeal.length,                              // gennemførte deals
     totalReceived: withDeal.reduce((s, d) => s + d.received, 0),
     seasons: new Set(deals.map(d => d.season)).size,
     latestSeason: Math.max(...deals.map(d => d.season)),
     investors: new Set(deals.flatMap(d => d.investorList)).size,
+  };
+}
+
+function getArchiveStats() {
+  const companies = typeof COMPANIES !== 'undefined' ? Object.values(COMPANIES) : [];
+  const events = typeof ARCHIVE_EVENTS !== 'undefined' ? ARCHIVE_EVENTS : [];
+  const sources = typeof SOURCES !== 'undefined' ? Object.values(SOURCES).flat() : [];
+  return {
+    companies: companies.length,
+    cvr: companies.filter(company => company.cvr_nummer).length,
+    events: events.length,
+    sources: sources.length,
   };
 }
 
@@ -207,17 +247,7 @@ function renderHeaderStats(deals) {
   if (!el) return;
 
   const s = getGlobalStats(deals);
-  el.innerHTML = [
-    { val: s.deals,                                             lbl: 'Deals' },
-    { val: s.seasons,                                           lbl: 'Sæsoner' },
-    { val: s.investors,                                         lbl: 'Investorer' },
-    { val: 'kr ' + (s.totalReceived / 1000000).toFixed(1) + 'M', lbl: 'Samlet investeret' },
-  ].map(p => `
-    <div class="stat-pill">
-      <div class="val">${p.val}</div>
-      <div class="lbl">${p.lbl}</div>
-    </div>
-  `).join('');
+  el.textContent = `${s.pitches} pitches · ${s.dealsClosed} aftaler`;
 }
 
 // Vis synlig fejlbesked når data ikke kan hentes

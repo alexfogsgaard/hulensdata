@@ -98,9 +98,9 @@ function side({ sti, titel, beskrivelse, jsonld, krop }) {
 <body>
 <header class="site-header"></header>
 <script>renderSiteHeader(null);</script>
-<main class="page-main">
+<main id="main-content" class="page-main">
 ${krop}
-<footer class="tryk-kolofon">Hulens Data · arkivet over dansk iværksætteri på TV · trykt ${TRYKT.split('-').reverse().join('.')}</footer>
+<footer class="tryk-kolofon">Hulens Data · uofficielt dataarkiv · snapshot ${TRYKT.split('-').reverse().join('.')} · <a href="/#metode">Metode og kilder</a></footer>
 </main>
 <script src="/js/helpers.js"></script>
 <script src="/js/supabase.js"></script>
@@ -130,11 +130,12 @@ for (const co of arkiv.companies) {
   const p = kald('buildCompanyProfile(__navn, __deals)');
   if (!p) continue;
   ctx.__p = p;
-  const krop = `<a class="back-btn" href="/companies.html">← Alle virksomheder</a>\n` + kald('renderCompanyProfile(__p)');
+  const krop = `<a class="back-btn" href="/companies.html">← Virksomhedsregisteret</a>\n` + kald('renderCompanyProfile(__p)');
   const d = p.latest;
+  const episode = d.episode == null ? '' : `, afsnit ${d.episode}`;
   const beskrivelse = (d.received
-    ? `Løvens Hule S${d.season} (${arkiv.seasons.find(s => s.season_number === d.season)?.year ?? ''}): søgte kr ${Number(d.asked).toLocaleString('da-DK')}, fik kr ${Number(d.received).toLocaleString('da-DK')} for ${d.shareSold} % — ${p.investors.join(', ')}.`
-    : `Pitchede i Løvens Hule S${d.season} uden aftale.`)
+    ? `Løvens Hule sæson ${d.season}${episode}: ${d.asked == null ? 'søgt beløb ikke dokumenteret' : `søgte kr ${Number(d.asked).toLocaleString('da-DK')}`}, fik kr ${Number(d.received).toLocaleString('da-DK')}${d.shareSold == null ? '' : ` for ${d.shareSold} %`} — ${p.investors.join(', ')}.`
+    : `Pitchede i Løvens Hule sæson ${d.season}${episode} uden aftale.`)
     + (p.events.length ? ' Se efterliv, kilder og kapitalhistorik.' : ' Se kapitalhistorik og kilder.');
   const jsonld = [
     { '@context': 'https://schema.org', '@type': 'Organization', name: co.name, url: HOST + sti,
