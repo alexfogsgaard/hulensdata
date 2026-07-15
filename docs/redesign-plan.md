@@ -57,9 +57,9 @@ Et roligt, dansk redaktionelt dataarkiv: varm papirbaggrund, mørk tekst, dyb r�
 
 Fase 1 redesigner forsiden, den fælles navigation og virksomhedssiderne. Trykpressen, snapshot-arkitekturen, URL-rummet og datamodellen bevares. Investorprofiler, sæsonsider og enkelte registre kan endnu have kartei-, mappe- eller protokolpræg fra den tidligere retning. Det blandede design er en bevidst, midlertidig overgangstilstand — ikke slutresultatet.
 
-Fase 2 samler investorprofiler, sæsonsider, registre og analyser i samme redaktionelle system. Overgangstilstanden afsluttes, når fase-2-PR'en merges; nye komponenter må ikke afhænge af de gamle dekorative klasser.
+Fase 2 samlede investorprofiler, sæsonsider, registre og analyser i samme redaktionelle system og blev merged til `main` i `5921ced`. Overgangstilstanden er afsluttet; nye komponenter må ikke afhænge af de gamle dekorative klasser.
 
-## Fase 2 — samlet redaktionelt system (implementeret på fase-2-branchen)
+## Fase 2 — samlet redaktionelt system (merged 2026-07-15)
 
 Fase 2 harmoniserer de resterende sidetyper med fase 1 uden at ændre produktidentiteten eller arkitekturen. Arbejdet omfatter:
 
@@ -74,9 +74,11 @@ Trykpressen, DOM-frie renderfunktioner, snapshot-læsestien, danske URL'er, Char
 
 Alle tidligere forbrugere er migreret. En forbrugsanalyse har verificeret og fjernet de døde kartei-, mappe-, journal-, protokol- og dashboardklasser samt deres ubrugte render-funktioner. Historiske designnoter bevares uændret.
 
-## Kendt kildegrænse
+## Fase 3 — produktkvalitet uden ny designretning
 
-REST-fallbackens `limit=10000` på `sources` kan stadig blive begrænset af Supabase-projektets servermæssige max-rows. Produktion bruger normalt `data/arkiv.json`, og snapshot'et rummer aktuelt cirka 61 kilder, så kompleks pagination er ikke en fase-2-opgave. Indfør pagination, før kildemængden nærmer sig servergrænsen.
+Fase 3 bevarer det godkendte system og gør det mere findbart, forklarligt og publiceringssikkert. Den tilføjer et build-genereret søgeindeks, reproducerbare pitchfiltre, offentlig metode- og dækningsside, deskriptive analyser med datatabeller, generisk REST-pagination og én samlet kvalitetsport i `npm run verify`.
+
+Trykpressen bruger nu generisk `Range`-pagination i stedet for store `limit`-værdier. Samme princip gælder browserens REST-fallback, mens normal produktion fortsat bruger `data/arkiv.json`. Trykte sider får headerstatistik ved build og henter ikke hele snapshot'et alene for layoutet.
 
 ## Risici og testkrav
 

@@ -141,3 +141,28 @@ Store tabeller bruger intern scrolling og er acceptable ved nuværende 329 rækk
 14. Opdatér repository-dokumentation og den kanoniske vault med drift, tests, begrænsninger og næste fase.
 
 Auditten er en implementeringskontrakt for fase 3. Den ændrer ikke produktidentiteten, datamodellen eller den redaktionelle metode.
+
+## Implementeringsresultat 2026-07-15
+
+Auditplanens P0–P3 er gennemført på `agent/product-quality-phase-3` uden database- eller frameworkændringer:
+
+- `npm run verify` samler syntaks, simuleret pagination, datavalidering, deterministisk build fra snapshot, link-/redirectkontrol, SEO og statisk tilgængelighed. Aktuelt resultat: 0 blockers og 0 warnings.
+- 326 virksomhedsprofiler, 18 investorprofiler, 11 sæsonsider, tre registre, arkivforside og `/metode/` genereres. Sitemap rummer 365 canonical URL'er.
+- Et build-genereret indeks med 388 poster gør virksomheder, CVR, investorer, sæsoner, kategorier, registre, events og metode findbare med dansk normalisering og tastaturbetjent combobox.
+- Pitchoversigten har kombinerbare filtre for efterliv, afsnit, søgt beløb, CVR og investorantal samt reproducerbar URL- og browserhistorik.
+- `/metode/` forklarer definitioner, kilder, confidence, NULL, datopræcision, rettelser og dynamisk dækning. Aktuel dækning udledes ved build og hardcodes ikke.
+- Analysesiden viser observationer, udeladte NULL-værdier og tilgængelige datatabeller ved seks analyser samt en enkel to-sæson-sammenligning. Chart.js er SRI-pinnet og har blød fallback.
+- Trykpresse og REST-fallback bruger generisk `Range`-pagination; en test med 2.300 rækker og en simuleret servergrænse på 500 gav alle rækker over fem requests.
+- Trykte sider får headerstatistik ved build og undgår snapshot-request alene for layout. Cache-/sikkerhedsheaders og font-preconnect er tilføjet.
+- Browser-QA er gennemført lokalt på 375, 768 og 1280 px, inklusive søgning, filtre, historik, profiler med relevante NULL-/relationsvarianter, reduceret bevægelse, canonical/JSON-LD og fejlfri konsol. Fysisk Tab-sekvens kunne ikke automatiseres stabilt i browserdriveren; de enkelte fokusmål, fokusstil og tastaturhandlinger er verificeret. En fuld manuel Tab-/assistive-technology-runde anbefales i previewet.
+
+Netlify-preview-QA afventer branchens push og den efterfølgende draft-PR/deploy. Det er en bevidst sekvensgrænse, ikke et grønt preview-resultat.
+
+## Resterende begrænsninger og næste fase
+
+- Sæson 1–4 mangler fortsat systematisk registrering af afviste pitches; deal-rate for de sæsoner må ikke sammenlignes ukritisk.
+- Kategori-, CVR-, kilde- og efterlivsdækning er ufuldstændig og vises som dækning, ikke som fravær i virkeligheden.
+- Chart.js og Google Fonts er fortsat eksterne afhængigheder; Chart.js er SRI-pinnet, og analyserne har tabeller/fallback.
+- Der er ingen analytics. Et eventuelt senere valg skal være privacy-bevidst og særskilt besluttet.
+- Resterende historisk CSS må kun fjernes efter konkret forbrugsanalyse; fase 3 laver ingen risikabel totaloprydning.
+- Næste fase bør fokusere på preview-/assistive-technology-QA, fortsat datakuratering og evidensbaseret oprydning — ikke en ny visuel retning.
