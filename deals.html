@@ -281,6 +281,17 @@ document.querySelector('thead').addEventListener('click', e => {
   if (th) sortBy(th.dataset.sort);
 });
 
+// Nogle browser-/hjælpemiddelkombinationer syntetiserer ikke click på den
+// native knap. preventDefault forhindrer samtidig en efterfølgende dobbeltaktivering.
+document.querySelector('thead').addEventListener('keydown', e => {
+  const button = e.target.closest('button');
+  if (!button || !['Enter', ' '].includes(e.key)) return;
+  const th = button.closest('th[data-sort]');
+  if (!th) return;
+  e.preventDefault();
+  sortBy(th.dataset.sort);
+});
+
 window.addEventListener('popstate', () => {
   applyUrlState();
   renderTable();
