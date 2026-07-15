@@ -3,119 +3,166 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hulens Data — Kartoteket over dansk iværksætteri på TV</title>
-<meta name="description" content="Det definitive arkiv over alle investeringer i DR's Løvens Hule: 326 sager, 11 bind, efterliv og kilder. Åbn en skuffe og træk en sag frem.">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Hulens Data — uofficielt dataarkiv om Løvens Hule</title>
+<meta name="description" content="Søg virksomheder, pitches, TV-aftaler, investorer og dokumenterede efterlivshændelser fra Løvens Hule.">
+<link rel="canonical" href="https://hulensdata.dk/">
+<meta property="og:site_name" content="Hulens Data">
+<meta property="og:locale" content="da_DK">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Hulens Data — uofficielt dataarkiv om Løvens Hule">
+<meta property="og:description" content="Søg virksomheder, pitches, TV-aftaler, investorer og dokumenterede efterlivshændelser.">
+<meta property="og:url" content="https://hulensdata.dk/">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <script src="js/layout.js"></script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Hulens Data","url":"https://hulensdata.dk/","description":"Uofficielt dataarkiv om virksomheder, investorer og aftaler fra Løvens Hule."}</script>
 </head>
 <body>
 
 <header class="site-header"></header>
-<script>renderSiteHeader('');</script>
+<script>renderSiteHeader('home');</script>
 
-<main class="page-main laesesal">
-
-  <!-- Kartotekets titelblad -->
-  <div class="titelblad">
-    <div class="tb-linje num">DET UOFFICIELLE ARKIV · GRUNDLAGT 2026 · OPDATERES LØBENDE</div>
-    <h1 class="tb-titel">Kartoteket</h1>
-    <p class="tb-under">over dansk iværksætteri gennem <em>Løvens Hule</em> — hver virksomhed en sag, hver sæson et bind, hvert tal med kilde.</p>
-  </div>
-
-  <!-- Skuffevæggen: navigationen ER møblet -->
-  <section class="skuffevaeg" aria-label="Kartotekets skuffer">
-    <a class="skuffe" href="/companies.html">
-      <span class="sk-etiket">Virksomhederne</span>
-      <span class="sk-detalje num" id="sk-virk">sager A–Å</span>
-      <span class="sk-greb" aria-hidden="true"></span>
-    </a>
-    <a class="skuffe" href="/investors.html">
-      <span class="sk-etiket">Løverne</span>
-      <span class="sk-detalje num" id="sk-loever">personakter</span>
-      <span class="sk-greb" aria-hidden="true"></span>
-    </a>
-    <a class="skuffe" href="/deals.html">
-      <span class="sk-etiket">Protokollen</span>
-      <span class="sk-detalje num" id="sk-deals">alle indførsler</span>
-      <span class="sk-greb" aria-hidden="true"></span>
-    </a>
-    <a class="skuffe" href="/charts.html">
-      <span class="sk-etiket">Tavlerne</span>
-      <span class="sk-detalje num">statistik i 4 opslag</span>
-      <span class="sk-greb" aria-hidden="true"></span>
-    </a>
+<main id="main-content" class="page-main editorial-home">
+  <section class="home-intro" aria-labelledby="home-title">
+    <div>
+      <p class="section-kicker">Uofficielt · uafhængigt · kildebaseret</p>
+      <h1 id="home-title">Hvad skete der med virksomhederne fra <em>Løvens Hule</em>?</h1>
+      <p class="home-lead">Et offentligt data- og analysearkiv over pitches, TV-aftaler og dokumenterede hændelser efter udsendelsen. Ukendte oplysninger forbliver ukendte.</p>
+    </div>
+    <div class="home-search site-search" role="search" data-search>
+      <label for="home-search-input">Find en virksomhed eller investor</label>
+      <div class="home-search-field">
+        <input id="home-search-input" type="search" placeholder="Søg f.eks. MuteBox, Stori eller Jesper Buch" autocomplete="off" spellcheck="false" aria-autocomplete="list" aria-controls="home-search-results" aria-expanded="false">
+        <span aria-hidden="true">Søg</span>
+      </div>
+      <div class="search-results" id="home-search-results" role="listbox" hidden></div>
+      <p>Søgningen bruger det senest publicerede datasnapshot.</p>
+    </div>
   </section>
 
-  <!-- Samlingen: bindene på hylden -->
-  <section class="reol-sektion" aria-label="Samlingen — sæsonbindene">
-    <div class="afsnit-etiket">Samlingen · ét bind pr. sæson</div>
-    <div class="reol" id="reol"></div>
-    <div class="hylde" aria-hidden="true"></div>
+  <section class="home-section" aria-labelledby="scope-title">
+    <div class="section-heading horizontal">
+      <div><span class="section-kicker">Arkivets omfang</span><h2 id="scope-title">Aktuelle tal fra datasættet</h2></div>
+      <p id="snapshot-date" class="section-note" aria-live="polite">Indlæser seneste snapshot…</p>
+    </div>
+    <dl class="editorial-stats" id="editorial-stats" aria-live="polite"></dl>
   </section>
 
-  <!-- Nyeste tilførsler: journalen -->
-  <section class="tilfoersler" aria-label="Nyeste tilførsler til arkivet">
-    <div class="afsnit-etiket">Nyeste tilførsler til arkivet</div>
-    <ol class="journal" id="journal"></ol>
+  <section class="home-section" aria-labelledby="explore-title">
+    <div class="section-heading"><span class="section-kicker">Find svar</span><h2 id="explore-title">Gå direkte til data</h2></div>
+    <div class="destination-grid">
+      <a href="/companies.html"><span>Virksomheder</span><strong>Identitet, TV-forløb og efterliv</strong><small id="destination-companies">Alle virksomheder</small></a>
+      <a href="/deals.html"><span>Pitches & aftaler</span><strong>Beløb, andele og TV-udfald</strong><small id="destination-deals">Alle registrerede pitches</small></a>
+      <a href="/investors.html"><span>Investorer</span><strong>Porteføljer, partnere og sæsoner</strong><small id="destination-investors">Alle investorer</small></a>
+      <a href="#saesoner"><span>Sæsoner</span><strong>Paneler og alle optrædener</strong><small id="destination-seasons">Sæson 1–11</small></a>
+      <a href="/arkiv/"><span>Arkiv</span><strong>Exits, konkurser og kollaps</strong><small id="destination-events">Dokumenterede hændelser</small></a>
+      <a href="/charts.html"><span>Analyser</span><strong>Udvikling på tværs af sæsoner</strong><small>Fire datavisninger</small></a>
+    </div>
   </section>
 
-  <!-- Registrene: tematiske opslag -->
-  <section aria-label="Registrene">
-    <div class="afsnit-etiket">Registrene · hvad der skete efter kameraerne slukkede</div>
-    <nav class="ryttere">
-      <a href="/arkiv/konkurser/">Konkurser</a>
-      <a href="/arkiv/exits/">Exits</a>
-      <a href="/arkiv/kollapsede-deals/">Kollapsede deals</a>
-      <a href="/arkiv/">Alle registre →</a>
-    </nav>
+  <section class="home-section split-section" aria-labelledby="register-title">
+    <div>
+      <div class="section-heading"><span class="section-kicker">Tematiske registre</span><h2 id="register-title">Efter kameraerne</h2><p>Registrene samler dokumenterede hændelser på tværs af virksomheder. Antal nedenfor er hændelser, ikke fortolkede historier.</p></div>
+      <div class="register-links">
+        <a href="/arkiv/exits/"><span>Exits</span><strong class="num" id="count-exits">…</strong><small>Dokumenterede salg og ejerskifter markeret som exit</small></a>
+        <a href="/arkiv/konkurser/"><span>Konkurser & lukninger</span><strong class="num" id="count-closures">…</strong><small>Kuraterede konkurs- og lukningshændelser</small></a>
+        <a href="/arkiv/kollapsede-deals/"><span>Kollapsede deals</span><strong class="num" id="count-collapsed">…</strong><small>Genforhandlede eller ophørte TV-aftaler</small></a>
+      </div>
+    </div>
+    <aside class="coverage-panel" aria-labelledby="coverage-title">
+      <span class="section-kicker">Datadækning</span>
+      <h2 id="coverage-title">CVR er dokumenteret, når kilden bærer det</h2>
+      <p class="coverage-number"><strong class="num" id="cvr-covered">…</strong> af <span class="num" id="cvr-total">…</span> virksomheder</p>
+      <div class="coverage-track" aria-hidden="true"><span id="cvr-bar"></span></div>
+      <p>Et manglende CVR-nummer vises som “Ikke dokumenteret”. Det udfyldes ikke ved navnegæt.</p>
+    </aside>
   </section>
 
-  <!-- Arkivets omfang: messingplakette -->
-  <div class="plakette num" id="plakette"></div>
+  <section class="home-section" aria-labelledby="stories-title">
+    <div class="section-heading horizontal">
+      <div><span class="section-kicker">Senest revideret</span><h2 id="stories-title">Dokumenterede hændelser</h2></div>
+      <a class="section-link" href="/arkiv/">Se alle registre →</a>
+    </div>
+    <div class="story-grid" id="story-grid" aria-live="polite"><p>Indlæser hændelser…</p></div>
+  </section>
 
+  <section class="home-section" id="saesoner" aria-labelledby="seasons-title">
+    <div class="section-heading"><span class="section-kicker">Sæsoner</span><h2 id="seasons-title">Programmet år for år</h2><p>De tidlige sæsoner mangler flere afviste pitches. Sæsonsiderne viser kun det, datasættet faktisk indeholder.</p></div>
+    <div class="season-grid" id="season-grid"></div>
+  </section>
+
+  <section class="home-section method-section" id="metode" aria-labelledby="method-title">
+    <div class="section-heading"><span class="section-kicker">Metode og kilder</span><h2 id="method-title">Arkivet viser sit arbejde</h2></div>
+    <div class="method-grid">
+      <p><strong>TV-laget</strong> beskriver pitchen og den aftale, der blev vist. En TV-aftale er ikke det samme som en endelig investering.</p>
+      <p><strong>Efterlivslaget</strong> rummer daterede hændelser som exit, konkurs, lukning, funding, genforhandling og ejerskifte.</p>
+      <p><strong>Kilderne</strong> vises ved den oplysning, de understøtter. Confidence markeres som bekræftet, sandsynlig eller usikker.</p>
+      <p><strong>Ukendt betyder ukendt.</strong> Arkivet gætter ikke afsnit, beløb, ejerandele, CVR eller status.</p>
+    </div>
+    <p class="unofficial-note">Hulens Data er et uofficielt, uafhængigt arkiv og er ikke tilknyttet DR eller programmets producenter.</p>
+  </section>
 </main>
+
+<footer class="site-footer"><span>Hulens Data · uofficielt dataarkiv</span><a href="#metode">Metode og kilder</a></footer>
 
 <script src="js/helpers.js"></script>
 <script src="js/supabase.js"></script>
 <script src="js/components.js"></script>
 <script>
 async function init() {
-  const allDeals = await loadDeals();
-  renderHeaderStats(allDeals);
-  const s = getGlobalStats(allDeals);
-  const sager = Object.keys(COMPANY_SLUGS).length;
+  initArchiveSearch(document.querySelector('.home-search'));
+  const [deals] = await Promise.all([loadDeals(), loadCompanyArchive()]);
+  renderHeaderStats(deals);
 
-  // Skuffe-etiketter med faktiske omfang
-  document.getElementById('sk-virk').textContent = `${sager} sager · A–Å`;
-  document.getElementById('sk-loever').textContent = `${s.investors} personakter`;
-  document.getElementById('sk-deals').textContent = `${s.deals} indførsler · ${s.dealsClosed} aftaler`;
+  const stats = getGlobalStats(deals);
+  const archiveStats = getArchiveStats();
+  const snapshot = typeof ARKIV === 'object' && ARKIV ? ARKIV.trykt : null;
+  document.getElementById('snapshot-date').textContent = snapshot
+    ? `Snapshot trykt ${snapshot.split('-').reverse().join('.')}`
+    : 'Aktuelle data fra redaktionsdatabasen';
 
-  // Reolen: bindene I–XI med årstal på ryggen
-  const seasons = [...new Set(allDeals.map(d => d.season))].sort((a, b) => a - b);
-  document.getElementById('reol').innerHTML = seasons.map(n => `
-    <a class="bind" href="/saesoner/${n}/" aria-label="Løvens Hule sæson ${n} (${SEASON_YEARS[n] || ''})">
-      <span class="bind-nr">${romertal(n)}</span>
-      <span class="bind-aar num">${SEASON_YEARS[n] || ''}</span>
-    </a>`).join('');
+  document.getElementById('editorial-stats').innerHTML = [
+    renderEditorialStat('Pitches', String(stats.pitches), `${stats.dealsClosed} endte med en aftale på TV`),
+    renderEditorialStat('TV-investeringer', stats.totalReceived.toLocaleString('da-DK') + ' kr.', 'Registreret beløb i udsendelserne'),
+    renderEditorialStat('Virksomheder', String(archiveStats.companies), `${archiveStats.cvr} med dokumenteret CVR`),
+    renderEditorialStat('Efterlivshændelser', String(archiveStats.events), `${archiveStats.sources} synlige kilder i arkivet`),
+    renderEditorialStat('Investorer', String(stats.investors), `${stats.seasons} sæsoner dækket`),
+  ].join('');
 
-  // Journalen: de 8 nyeste indførsler som journallinjer
-  const nyeste = allDeals.slice(-8).reverse();
-  document.getElementById('journal').innerHTML = nyeste.map(d => `
-    <li class="journal-linje">
-      <span class="jl-ep num">S${d.season}E${d.episode}</span>
-      <a class="jl-navn" href="${companyUrl(d.name)}">${esc(d.name)}</a>
-      <span class="jl-prikker" aria-hidden="true"></span>
-      <span class="jl-beloeb num">${d.received ? fmt(d.received) : 'ingen aftale'}</span>
-    </li>`).join('');
+  document.getElementById('destination-companies').textContent = `${archiveStats.companies} virksomheder`;
+  document.getElementById('destination-deals').textContent = `${stats.pitches} pitches · ${stats.dealsClosed} aftaler`;
+  document.getElementById('destination-investors').textContent = `${stats.investors} investorer`;
+  document.getElementById('destination-seasons').textContent = `${stats.seasons} sæsoner`;
+  document.getElementById('destination-events').textContent = `${archiveStats.events} efterlivshændelser`;
 
-  // Plaketten: arkivets omfang, ét blik
-  const aar = seasons.map(n => SEASON_YEARS[n]).filter(Boolean);
-  document.getElementById('plakette').innerHTML =
-    `ARKIVETS OMFANG — ${s.deals} PITCHES · ${s.dealsClosed} AFTALER · KR ${(s.totalReceived/1e6).toFixed(1).replace('.', ',')}M · ${sager} VIRKSOMHEDER · ${s.investors} LØVER · ${aar[0]}–${aar[aar.length-1]}`;
+  const countTypes = types => ARCHIVE_EVENTS.filter(event => types.includes(event.event_type)).length;
+  document.getElementById('count-exits').textContent = countTypes(['exit']);
+  document.getElementById('count-closures').textContent = countTypes(['bankruptcy', 'closed']);
+  document.getElementById('count-collapsed').textContent = countTypes(['cancelled', 'renegotiated']);
+
+  document.getElementById('cvr-covered').textContent = archiveStats.cvr;
+  document.getElementById('cvr-total').textContent = archiveStats.companies;
+  document.getElementById('cvr-bar').style.width = `${archiveStats.companies ? archiveStats.cvr / archiveStats.companies * 100 : 0}%`;
+
+  const companyBySlug = Object.fromEntries(Object.values(COMPANIES).map(company => [company.slug, company]));
+  const stories = [...ARCHIVE_EVENTS]
+    .sort((a, b) => String(b.updated_at || b.event_date).localeCompare(String(a.updated_at || a.event_date)))
+    .slice(0, 6)
+    .map(event => ({ ...event, sources: sourcesFor('company_event', event.id) }));
+  document.getElementById('story-grid').innerHTML = stories.map(event => {
+    const company = companyBySlug[event.company.slug];
+    return company ? renderHomepageEvent(event, company) : '';
+  }).join('') || '<div class="empty-state"><strong>Ingen efterlivshændelser er publiceret endnu.</strong></div>';
+
+  const seasons = [...new Set(deals.map(deal => deal.season))].sort((a, b) => a - b);
+  document.getElementById('season-grid').innerHTML = seasons.map(season => {
+    const seasonDeals = deals.filter(deal => deal.season === season);
+    const closed = seasonDeals.filter(deal => deal.aftale).length;
+    return `<a href="/saesoner/${season}/"><span>Sæson ${season}</span><strong>${SEASON_YEARS[season] || 'År ikke dokumenteret'}</strong><small>${seasonDeals.length} pitches · ${closed} aftaler</small></a>`;
+  }).join('');
 }
 
-init().catch(err => { console.error(err); showLoadError(); });
+init().catch(error => { console.error(error); showLoadError(); });
 </script>
 </body>
 </html>
