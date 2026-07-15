@@ -32,7 +32,7 @@ Denne fil er den fælles arbejdsregel for Codex, Claude og andre implementører 
 - Gamle URL'er skal fortsat virke eller have redirects. Eksisterende canonical URLs må ikke brydes tavst.
 - Supabase-ændringer kræver en dokumenteret migration, før-/efterkontrol og et reelt behov. Ingen destruktive produktionsændringer uden eksplicit godkendelse.
 - Genererede mapper og filer håndteres efter `.gitignore` og Trykpressens eksisterende proces. Commit ikke genererede artefakter, der normalt bygges ved deploy.
-- REST-forespørgslens `limit=10000` på `sources` er et klientønske, ikke en garanti for at omgå Supabase-projektets servermæssige max-rows. Normal produktion læser det statiske snapshot, og datasættet har cirka 61 kilder, så fase 1 indfører ikke pagination. Pagination skal planlægges, før kildemængden nærmer sig projektets servergrænse.
+- REST-forespørgslens `limit=10000` på `sources` er et klientønske, ikke en garanti for at omgå Supabase-projektets servermæssige max-rows. Normal produktion læser det statiske snapshot, og datasættet har cirka 61 kilder, så fase 2 indfører ikke pagination. Pagination skal planlægges, før kildemængden nærmer sig projektets servergrænse.
 
 ## Verifikation før review
 
