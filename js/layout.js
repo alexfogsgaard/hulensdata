@@ -32,7 +32,7 @@ function renderSiteHeader(activePage) {
       <div class="header-tools">
         <div class="global-search site-search" role="search" data-search>
           <label class="sr-only" for="global-search-input">Søg i arkivet</label>
-          <input id="global-search-input" type="search" placeholder="Søg virksomhed eller investor" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="global-search-results" aria-expanded="false">
+          <input id="global-search-input" type="search" placeholder="Søg i arkivet" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="global-search-results" aria-expanded="false">
           <span class="search-shortcut" aria-hidden="true">⌘K</span>
           <div class="search-results" id="global-search-results" role="listbox" hidden></div>
         </div>
@@ -54,30 +54,58 @@ function normalizeSearch(value) {
   return String(value || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .toLocaleLowerCase('da-DK');
+    .toLocaleLowerCase('da-DK')
+    .replace(/æ/g, 'ae')
+    .replace(/ø/g, 'oe')
+    .replace(/å/g, 'aa')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
 }
 
 async function ensureSearchIndex() {
   if (SEARCH_INDEX) return SEARCH_INDEX;
-  const [investors, companies] = await Promise.all([
-    sbFetch('investor_status?select=canonical_name,slug,status&order=canonical_name.asc'),
-    sbFetch('companies?select=name,slug,status,category&order=name.asc'),
-  ]);
-  SEARCH_INDEX = [
-    ...companies.map(company => ({
-      type: 'Virksomhed',
-      name: company.name,
-      detail: company.category || 'Kategori ikke dokumenteret',
-      url: company.slug ? `/virksomheder/${encodeURIComponent(company.slug)}/` : `/companies.html?name=${encodeURIComponent(company.name)}`,
-    })),
-    ...investors.map(investor => ({
-      type: 'Investor',
-      name: investor.canonical_name,
-      detail: investor.status === 'aktiv' ? 'Aktiv investor' : investor.status === 'gaest' ? 'Gæsteinvestor' : 'Tidligere investor',
-      url: investor.slug ? `/loever/${encodeURIComponent(investor.slug)}/` : `/investors.html?name=${encodeURIComponent(investor.canonical_name)}`,
-    })),
-  ].map(item => ({ ...item, searchName: normalizeSearch(item.name) }));
+  try {
+    const response = await fetch('/data/search-index.json', { cache: 'no-cache' });
+    if (!response.ok) throw new Error(`Søgeindeks svarede med status ${response.status}`);
+    const payload = await response.json();
+    SEARCH_INDEX = payload.items;
+  } catch (error) {
+    // Lokal udvikling uden en trykning får et mindre fallback-indeks.
+    const [investors, companies] = await Promise.all([
+      sbFetch('investor_status?select=canonical_name,slug,status&order=canonical_name.asc'),
+      sbFetch('companies?select=name,slug,status,category,cvr_nummer&order=name.asc'),
+    ]);
+    SEARCH_INDEX = [
+      ...companies.map(company => ({
+        group: 'Virksomheder', type: 'Virksomhed', name: company.name,
+        detail: company.category || 'Kategori ikke dokumenteret',
+        url: company.slug ? `/virksomheder/${encodeURIComponent(company.slug)}/` : `/companies.html?name=${encodeURIComponent(company.name)}`,
+        keywords: [company.name, company.category, company.cvr_nummer].filter(Boolean),
+      })),
+      ...investors.map(investor => ({
+        group: 'Investorer', type: 'Investor', name: investor.canonical_name,
+        detail: investor.status === 'aktiv' ? 'Aktiv investor' : investor.status === 'gaest' ? 'Gæsteinvestor' : 'Tidligere investor',
+        url: investor.slug ? `/loever/${encodeURIComponent(investor.slug)}/` : `/investors.html?name=${encodeURIComponent(investor.canonical_name)}`,
+        keywords: [investor.canonical_name, investor.status],
+      })),
+    ];
+  }
+  SEARCH_INDEX = SEARCH_INDEX.map(item => {
+    const searchName = normalizeSearch(item.name);
+    const searchWords = normalizeSearch([item.name, item.detail, ...(item.keywords || [])].join(' ')).split(' ').filter(Boolean);
+    return { ...item, searchName, searchWords: [...new Set(searchWords)] };
+  });
   return SEARCH_INDEX;
+}
+
+function searchScore(item, query) {
+  if (item.searchName === query) return 0;
+  if (item.searchName.startsWith(query)) return 1;
+  if (item.searchName.split(' ').some(word => word.startsWith(query))) return 2;
+  const terms = query.split(' ').filter(Boolean);
+  if (terms.length && terms.every(term => item.searchWords.some(word => word.startsWith(term)))) return 3;
+  if (query.length >= 4 && item.searchName.includes(query)) return 4;
+  return null;
 }
 
 function initArchiveSearch(root) {
@@ -99,13 +127,20 @@ function initArchiveSearch(root) {
 
   const paint = () => {
     if (!hits.length) {
-      results.innerHTML = '<div class="search-empty">Ingen resultater. Prøv et andet navn.</div>';
+      results.innerHTML = '<div class="search-empty">Ingen resultater. Prøv et navn, CVR, en sæson, kategori eller hændelse.</div>';
     } else {
-      results.innerHTML = hits.map((hit, index) => `
+      let lastGroup = null;
+      results.innerHTML = hits.map((hit, index) => {
+        const group = hit.group !== lastGroup
+          ? `<div class="search-group" role="presentation">${layoutEsc(hit.group || hit.type)}</div>`
+          : '';
+        lastGroup = hit.group;
+        return `${group}
         <a id="search-option-${input.id}-${index}" class="search-result${index === activeIndex ? ' active' : ''}" href="${layoutEsc(hit.url)}" role="option" aria-selected="${index === activeIndex}">
           <span><strong>${layoutEsc(hit.name)}</strong><small>${layoutEsc(hit.detail)}</small></span>
           <span class="search-result-type">${hit.type}</span>
-        </a>`).join('');
+        </a>`;
+      }).join('');
     }
     results.hidden = false;
     input.setAttribute('aria-expanded', 'true');
@@ -123,13 +158,14 @@ function initArchiveSearch(root) {
     try {
       const index = await ensureSearchIndex();
       hits = index
-        .filter(item => item.searchName.includes(query))
+        .map(item => ({ ...item, score: searchScore(item, query) }))
+        .filter(item => item.score != null)
+        .sort((a, b) => a.score - b.score || String(a.group).localeCompare(String(b.group), 'da') || a.name.localeCompare(b.name, 'da'))
+        .slice(0, 12)
         .sort((a, b) => {
-          const aStarts = a.searchName.startsWith(query) ? 0 : 1;
-          const bStarts = b.searchName.startsWith(query) ? 0 : 1;
-          return aStarts - bStarts || a.name.localeCompare(b.name, 'da');
-        })
-        .slice(0, 8);
+          const groups = ['Virksomheder', 'Investorer', 'Sæsoner', 'Kategorier', 'Registre', 'Dokumenterede hændelser'];
+          return groups.indexOf(a.group) - groups.indexOf(b.group) || a.score - b.score || a.name.localeCompare(b.name, 'da');
+        });
       activeIndex = -1;
       paint();
     } catch (error) {

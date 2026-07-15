@@ -99,6 +99,7 @@ async function loadDeals() {
 var COMPANY_EVENTS = {};  // company-slug → [events, kronologisk]
 var SOURCES = {};         // 'entity_type:entity_id' → [kilder]
 var ARCHIVE_EVENTS = [];  // flad liste til forsiden og registre
+var ARCHIVE_AVAILABLE = false;
 
 async function loadCompanyArchive() {
   try {
@@ -117,7 +118,9 @@ async function loadCompanyArchive() {
       const k = s.entity_type + ':' + s.entity_id;
       (SOURCES[k] = SOURCES[k] || []).push(s);
     });
+    ARCHIVE_AVAILABLE = true;
   } catch (err) {
+    ARCHIVE_AVAILABLE = false;
     console.error('Arkiv-data kunne ikke hentes (profilen vises uden efterliv):', err);
   }
 }

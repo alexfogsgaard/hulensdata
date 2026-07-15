@@ -24,6 +24,7 @@ function requireFile(path, code, message) {
 requireFile(join(root, '404.html'), 'BUILD_404', '404-side mangler');
 requireFile(join(root, 'sitemap.xml'), 'BUILD_SITEMAP', 'sitemap.xml mangler');
 requireFile(join(root, 'robots.txt'), 'BUILD_ROBOTS', 'robots.txt mangler');
+requireFile(join(root, 'data', 'search-index.json'), 'BUILD_SEARCH_INDEX', 'Det genererede søgeindeks mangler');
 
 for (const company of archive.companies || []) {
   requireFile(join(root, 'virksomheder', company.slug, 'index.html'), 'BUILD_COMPANY_PAGE', 'Virksomhedsside mangler');
@@ -72,6 +73,23 @@ for (const file of publicFiles) {
   for (const [code, pattern] of badPatterns) {
     if (pattern.test(visible)) report.blocker(code, `Fejltekst matchede ${pattern}`, `${rel} (${route})`);
   }
+}
+
+try {
+  const search = JSON.parse(readFileSync(join(root, 'data', 'search-index.json'), 'utf8'));
+  const categories = new Set((archive.companies || []).map(company => company.category).filter(Boolean)).size;
+  const expected = (archive.companies || []).length + (archive.investor_status || []).length
+    + (archive.seasons || []).length + (archive.company_events || []).length + categories + 3;
+  if (!Array.isArray(search.items) || search.items.length !== expected) {
+    report.blocker('BUILD_SEARCH_INDEX_COUNT', `Søgeindekset har ${search.items?.length ?? 'ingen'} opslag; forventede ${expected}`, 'data/search-index.json');
+  }
+  for (const [index, item] of (search.items || []).entries()) {
+    if (!item.name || !item.type || !item.group || !item.url || !Array.isArray(item.keywords)) {
+      report.blocker('BUILD_SEARCH_INDEX_ITEM', 'Søgeopslag mangler navn, type, gruppe, URL eller keywords', `data/search-index.json#${index}`);
+    }
+  }
+} catch (error) {
+  report.blocker('BUILD_SEARCH_INDEX_JSON', `Ugyldigt søgeindeks: ${error.message}`, 'data/search-index.json');
 }
 
 const registerDefinitions = [

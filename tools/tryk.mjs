@@ -62,6 +62,71 @@ if (arkiv.deals.length < 300) throw new Error('deals ser afkortet ud — tryknin
 mkdirSync(join(ROD, 'data'), { recursive: true });
 writeFileSync(join(ROD, 'data', 'arkiv.json'), JSON.stringify(arkiv));
 console.log(`arkiv.json: ${Object.entries(QUERIES).map(([n]) => `${n}=${arkiv[n].length}`).join(' ')}`);
+
+const searchCompanies = Object.fromEntries(arkiv.companies.map(company => [company.slug, company]));
+const searchEventLabels = {
+  renegotiated: 'Genforhandlet', cancelled: 'Samarbejde ophørt', follow_on_investment: 'Opfølgende investering',
+  exit: 'Exit', bankruptcy: 'Konkurs', closed: 'Lukket', comeback: 'Comeback', rebrand: 'Rebranding',
+  funding_round: 'Fundingrunde', milestone: 'Milepæl', other: 'Anden hændelse',
+};
+const searchIndex = [
+  ...arkiv.companies.map(company => ({
+    group: 'Virksomheder',
+    type: 'Virksomhed',
+    name: company.name,
+    detail: [company.category || 'Kategori ikke dokumenteret', company.cvr_nummer ? `CVR ${company.cvr_nummer}` : null].filter(Boolean).join(' · '),
+    url: `/virksomheder/${company.slug}/`,
+    keywords: [company.name, company.slug, company.category, company.cvr_nummer, company.status].filter(Boolean),
+  })),
+  ...arkiv.investor_status.map(investor => ({
+    group: 'Investorer',
+    type: 'Investor',
+    name: investor.canonical_name,
+    detail: investor.status === 'aktiv' ? 'Aktiv investor' : investor.status === 'gaest' ? 'Gæsteinvestor' : 'Tidligere investor',
+    url: `/loever/${investor.slug}/`,
+    keywords: [investor.canonical_name, investor.slug, investor.status, ...(investor.panel_seasons || []).map(season => `sæson ${season}`)],
+  })),
+  ...arkiv.seasons.map(season => {
+    const deals = arkiv.deals.filter(deal => deal.saeson === season.season_number);
+    const closed = deals.filter(deal => deal.aftale).length;
+    return {
+      group: 'Sæsoner', type: 'Sæson', name: `Sæson ${season.season_number}`,
+      detail: `${season.year} · ${deals.length} pitches · ${closed} TV-aftaler`,
+      url: `/saesoner/${season.season_number}/`,
+      keywords: [`sæson ${season.season_number}`, `season ${season.season_number}`, season.year],
+    };
+  }),
+  ...[...new Set(arkiv.companies.map(company => company.category).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'da'))
+    .map(category => ({
+      group: 'Kategorier', type: 'Kategori', name: category,
+      detail: `${arkiv.deals.filter(deal => deal.company.category === category).length} registrerede pitches`,
+      url: `/deals.html?category=${encodeURIComponent(category)}`,
+      keywords: [category, 'kategori'],
+    })),
+  ...[
+    { slug: 'exits', name: 'Exits', types: ['exit'] },
+    { slug: 'konkurser', name: 'Konkurser og lukninger', types: ['bankruptcy', 'closed'] },
+    { slug: 'kollapsede-deals', name: 'Kollapsede deals', types: ['cancelled', 'renegotiated'] },
+  ].map(register => ({
+    group: 'Registre', type: 'Register', name: register.name,
+    detail: `${arkiv.company_events.filter(event => register.types.includes(event.event_type)).length} dokumenterede hændelser`,
+    url: `/arkiv/${register.slug}/`,
+    keywords: [register.name, register.slug, ...register.types],
+  })),
+  ...arkiv.company_events.map(event => {
+    const company = searchCompanies[event.company.slug];
+    return {
+      group: 'Dokumenterede hændelser', type: 'Hændelse',
+      name: company ? `${company.name}: ${event.title}` : event.title,
+      detail: `${searchEventLabels[event.event_type] || 'Hændelse'} · ${event.event_date.slice(0, 4)}`,
+      url: company ? `/virksomheder/${company.slug}/#efterliv` : '/arkiv/',
+      keywords: [company?.name, company?.cvr_nummer, event.title, event.description, event.event_type, searchEventLabels[event.event_type], event.event_date].filter(Boolean),
+    };
+  }),
+].map(item => ({ ...item, keywords: [...new Set(item.keywords.map(String))] }));
+writeFileSync(join(ROD, 'data', 'search-index.json'), JSON.stringify({ trykt: arkiv.trykt, items: searchIndex }));
+console.log(`search-index.json: ${searchIndex.length} opslag`);
 if (DATA_ONLY) process.exit(0);
 
 // En lokal mappe kan rumme gamle, gitignorede profilsider efter slugskift.
