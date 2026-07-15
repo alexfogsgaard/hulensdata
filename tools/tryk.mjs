@@ -19,6 +19,7 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { createContext, runInContext } from 'node:vm';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { fetchAllPages } from './lib/paginated-fetch.mjs';
 
 const ROD = join(dirname(fileURLToPath(import.meta.url)), '..');
 const HOST = 'https://hulensdata.dk';
@@ -30,25 +31,20 @@ const FROM_SNAPSHOT = process.argv.includes('--from-snapshot');
 
 /* ── 1. Hent datagrundlaget (samme queries som klienten — arkiv.json
        skal kunne svare på præcis de kald, sbFetch stiller) ── */
-async function hent(path) {
-  const res = await fetch(`${SUPABASE}/${path}`, {
-    headers: { apikey: ANON, Authorization: `Bearer ${ANON}` },
-  });
-  if (!res.ok) throw new Error(`Supabase ${res.status} på ${path}`);
-  return res.json();
-}
+const hentAlle = path => fetchAllPages(`${SUPABASE}/${path}`, {
+  headers: { apikey: ANON, Authorization: `Bearer ${ANON}` },
+});
 
 const QUERIES = {
-  deals: 'deals?select=id,saeson,afsnit,soeger,andel_tilbudt,beloeb_modtaget,andel_solgt,aftale,company:companies(name,slug,category,status),deal_investors(investor:investors(canonical_name))&order=saeson.asc,afsnit.asc&limit=1000',
-  deal_investors: 'deal_investors?select=deal_id,investor_id&order=deal_id.asc,investor_id.asc&limit=1000',
+  deals: 'deals?select=id,saeson,afsnit,soeger,andel_tilbudt,beloeb_modtaget,andel_solgt,aftale,company:companies(name,slug,category,status),deal_investors(investor:investors(canonical_name))&order=saeson.asc,afsnit.asc,id.asc',
+  deal_investors: 'deal_investors?select=deal_id,investor_id&order=deal_id.asc,investor_id.asc',
   investor_status: 'investor_status?select=canonical_name,slug,status,first_season,last_season,panel_seasons&order=canonical_name.asc',
   seasons: 'seasons?select=season_number,year&order=season_number.asc',
-  companies: 'companies?select=id,name,slug,category,status,cvr_nummer&order=name.asc&limit=1000',
-  company_events: 'company_events?select=id,event_date,date_precision,event_type,title,description,amount,created_at,updated_at,company:companies(slug)&order=event_date.asc&limit=1000',
-  // limit er et klientønske; Supabase kan stadig håndhæve projektets server-side max-rows.
-  sources: 'sources?select=id,entity_type,entity_id,field_name,source_name,source_url,note,confidence&limit=10000',
-  panel_memberships: 'panel_memberships?select=season_number,investor_id,role',
-  investors: 'investors?select=id,canonical_name,slug',
+  companies: 'companies?select=id,name,slug,category,status,cvr_nummer&order=name.asc,id.asc',
+  company_events: 'company_events?select=id,event_date,date_precision,event_type,title,description,amount,created_at,updated_at,company:companies(slug)&order=event_date.asc,id.asc',
+  sources: 'sources?select=id,entity_type,entity_id,field_name,source_name,source_url,note,confidence&order=id.asc',
+  panel_memberships: 'panel_memberships?select=season_number,investor_id,role&order=season_number.asc,investor_id.asc',
+  investors: 'investors?select=id,canonical_name,slug&order=canonical_name.asc,id.asc',
 };
 
 let arkiv;
@@ -56,7 +52,7 @@ if (FROM_SNAPSHOT) {
   arkiv = JSON.parse(readFileSync(join(ROD, 'data', 'arkiv.json'), 'utf8'));
 } else {
   arkiv = { trykt: TRYKT };
-  for (const [navn, q] of Object.entries(QUERIES)) arkiv[navn] = await hent(q);
+  for (const [navn, q] of Object.entries(QUERIES)) arkiv[navn] = await hentAlle(q);
 }
 if (arkiv.deals.length < 300) throw new Error('deals ser afkortet ud — trykning afbrudt');
 mkdirSync(join(ROD, 'data'), { recursive: true });
@@ -163,6 +159,7 @@ const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').
 
 function side({ sti, titel, beskrivelse, jsonld, krop, aktiv = null, type = 'article' }) {
   const url = HOST + sti;
+  const headerStats = `${arkiv.deals.length} pitches · ${arkiv.deals.filter(deal => deal.aftale).length} aftaler`;
   return `<!DOCTYPE html>
 <html lang="da">
 <head>
@@ -177,6 +174,8 @@ function side({ sti, titel, beskrivelse, jsonld, krop, aktiv = null, type = 'art
 <meta property="og:title" content="${esc(titel)}">
 <meta property="og:description" content="${esc(beskrivelse)}">
 <meta property="og:url" content="${url}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 <script src="/js/layout.js"></script>
@@ -185,14 +184,11 @@ function side({ sti, titel, beskrivelse, jsonld, krop, aktiv = null, type = 'art
 <body>
 <a class="skip-link" href="#main-content">Spring til indhold</a>
 <header class="site-header"></header>
-<script>renderSiteHeader(${JSON.stringify(aktiv)});</script>
+<script>renderSiteHeader(${JSON.stringify(aktiv)}, ${JSON.stringify(headerStats)});</script>
 <main id="main-content" class="page-main">
 ${krop}
 </main>
 <footer class="site-footer"><span>Hulens Data · uofficielt dataarkiv · snapshot ${TRYKT.split('-').reverse().join('.')}</span><a href="/metode/">Metode og datadækning</a></footer>
-<script src="/js/helpers.js"></script>
-<script src="/js/supabase.js"></script>
-<script>loadDeals().then(renderHeaderStats).catch(function(){});</script>
 </body>
 </html>`;
 }

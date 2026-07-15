@@ -60,6 +60,12 @@ for (const file of publicFiles) {
   if (!/<header\b[^>]*class=["'][^"']*site-header/i.test(html)) report.blocker('BUILD_HEADER', 'Siden mangler fælles site-header', rel);
   if (/\son(?:click|input|change|keydown|keyup)\s*=/i.test(html)) report.blocker('BUILD_INLINE_HANDLER', 'Inline event-handler bryder komponentkontrakten', rel);
 
+  const isPrintedPage = /^\/(?:virksomheder|loever|saesoner)\//.test(route)
+    || /^\/arkiv(?:\/.*)?\/$/.test(route) || route === '/metode/';
+  if (isPrintedPage && /(?:\/js\/supabase\.js|loadDeals\s*\()/i.test(html)) {
+    report.blocker('BUILD_STATIC_RUNTIME_DATA', 'Trykt side må ikke hente hele datasnapshottet for at vise statisk indhold', rel);
+  }
+
   const ids = [...extractIds(html)];
   const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
   for (const id of new Set(duplicates)) report.blocker('BUILD_DUPLICATE_ID', `Dubleret id="${id}"`, rel);

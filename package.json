@@ -3,12 +3,13 @@
   "private": true,
   "scripts": {
     "check:syntax": "node tools/check-syntax.mjs",
+    "test:pagination": "node tools/test-pagination.mjs",
     "prepare:data": "node tools/tryk.mjs --data-only",
     "validate:data": "node tools/validate-data.mjs",
     "build": "node tools/tryk.mjs --from-snapshot",
     "validate:build": "node tools/validate-build.mjs",
     "check:links": "node tools/check-links.mjs",
     "check:seo": "node tools/check-seo.mjs",
-    "verify": "npm run check:syntax && npm run prepare:data && npm run validate:data && npm run build && npm run validate:build && npm run check:links && npm run check:seo"
+    "verify": "npm run check:syntax && npm run test:pagination && npm run prepare:data && npm run validate:data && npm run build && npm run validate:build && npm run check:links && npm run check:seo"
   }
 }

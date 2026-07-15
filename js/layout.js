@@ -16,7 +16,7 @@ const layoutEsc = value => String(value ?? '')
   .replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;');
 
-function renderSiteHeader(activePage) {
+function renderSiteHeader(activePage, statsText = '') {
   const host = document.querySelector('.site-header');
   if (!host) return;
 
@@ -37,7 +37,7 @@ function renderSiteHeader(activePage) {
           <span class="search-shortcut" aria-hidden="true">⌘K</span>
           <div class="search-results" id="global-search-results" role="listbox" hidden></div>
         </div>
-        <div class="header-stats" id="header-stats" aria-live="polite"></div>
+        <div class="header-stats" id="header-stats" aria-live="polite">${layoutEsc(statsText)}</div>
       </div>
     </div>
     <nav class="site-nav" aria-label="Primær navigation">
@@ -71,11 +71,13 @@ async function ensureSearchIndex() {
     const payload = await response.json();
     SEARCH_INDEX = payload.items;
   } catch (error) {
-    // Lokal udvikling uden en trykning får et mindre fallback-indeks.
-    const [investors, companies] = await Promise.all([
-      sbFetch('investor_status?select=canonical_name,slug,status&order=canonical_name.asc'),
-      sbFetch('companies?select=name,slug,status,category,cvr_nummer&order=name.asc'),
-    ]);
+    // Hvis det lille indeks mangler, bruges stadig den statiske publikation.
+    // Global søgning etablerer aldrig selv en direkte Supabase-afhængighed.
+    const response = await fetch('/data/arkiv.json', { cache: 'no-cache' });
+    if (!response.ok) throw error;
+    const archive = await response.json();
+    const investors = archive.investor_status || [];
+    const companies = archive.companies || [];
     SEARCH_INDEX = [
       ...companies.map(company => ({
         group: 'Virksomheder', type: 'Virksomhed', name: company.name,
