@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Siden blev ikke fundet — Hulens Data</title>
+<meta name="description" content="Siden findes ikke. Søg i Hulens Data eller gå til virksomhedsregisteret.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<script src="/js/layout.js"></script>
+</head>
+<body>
+<header class="site-header"></header>
+<script>renderSiteHeader(null);</script>
+<main id="main-content" class="page-main">
+  <section class="not-found">
+    <p class="section-kicker">Fejl 404</p>
+    <h1 class="page-title">Siden findes ikke</h1>
+    <p>Linket kan være forældet eller skrevet forkert. Brug søgningen ovenfor, eller fortsæt til et af arkivets registre.</p>
+    <div class="text-links">
+      <a class="text-link" href="/companies.html">Virksomheder</a>
+      <a class="text-link" href="/deals.html">Pitches & aftaler</a>
+      <a class="text-link" href="/arkiv/">Arkiv</a>
+      <a class="text-link" href="/">Forsiden</a>
+    </div>
+  </section>
+</main>
+<script src="/js/helpers.js"></script>
+<script src="/js/supabase.js"></script>
+<script>loadDeals().then(renderHeaderStats).catch(function(){});</script>
+</body>
+</html>
