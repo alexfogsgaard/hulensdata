@@ -134,17 +134,26 @@ function initArchiveSearch(root) {
       results.innerHTML = '<div class="search-empty">Ingen resultater. Prøv et navn, CVR, en sæson, kategori eller hændelse.</div>';
     } else {
       results.setAttribute('role', 'listbox');
-      let lastGroup = null;
-      results.innerHTML = hits.map((hit, index) => {
-        const group = hit.group !== lastGroup
-          ? `<div class="search-group" role="presentation">${layoutEsc(hit.group || hit.type)}</div>`
-          : '';
-        lastGroup = hit.group;
-        return `${group}
-        <a id="search-option-${input.id}-${index}" class="search-result${index === activeIndex ? ' active' : ''}" href="${layoutEsc(hit.url)}" role="option" tabindex="-1" aria-selected="${index === activeIndex}">
-          <span><strong>${layoutEsc(hit.name)}</strong><small>${layoutEsc(hit.detail)}</small></span>
-          <span class="search-result-type">${hit.type}</span>
-        </a>`;
+      const groups = [];
+      hits.forEach((hit, index) => {
+        const name = hit.group || hit.type;
+        let group = groups[groups.length - 1];
+        if (!group || group.name !== name) {
+          group = { name, entries: [] };
+          groups.push(group);
+        }
+        group.entries.push({ hit, index });
+      });
+      results.innerHTML = groups.map((group, groupIndex) => {
+        const groupId = `search-group-${input.id}-${groupIndex}`;
+        return `<div class="search-result-group" role="group" aria-labelledby="${groupId}">
+          <div class="search-group" id="${groupId}">${layoutEsc(group.name)}</div>
+          ${group.entries.map(({ hit, index }) => `
+          <a id="search-option-${input.id}-${index}" class="search-result${index === activeIndex ? ' active' : ''}" href="${layoutEsc(hit.url)}" role="option" tabindex="-1" aria-selected="${index === activeIndex}">
+            <span><strong>${layoutEsc(hit.name)}</strong><small>${layoutEsc(hit.detail)}</small></span>
+            <span class="search-result-type">${hit.type}</span>
+          </a>`).join('')}
+        </div>`;
       }).join('');
     }
     results.hidden = false;

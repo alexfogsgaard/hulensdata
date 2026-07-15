@@ -90,5 +90,13 @@ if (!/role="combobox"[^>]*aria-autocomplete="list"[^>]*aria-haspopup="listbox"[^
 if (!/role="option"[^>]*tabindex="-1"/i.test(layout)) {
   report.blocker('A11Y_GLOBAL_OPTIONS', 'Søgeresultater skal styres med aktiv descendant uden ekstra tabstop', 'js/layout.js');
 }
+if (!/class="search-result-group"[^>]*role="group"[^>]*aria-labelledby=/i.test(layout)) {
+  report.blocker('A11Y_SEARCH_GROUPS', 'Søgeresultatgrupper skal have navn og semantisk gruppere deres options', 'js/layout.js');
+}
+
+const dealsHtml = readFileSync(`${root}/deals.html`, 'utf8');
+if (!/id="deal-filters"[^>]*role="group"[^>]*aria-label=/i.test(dealsHtml)) {
+  report.blocker('A11Y_FILTER_GROUP', 'Pitchfiltrene skal være samlet i en navngivet gruppe', 'deals.html');
+}
 
 report.finish();
