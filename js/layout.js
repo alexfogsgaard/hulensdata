@@ -7,6 +7,7 @@ const NAV_PAGES = [
   { id: 'seasons', href: '/#saesoner', label: 'Sæsoner' },
   { id: 'archive', href: '/arkiv/', label: 'Arkiv' },
   { id: 'charts', href: '/charts.html', label: 'Analyser' },
+  { id: 'method', href: '/metode/', label: 'Metode' },
 ];
 
 const layoutEsc = value => String(value ?? '')
@@ -163,7 +164,7 @@ function initArchiveSearch(root) {
         .sort((a, b) => a.score - b.score || String(a.group).localeCompare(String(b.group), 'da') || a.name.localeCompare(b.name, 'da'))
         .slice(0, 12)
         .sort((a, b) => {
-          const groups = ['Virksomheder', 'Investorer', 'Sæsoner', 'Kategorier', 'Registre', 'Dokumenterede hændelser'];
+          const groups = ['Virksomheder', 'Investorer', 'Sæsoner', 'Kategorier', 'Registre', 'Dokumenterede hændelser', 'Metode'];
           return groups.indexOf(a.group) - groups.indexOf(b.group) || a.score - b.score || a.name.localeCompare(b.name, 'da');
         });
       activeIndex = -1;

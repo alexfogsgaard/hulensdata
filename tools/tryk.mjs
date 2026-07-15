@@ -124,6 +124,12 @@ const searchIndex = [
       keywords: [company?.name, company?.cvr_nummer, event.title, event.description, event.event_type, searchEventLabels[event.event_type], event.event_date].filter(Boolean),
     };
   }),
+  {
+    group: 'Metode', type: 'Metode', name: 'Metode og datadækning',
+    detail: 'Definitioner, kilder, confidence, NULL og dækning pr. sæson',
+    url: '/metode/',
+    keywords: ['metode', 'datadækning', 'kilder', 'confidence', 'null', 'cvr', 'rettelser'],
+  },
 ].map(item => ({ ...item, keywords: [...new Set(item.keywords.map(String))] }));
 writeFileSync(join(ROD, 'data', 'search-index.json'), JSON.stringify({ trykt: arkiv.trykt, items: searchIndex }));
 console.log(`search-index.json: ${searchIndex.length} opslag`);
@@ -183,7 +189,7 @@ function side({ sti, titel, beskrivelse, jsonld, krop, aktiv = null, type = 'art
 <main id="main-content" class="page-main">
 ${krop}
 </main>
-<footer class="site-footer"><span>Hulens Data · uofficielt dataarkiv · snapshot ${TRYKT.split('-').reverse().join('.')}</span><a href="/#metode">Metode og kilder</a></footer>
+<footer class="site-footer"><span>Hulens Data · uofficielt dataarkiv · snapshot ${TRYKT.split('-').reverse().join('.')}</span><a href="/metode/">Metode og datadækning</a></footer>
 <script src="/js/helpers.js"></script>
 <script src="/js/supabase.js"></script>
 <script>loadDeals().then(renderHeaderStats).catch(function(){});</script>
@@ -376,7 +382,133 @@ if (registerStier.length) {
   console.log(`registre: ${registerStier.length} opslag (${registerStier.map(r => `${r.titel.toLowerCase()}=${r.antal}`).join(' ')})`);
 }
 
-/* ── 8. Sitemap ── */
+/* ── 8. Metode og datadækning ── */
+const companyIdToSlug = Object.fromEntries(arkiv.companies.map(company => [company.id, company.slug]));
+const dealIdToSlug = Object.fromEntries(arkiv.deals.map(deal => [deal.id, deal.company.slug]));
+const eventIdToSlug = Object.fromEntries(arkiv.company_events.map(event => [event.id, event.company.slug]));
+const companiesWithSources = new Set();
+for (const source of arkiv.sources) {
+  const slug = source.entity_type === 'company' ? companyIdToSlug[source.entity_id]
+    : source.entity_type === 'deal' ? dealIdToSlug[source.entity_id]
+      : source.entity_type === 'company_event' ? eventIdToSlug[source.entity_id]
+        : null;
+  if (slug) companiesWithSources.add(slug);
+}
+const companiesWithEvents = new Set(arkiv.company_events.map(event => event.company.slug));
+const closedDeals = arkiv.deals.filter(deal => deal.aftale);
+const coveragePercent = (known, total) => total ? `${Math.round(known / total * 100)} %` : 'Ikke relevant';
+const coverageValue = (known, total) => `${known} af ${total} · ${coveragePercent(known, total)}`;
+const coverageCard = (label, known, total, note) => `
+  <div><dt>${esc(label)}</dt><dd class="num">${esc(coverageValue(known, total))}</dd><span>${esc(note)}</span></div>`;
+
+const coverageCards = [
+  coverageCard('Pitches med kendt afsnit', arkiv.deals.filter(deal => deal.afsnit != null).length, arkiv.deals.length, 'Ukendt afsnit bevares som NULL.'),
+  coverageCard('Pitches med kendt søgt beløb', arkiv.deals.filter(deal => deal.soeger != null).length, arkiv.deals.length, 'Manglende beløb estimeres ikke.'),
+  coverageCard('TV-aftaler med kendt beløb', closedDeals.filter(deal => deal.beloeb_modtaget != null).length, closedDeals.length, 'Vilkår vist i udsendelsen.'),
+  coverageCard('TV-aftaler med kendt ejerandel', closedDeals.filter(deal => deal.andel_solgt != null).length, closedDeals.length, 'Kun registreret andel i TV-aftalen.'),
+  coverageCard('Virksomheder med CVR', arkiv.companies.filter(company => company.cvr_nummer).length, arkiv.companies.length, 'CVR indsættes kun ved dokumenteret match.'),
+  coverageCard('Virksomheder med mindst én kilde', companiesWithSources.size, arkiv.companies.length, 'Kilde på virksomhed, pitch eller efterliv tæller.'),
+  coverageCard('Virksomheder med dokumenteret efterliv', companiesWithEvents.size, arkiv.companies.length, 'Fravær af event er ikke bevis for manglende udvikling.'),
+].join('');
+
+const seasonCoverageRows = arkiv.seasons.map(season => {
+  const deals = arkiv.deals.filter(deal => deal.saeson === season.season_number);
+  const companySlugs = new Set(deals.map(deal => deal.company.slug));
+  const dealsClosed = deals.filter(deal => deal.aftale);
+  const cvrCompanies = [...companySlugs].filter(slug => coAfSlug[slug]?.cvr_nummer).length;
+  const eventCompanies = [...companySlugs].filter(slug => companiesWithEvents.has(slug)).length;
+  return `<tr>
+    <th scope="row">Sæson ${season.season_number}<small>${season.year}</small></th>
+    <td class="num">${deals.length}</td>
+    <td class="num">${coverageValue(deals.filter(deal => deal.afsnit != null).length, deals.length)}</td>
+    <td class="num">${coverageValue(deals.filter(deal => deal.soeger != null).length, deals.length)}</td>
+    <td class="num">${coverageValue(dealsClosed.filter(deal => deal.andel_solgt != null).length, dealsClosed.length)}</td>
+    <td class="num">${coverageValue(cvrCompanies, companySlugs.size)}</td>
+    <td class="num">${coverageValue(eventCompanies, companySlugs.size)}</td>
+  </tr>`;
+}).join('');
+
+const confidenceCounts = ['confirmed', 'likely', 'uncertain'].map(confidence => ({
+  confidence,
+  count: arkiv.sources.filter(source => source.confidence === confidence).length,
+}));
+const confidenceLabels = { confirmed: 'Bekræftet', likely: 'Sandsynlig', uncertain: 'Usikker' };
+const confidenceRows = confidenceCounts.map(item => `<tr><th scope="row">${confidenceLabels[item.confidence]}</th><td class="num">${item.count}</td><td class="num">${coveragePercent(item.count, arkiv.sources.length)}</td></tr>`).join('');
+
+const methodPath = '/metode/';
+const methodBody = `<a class="back-btn" href="/">← Forsiden</a>
+<article class="method-page company-profile">
+  <header class="company-profile-header method-header">
+    <div class="profile-eyebrow">Metode · snapshot ${TRYKT.split('-').reverse().join('.')}</div>
+    <h1>Sådan arbejder arkivet</h1>
+    <p>Definitioner, kildekrav og den aktuelle datadækning bag Hulens Data. Tallene nedenfor beregnes ved hver trykning og er ikke skrevet ind manuelt.</p>
+  </header>
+
+  <nav class="profile-nav" aria-label="På denne side"><a href="#definitioner">Definitioner</a><a href="#kilder">Kilder og confidence</a><a href="#daekning">Datadækning</a><a href="#saesoner">Sæsoner</a><a href="#rettelser">Rettelser</a></nav>
+
+  <section class="profile-section" id="definitioner">
+    <div class="section-heading"><span class="section-kicker">01 · Datakontrakt</span><h2>Hvad arkivet registrerer</h2><p>TV-øjeblikket og tiden efter udsendelsen er to forskellige datalag.</p></div>
+    <div class="method-definition-grid">
+      <div><h3>Pitch</h3><p>En registreret virksomhedsoptræden i programmet. Samme virksomhed kan have flere pitches. Ukendt afsnit forbliver ukendt.</p></div>
+      <div><h3>Registreret TV-aftale</h3><p>De vilkår, der er registreret fra udsendelsen: beløb, ejerandel og investorer. Det betyder ikke automatisk, at investeringen blev realiseret efter optagelsen.</p></div>
+      <div><h3>Flere investorer</h3><p>Hver investor knyttes som en selvstændig relation til samme TV-aftale. Aftalebeløbet summeres ikke én gang pr. investor.</p></div>
+      <div><h3>Kollapset eller ændret aftale</h3><p>En senere genforhandling eller ophør registreres som en efterlivshændelse. Den overskriver ikke det dokumenterede TV-øjeblik.</p></div>
+      <div><h3>Efterlivshændelse</h3><p>En daterbar, kildebelagt begivenhed efter udsendelsen, eksempelvis exit, konkurs, lukning, funding, ejerskifte eller milepæl.</p></div>
+      <div><h3>NULL</h3><p>NULL betyder, at arkivet ikke har tilstrækkelig dokumentation. Ukendte afsnit, datoer, beløb, ejerandele, CVR og status bliver ikke udfyldt ved gæt.</p></div>
+    </div>
+  </section>
+
+  <section class="profile-section" id="kilder">
+    <div class="section-heading"><span class="section-kicker">02 · Kildekritik</span><h2>Kilder, confidence og datopræcision</h2><p>Kilder knyttes til den konkrete entitet eller det konkrete felt, de understøtter.</p></div>
+    <div class="documentation-grid method-source-grid">
+      <div>
+        <h3>Confidence</h3>
+        <dl class="method-confidence"><div><dt>Bekræftet</dt><dd>Primærkilde eller flere uafhængige kilder er enige.</dd></div><div><dt>Sandsynlig</dt><dd>Én troværdig kilde eller en dokumenteret afledning.</dd></div><div><dt>Usikker</dt><dd>Kilder er uenige, eller dokumentationen er svag. Uenige tal vises som spænd.</dd></div></dl>
+      </div>
+      <div>
+        <h3>Kildegrænser</h3>
+        <p>Aggregatorer som grundigt.dk bruges som kontrol- og leadkilder. Centrale exit-, konkurs- og beløbsoplysninger publiceres ikke alene på baggrund af et aggregatorfund.</p>
+        <p>Datoer vises med den dokumenterede præcision: dag, måned eller år. Arkivet opfinder ikke en dag for at udfylde et datoformat.</p>
+        <p>En oplysning publiceres ikke, når identiteten er tvetydig, kilden ikke kan efterprøves, eller påstanden kræver en årsagsforklaring, kilden ikke bærer.</p>
+      </div>
+    </div>
+    <div class="table-wrap method-table"><table><caption>Kilder fordelt på confidence</caption><thead><tr><th>Confidence</th><th class="num">Kilder</th><th class="num">Andel</th></tr></thead><tbody>${confidenceRows}</tbody></table></div>
+  </section>
+
+  <section class="profile-section" id="daekning">
+    <div class="section-heading"><span class="section-kicker">03 · Aktuelt snapshot</span><h2>Datadækning</h2><p>Dækning måler, hvor meget arkivet kan dokumentere — ikke kvaliteten eller succesen af virksomhederne.</p></div>
+    <dl class="method-coverage-grid">${coverageCards}</dl>
+  </section>
+
+  <section class="profile-section" id="saesoner">
+    <div class="section-heading"><span class="section-kicker">04 · Sæsoner</span><h2>Dækning pr. sæson</h2><p>Sæson 1–4 mangler systematisk flere afviste pitches. Antal og aftaleandele kan derfor ikke sammenlignes direkte med senere sæsoner.</p></div>
+    <div class="table-wrap method-table"><table><caption>Datadækning pr. sæson</caption><thead><tr><th>Sæson</th><th class="num">Pitches</th><th class="num">Kendt afsnit</th><th class="num">Kendt søgt beløb</th><th class="num">Kendt aftaleandel</th><th class="num">CVR</th><th class="num">Efterliv</th></tr></thead><tbody>${seasonCoverageRows}</tbody></table></div>
+    <p class="context-note">CVR og efterliv beregnes på unikke virksomheder i sæsonen. En virksomhed med flere pitches tæller én gang i disse to kolonner.</p>
+  </section>
+
+  <section class="profile-section" id="rettelser">
+    <div class="section-heading"><span class="section-kicker">05 · Revision</span><h2>Sådan foretages rettelser</h2></div>
+    <div class="method-definition-grid">
+      <div><h3>1. Påstanden afgrænses</h3><p>Det afgøres, om rettelsen vedrører TV-pitchen, virksomhedens identitet eller en efterlivshændelse. Fakta flyttes ikke mellem datalag.</p></div>
+      <div><h3>2. Kilden efterprøves</h3><p>En samtidig primærkilde foretrækkes. Aggregatorer bruges til at finde spor, ikke som automatisk slutdokumentation.</p></div>
+      <div><h3>3. Data og note opdateres</h3><p>Den kanoniske værdi rettes ét sted. Kilden får confidence, og væsentlige korrektioner dokumenterer den tidligere værdi i noten.</p></div>
+      <div><h3>4. Arkivet trykkes igen</h3><p>Datavalidering, statisk build, links, redirects, canonical og JSON-LD kontrolleres før det nye snapshot publiceres.</p></div>
+    </div>
+    <p class="unofficial-note">Hulens Data er uofficielt og uafhængigt. Arkivet publicerer kun det, det aktuelle kildelag kan bære.</p>
+  </section>
+</article>`;
+const methodJsonLd = [
+  { '@context': 'https://schema.org', '@type': 'WebPage', name: 'Metode og datadækning', url: HOST + methodPath,
+    description: 'Definitioner, kildekritik, confidence, NULL-håndtering og aktuel datadækning for Hulens Data.' },
+  { '@context': 'https://schema.org', ...brodkrumme('Metode og datadækning', methodPath) },
+];
+skriv('metode/', side({ sti: methodPath, titel: 'Metode og datadækning — Hulens Data',
+  beskrivelse: 'Sådan registrerer og dokumenterer Hulens Data pitches, TV-aftaler, efterliv, kilder, confidence, NULL og CVR — med aktuel dækning pr. sæson.',
+  jsonld: methodJsonLd, krop: methodBody, aktiv: 'method', type: 'website' }));
+stier.push(methodPath);
+console.log('metode: dækning genereret');
+
+/* ── 9. Sitemap ── */
 const faste = ['/', '/deals.html', '/companies.html', '/investors.html', '/charts.html'];
 writeFileSync(join(ROD, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +

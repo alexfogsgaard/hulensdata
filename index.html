@@ -100,11 +100,11 @@
       <p><strong>Kilderne</strong> vises ved den oplysning, de understøtter. Confidence markeres som bekræftet, sandsynlig eller usikker.</p>
       <p><strong>Ukendt betyder ukendt.</strong> Arkivet gætter ikke afsnit, beløb, ejerandele, CVR eller status.</p>
     </div>
-    <p class="unofficial-note">Hulens Data er et uofficielt, uafhængigt arkiv og er ikke tilknyttet DR eller programmets producenter.</p>
+    <p class="unofficial-note">Hulens Data er et uofficielt, uafhængigt arkiv og er ikke tilknyttet DR eller programmets producenter. <a href="/metode/">Læs den fulde metode og aktuelle datadækning.</a></p>
   </section>
 </main>
 
-<footer class="site-footer"><span>Hulens Data · uofficielt dataarkiv</span><a href="#metode">Metode og kilder</a></footer>
+<footer class="site-footer"><span>Hulens Data · uofficielt dataarkiv</span><a href="/metode/">Metode og datadækning</a></footer>
 
 <script src="js/helpers.js"></script>
 <script src="js/supabase.js"></script>
@@ -124,7 +124,7 @@ async function init() {
 
   document.getElementById('editorial-stats').innerHTML = [
     renderEditorialStat('Pitches', String(stats.pitches), `${stats.dealsClosed} endte med en aftale på TV`),
-    renderEditorialStat('TV-investeringer', stats.totalReceived.toLocaleString('da-DK') + ' kr.', 'Registreret beløb i udsendelserne'),
+    renderEditorialStat('Registreret TV-beløb', stats.totalReceived.toLocaleString('da-DK') + ' kr.', 'Vilkår i udsendelserne — ikke nødvendigvis realiseret'),
     renderEditorialStat('Virksomheder', String(archiveStats.companies), `${archiveStats.cvr} med dokumenteret CVR`),
     renderEditorialStat('Efterlivshændelser', String(archiveStats.events), `${archiveStats.sources} synlige kilder i arkivet`),
     renderEditorialStat('Investorer', String(stats.investors), `${stats.seasons} sæsoner dækket`),

@@ -1135,13 +1135,38 @@ thead th[data-sort] button:focus-visible { outline: 2px solid var(--red); outlin
 .filter-summary { margin: calc(-1 * var(--space-4)) 0 var(--space-4); color: var(--muted); font-size: .75rem; }
 .filters select:disabled { color: var(--muted); cursor: not-allowed; opacity: .7; }
 
+/* Fase 3 · metode og aktuel datadækning */
+.method-header h1 { max-width: 10ch; }
+.method-definition-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); }
+.method-definition-grid > div { padding-top: 16px; border-top: 2px solid var(--text); }
+.method-definition-grid h3 { margin-bottom: 8px; font-family: var(--font-display); font-size: 1.2rem; }
+.method-definition-grid p, .method-source-grid p { color: var(--muted); font-size: .84rem; }
+.method-source-grid > div { min-width: 0; }
+.method-source-grid p + p { margin-top: 12px; }
+.method-confidence { display: grid; gap: 0; margin: 0; border-top: 1px solid var(--border-strong); }
+.method-confidence > div { display: grid; grid-template-columns: minmax(100px, .35fr) 1fr; gap: var(--space-4); padding: 12px 0; border-bottom: 1px solid var(--border); }
+.method-confidence dt { font-weight: 600; }
+.method-confidence dd { margin: 0; color: var(--muted); font-size: .8rem; }
+.method-coverage-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; border-top: 1px solid var(--border-strong); border-left: 1px solid var(--border); }
+.method-coverage-grid > div { min-height: 158px; padding: var(--space-4); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.method-coverage-grid dt { color: var(--muted); font-size: .68rem; font-weight: 600; letter-spacing: .055em; text-transform: uppercase; }
+.method-coverage-grid dd { margin: var(--space-5) 0 6px; color: var(--text); font-size: 1rem; font-weight: 600; }
+.method-coverage-grid span { color: var(--muted); font-size: .72rem; line-height: 1.4; }
+.method-table { max-height: none; margin-top: var(--space-5); overflow-x: auto; }
+.method-table table { min-width: 680px; }
+.method-table caption { padding: 12px; color: var(--muted); border-bottom: 1px solid var(--border); font: .68rem var(--font-mono); letter-spacing: .04em; text-align: left; text-transform: uppercase; }
+.method-table th small { display: block; margin-top: 3px; color: var(--muted); font-weight: 400; }
+
 @media (max-width: 760px) {
   .deals-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .register-entry > header { flex-direction: column; }
   .register-entry .archive-event { margin-left: 22px; }
+  .method-definition-grid, .method-coverage-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 520px) {
   .deals-filters { grid-template-columns: 1fr; }
   .season-strip { min-height: 160px; padding: 18px 10px; overflow-x: auto; }
+  .method-definition-grid, .method-coverage-grid { grid-template-columns: 1fr; }
+  .method-confidence > div { grid-template-columns: 1fr; gap: 4px; }
 }

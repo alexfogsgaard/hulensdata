@@ -68,7 +68,8 @@ for (const file of files) {
       report.blocker('SEO_JSONLD_PARSE', `Ugyldig JSON-LD: ${error.message}`, `${rel}#jsonld-${index + 1}`);
     }
   }
-  const needsBreadcrumb = /^\/(?:virksomheder|loever|saesoner)\//.test(route) || /^\/arkiv\/.+\/$/.test(route);
+  const needsBreadcrumb = /^\/(?:virksomheder|loever|saesoner)\//.test(route)
+    || /^\/arkiv\/.+\/$/.test(route) || route === '/metode/';
   if (needsBreadcrumb && !types.includes('BreadcrumbList')) report.blocker('SEO_BREADCRUMB', 'Dyb side mangler BreadcrumbList', rel);
 }
 
