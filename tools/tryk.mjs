@@ -42,6 +42,7 @@ const QUERIES = {
   seasons: 'seasons?select=season_number,year&order=season_number.asc',
   companies: 'companies?select=id,name,slug,category,status,cvr_nummer&order=name.asc&limit=1000',
   company_events: 'company_events?select=id,event_date,date_precision,event_type,title,description,amount,created_at,updated_at,company:companies(slug)&order=event_date.asc&limit=1000',
+  // limit er et klientønske; Supabase kan stadig håndhæve projektets server-side max-rows.
   sources: 'sources?select=id,entity_type,entity_id,field_name,source_name,source_url,note,confidence&limit=10000',
   panel_memberships: 'panel_memberships?select=season_number,investor_id,role',
   investors: 'investors?select=id,canonical_name,slug',
@@ -285,7 +286,7 @@ ${faktaListe}`;
 
 // Registrenes forside (/arkiv/)
 if (registerStier.length) {
-  const krop = `<a class="back-btn" href="/">← Kartoteket</a>
+  const krop = `<a class="back-btn" href="/">← Forsiden</a>
 <h1 class="page-title">Registrene <span>·</span> tematiske opslag</h1>
 <p class="tb-under" style="margin:0 0 24px">Hvad der skete, efter kameraerne slukkede — på tværs af sagerne. Kun dokumenterede hændelser med kilder.</p>
 <div class="kartei">${registerStier.map(r => `
