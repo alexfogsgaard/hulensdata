@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Deals — Hulens Data</title>
+<title>Pitches og aftaler fra Løvens Hule — Hulens Data</title>
+<meta name="description" content="Filtrér registrerede pitches og TV-aftaler fra Løvens Hule efter sæson og investor. Se beløb, andele og udfald.">
+<link rel="canonical" href="https://hulensdata.dk/deals.html">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <script src="js/layout.js"></script>
@@ -13,8 +15,8 @@
 <header class="site-header"></header>
 <script>renderSiteHeader('deals');</script>
 
-<main class="page-main">
-  <h1 class="page-title">Protokollen <span>·</span> alle indførsler</h1>
+<main id="main-content" class="page-main">
+  <header class="index-header"><p class="section-kicker">TV-laget</p><h1 class="page-title">Pitches & aftaler</h1><p>Registrerede vilkår og udfald fra udsendelserne. En TV-aftale er ikke nødvendigvis en endelig investering.</p></header>
 
   <div class="filters">
     <label>Sæson</label>
@@ -105,14 +107,14 @@ function renderTable() {
   });
 
   document.getElementById('deals-tbody').innerHTML = data.length === 0
-    ? '<tr><td colspan="10" class="empty">Ingen deals matcher filteret</td></tr>'
+    ? '<tr><td colspan="10" class="empty">Ingen pitches matcher filteret</td></tr>'
     : data.map(renderDealRow).join('');
 
   // Markér aktiv sorteringskolonne (guld sort-ikon via thead th.sorted i style.css)
   document.querySelectorAll('thead th[data-sort]').forEach(th =>
     th.classList.toggle('sorted', th.dataset.sort === sortKey));
 
-  document.getElementById('table-count').textContent = `Viser ${data.length} af ${allDeals.length} deals`;
+  document.getElementById('table-count').textContent = `Viser ${data.length} af ${allDeals.length} pitches`;
 }
 
 // Event-wiring — ingen inline handlers i markup
