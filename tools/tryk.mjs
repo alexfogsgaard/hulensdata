@@ -38,6 +38,7 @@ async function hent(path) {
 
 const QUERIES = {
   deals: 'deals?select=id,saeson,afsnit,soeger,andel_tilbudt,beloeb_modtaget,andel_solgt,aftale,company:companies(name,slug,category,status),deal_investors(investor:investors(canonical_name))&order=saeson.asc,afsnit.asc&limit=1000',
+  deal_investors: 'deal_investors?select=deal_id,investor_id&order=deal_id.asc,investor_id.asc&limit=1000',
   investor_status: 'investor_status?select=canonical_name,slug,status,first_season,last_season,panel_seasons&order=canonical_name.asc',
   seasons: 'seasons?select=season_number,year&order=season_number.asc',
   companies: 'companies?select=id,name,slug,category,status,cvr_nummer&order=name.asc&limit=1000',
