@@ -450,7 +450,7 @@ const methodBody = `<a class="back-btn" href="/">← Forsiden</a>
       <div><h3>Flere investorer</h3><p>Hver investor knyttes som en selvstændig relation til samme TV-aftale. Aftalebeløbet summeres ikke én gang pr. investor.</p></div>
       <div><h3>Kollapset eller ændret aftale</h3><p>En senere genforhandling eller ophør registreres som en efterlivshændelse. Den overskriver ikke det dokumenterede TV-øjeblik.</p></div>
       <div><h3>Efterlivshændelse</h3><p>En daterbar, kildebelagt begivenhed efter udsendelsen, eksempelvis exit, konkurs, lukning, funding, ejerskifte eller milepæl.</p></div>
-      <div><h3>NULL</h3><p>NULL betyder, at arkivet ikke har tilstrækkelig dokumentation. Ukendte afsnit, datoer, beløb, ejerandele, CVR og status bliver ikke udfyldt ved gæt.</p></div>
+      <div><h3>NULL</h3><p>NULL betyder, at en værdi er ukendt eller ikke anvendelig. For et pitch uden TV-aftale er TV-beløb og solgt ejerandel ikke anvendelige; ukendte afsnit, datoer, søgte beløb, ejerandele og CVR bliver ikke udfyldt ved gæt.</p></div>
     </div>
   </section>
 

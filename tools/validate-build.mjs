@@ -2,7 +2,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { createReport } from './lib/report.mjs';
-import { extractIds, listPublicHtml, readHtml, routeForFile, stripNonVisibleHtml } from './lib/site.mjs';
+import { listPublicHtml, readHtml, routeForFile, stripNonVisibleHtml } from './lib/site.mjs';
 
 const root = process.cwd();
 const report = createReport('Buildvalidering');
@@ -66,19 +66,19 @@ for (const file of publicFiles) {
     report.blocker('BUILD_STATIC_RUNTIME_DATA', 'Trykt side må ikke hente hele datasnapshottet for at vise statisk indhold', rel);
   }
 
-  const ids = [...extractIds(html)];
+  const ids = [...html.matchAll(/\sid=["']([^"']+)["']/gi)].map(match => match[1]);
   const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
   for (const id of new Set(duplicates)) report.blocker('BUILD_DUPLICATE_ID', `Dubleret id="${id}"`, rel);
 
   const visible = stripNonVisibleHtml(html);
   const badPatterns = [
-    ['BUILD_EUNDEFINED', /Eundefined/],
-    ['BUILD_UNDEFINED', /\bundefined\b/],
-    ['BUILD_NAN', /\bNaN\b/],
-    ['BUILD_NULL_MONEY', /(?:null\s*kr\.|kr\.?\s*null)/i],
+    ['BUILD_EUNDEFINED', /Eundefined/, html],
+    ['BUILD_UNDEFINED', /\bundefined\b/, visible],
+    ['BUILD_NAN', /\bNaN\b/, html],
+    ['BUILD_NULL_MONEY', /(?:null\s*kr\.|kr\.?\s*null)/i, visible],
   ];
-  for (const [code, pattern] of badPatterns) {
-    if (pattern.test(visible)) report.blocker(code, `Fejltekst matchede ${pattern}`, `${rel} (${route})`);
+  for (const [code, pattern, content] of badPatterns) {
+    if (pattern.test(content)) report.blocker(code, `Fejltekst matchede ${pattern}`, `${rel} (${route})`);
   }
 }
 
@@ -90,9 +90,17 @@ try {
   if (!Array.isArray(search.items) || search.items.length !== expected) {
     report.blocker('BUILD_SEARCH_INDEX_COUNT', `Søgeindekset har ${search.items?.length ?? 'ingen'} opslag; forventede ${expected}`, 'data/search-index.json');
   }
+  const searchEntries = new Map();
   for (const [index, item] of (search.items || []).entries()) {
     if (!item.name || !item.type || !item.group || !item.url || !Array.isArray(item.keywords)) {
       report.blocker('BUILD_SEARCH_INDEX_ITEM', 'Søgeopslag mangler navn, type, gruppe, URL eller keywords', `data/search-index.json#${index}`);
+    }
+    const key = [item.type, item.name, item.url].map(value => String(value || '').toLocaleLowerCase('da-DK')).join('\u0000');
+    if (searchEntries.has(key)) {
+      report.blocker('BUILD_SEARCH_INDEX_DUPLICATE', 'Søgeindekset indeholder et dubleret opslag', `data/search-index.json#${searchEntries.get(key)},#${index}`);
+    } else searchEntries.set(key, index);
+    if (item.url && (!String(item.url).startsWith('/') || /(?:Eundefined|\bNaN\b)/.test(item.url))) {
+      report.blocker('BUILD_SEARCH_INDEX_URL', `Ugyldig intern søge-URL: ${item.url}`, `data/search-index.json#${index}`);
     }
   }
 } catch (error) {
