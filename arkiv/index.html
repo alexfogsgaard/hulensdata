@@ -8,7 +8,7 @@
 <link rel="canonical" href="https://hulensdata.dk/arkiv/">
 <meta property="og:site_name" content="Hulens Data">
 <meta property="og:locale" content="da_DK">
-<meta property="og:type" content="article">
+<meta property="og:type" content="website">
 <meta property="og:title" content="Registrene — konkurser, exits og kollapsede deals fra Løvens Hule | Hulens Data">
 <meta property="og:description" content="Tematiske registre over efterlivet i Løvens Hule: konkurser, exits og kollapsede deals — dokumenteret med kilder.">
 <meta property="og:url" content="https://hulensdata.dk/arkiv/">
@@ -19,24 +19,13 @@
 </head>
 <body>
 <header class="site-header"></header>
-<script>renderSiteHeader(null);</script>
+<script>renderSiteHeader("archive");</script>
 <main id="main-content" class="page-main">
 <a class="back-btn" href="/">← Forsiden</a>
-<h1 class="page-title">Registrene <span>·</span> tematiske opslag</h1>
-<p class="tb-under" style="margin:0 0 24px">Hvad der skete, efter kameraerne slukkede — på tværs af sagerne. Kun dokumenterede hændelser med kilder.</p>
-<div class="kartei">
-  <a class="kartei-kort" href="/arkiv/konkurser/">
-    <span class="kk-kant"><span class="kk-nr num">19</span><span class="kk-navn">Konkurser</span><span class="kk-spaend num">tilfælde</span></span>
-  </a>
-  <a class="kartei-kort" href="/arkiv/exits/">
-    <span class="kk-kant"><span class="kk-nr num">03</span><span class="kk-navn">Exits</span><span class="kk-spaend num">tilfælde</span></span>
-  </a>
-  <a class="kartei-kort" href="/arkiv/kollapsede-deals/">
-    <span class="kk-kant"><span class="kk-nr num">05</span><span class="kk-navn">Kollapsede deals</span><span class="kk-spaend num">tilfælde</span></span>
-  </a>
-</div>
-<footer class="tryk-kolofon">Hulens Data · uofficielt dataarkiv · snapshot 15.07.2026 · <a href="/#metode">Metode og kilder</a></footer>
+<header class="index-header"><p class="section-kicker">Efter kameraerne</p><h1 class="page-title">Tematiske registre</h1><p>Hvad der skete efter udsendelsen, på tværs af virksomhederne. Kun dokumenterede hændelser med synlige kilder.</p></header>
+<div class="register-links"><a href="/arkiv/konkurser/"><span>Konkurser og lukninger</span><small>Dokumenterede hændelser</small><strong class="num">5</strong></a><a href="/arkiv/exits/"><span>Exits</span><small>Dokumenterede hændelser</small><strong class="num">3</strong></a><a href="/arkiv/kollapsede-deals/"><span>Kollapsede deals</span><small>Dokumenterede hændelser</small><strong class="num">5</strong></a></div>
 </main>
+<footer class="site-footer"><span>Hulens Data · uofficielt dataarkiv · snapshot 15.07.2026</span><a href="/#metode">Metode og kilder</a></footer>
 <script src="/js/helpers.js"></script>
 <script src="/js/supabase.js"></script>
 <script>loadDeals().then(renderHeaderStats).catch(function(){});</script>

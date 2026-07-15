@@ -9,26 +9,23 @@
 // Deal-række (deals-tabellen) — returnerer <tr>-markup for ét deal.
 // Virksomhedsnavne er ægte links til de trykte bind (crawlbar intern graf).
 function renderDealRow(d) {
-  const change = (d.valBefore && d.valAfter) ? d.valAfter - d.valBefore : null;
   return `
     <tr>
       <td><a class="company-name" href="${companyUrl(d.name)}">${esc(d.name)}</a></td>
       <td><span class="season-badge">S${d.season}${d.episode == null ? '' : ` · Afsnit ${d.episode}`}</span></td>
+      <td><span class="deal-outcome ${d.aftale ? 'has-deal' : 'no-deal'}">${d.aftale ? 'Aftale på TV' : 'Ingen aftale på TV'}</span></td>
       <td class="num${d.asked == null ? ' unknown' : ''}">${d.asked == null ? 'Ikke dokumenteret' : fmt(d.asked)}</td>
       <td class="num dim col-secondary${d.shareOffered == null ? ' unknown' : ''}">${d.shareOffered == null ? 'Ikke dokumenteret' : pct(d.shareOffered)}</td>
-      <td class="num dim col-secondary${d.valBefore == null ? ' unknown' : ''}">${d.valBefore == null ? 'Ikke dokumenteret' : fmt(d.valBefore)}</td>
-      <td class="num${d.received ? ' received' : ''}">${d.aftale ? knownMoney(d.received) : 'Ingen aftale'}</td>
+      <td class="num${d.received ? ' received' : ''}">${d.aftale ? knownMoney(d.received) : 'Ikke relevant'}</td>
       <td class="num dim col-secondary${d.shareSold == null ? ' unknown' : ''}">${d.aftale ? knownPercent(d.shareSold) : 'Ikke relevant'}</td>
-      <td class="num dim col-secondary${d.valAfter == null ? ' unknown' : ''}">${d.aftale && d.valAfter != null ? fmt(d.valAfter) : d.aftale ? 'Ikke dokumenteret' : 'Ikke relevant'}</td>
-      <td class="num col-secondary ${change == null ? 'unknown' : change >= 0 ? 'val-up' : 'val-down'}">${change == null ? 'Ikke dokumenteret' : (change >= 0 ? '+' : '') + fmt(change)}</td>
       <td class="investors-cell" title="${esc(d.investors)}">${esc(d.investorList.slice(0,2).join(', '))}${d.investorList.length > 2 ? ' +' + (d.investorList.length - 2) : ''}</td>
+      <td>${esc(d.category || 'Ikke dokumenteret')}</td>
+      <td><span class="status-label status-${esc((d.status || 'ukendt').toLowerCase())}">${esc(d.status || 'Ukendt')}</span></td>
     </tr>`;
 }
 
-// Virksomhedskort (companies-gridet) — deals er virksomhedens deals, kronologisk.
-// KARTEIEN: kortet står på højkant i skuffen — hvilende ses kun kanten
-// (№, navn, spænd, statusmærke); hover/fokus løfter kortet op og viser
-// forsiden. Hele kortet er ét link til det trykte bind.
+// Virksomhedskort i det redaktionelle register. Deals er kronologiske,
+// og hele kortet er et direkte link til den statiske virksomhedsprofil.
 function renderCompanyCard(name, deals) {
   const latest = deals[deals.length - 1];
   const hasDeal = deals.some(d => d.received);
@@ -54,15 +51,11 @@ function renderCompanyCard(name, deals) {
     </a>`;
 }
 
-// Investor-profil — mini-dashboard (hero + sæsongraf + mønstre + deals-tabel).
-// p er output fra buildInvestorProfile(); klik på partnere/virksomheder
-// håndteres af siden via delegation (data-name / data-company).
+// Investorprofil med panelhistorik, sæsonfordeling og registrerede TV-aftaler.
+// P er output fra buildInvestorProfile(); relationer er direkte links.
 function renderInvestorProfile(p, latestSeason) {
   const m = p.m;
-  const isActive = m.status === 'aktiv';
-  const badge = isActive
-    ? '<span class="inv-badge inv-badge--active">● Aktiv løve</span>'
-    : m.status === 'gaest' ? '<span class="inv-badge">Gæsteløve</span>' : '<span class="inv-badge">Tidligere løve</span>';
+  const statusLabel = m.status === 'aktiv' ? 'Aktiv investor' : m.status === 'gaest' ? 'Gæsteinvestor' : 'Tidligere investor';
   const seasons = m.panelSeasons;
   const span = seasons.length === 1 ? `S${seasons[0]}` : `S${seasons[0]}–S${seasons[seasons.length - 1]}`;
 
@@ -79,64 +72,46 @@ function renderInvestorProfile(p, latestSeason) {
       </div>`;
   }
 
-  const partnerChips = p.partners.slice(0, 4).map(pt =>
-    `<a class="partner-chip" href="${investorUrl(pt.name)}">${esc(pt.name)} <span class="chip-count">${pt.count}</span></a>`
-  ).join('') || '<span class="profile-dim">Ingen co-investeringer</span>';
+  const partnerChips = p.partners.slice(0, 6).map(pt =>
+    `<a class="text-link" href="${investorUrl(pt.name)}">${esc(pt.name)} · ${pt.count}</a>`
+  ).join('') || '<span class="empty-value">Ingen fælles TV-aftaler registreret</span>';
 
   return `
-    <div class="mappe">
-    <div class="mappe-fane"><span class="num">PERSONAKT</span> ${esc(m.name)} <span class="mf-bind num">${span}</span></div>
-    <div class="mappe-indhold">
-    <div class="profile-hero dokument">
-      <div class="inv-topline">${badge}<span class="inv-span">${span}</span></div>
-      <h1 class="profile-name">${esc(m.name)}</h1>
-      <div class="profile-metrics">
-        <div class="pm"><span class="k">Deals</span><span class="v num">${m.deals}</span></div>
-        <div class="pm"><span class="k">Samlet investeret</span><span class="v num">kr ${(m.received/1000000).toFixed(1)}M</span></div>
-        <div class="pm"><span class="k">Gns. andel</span><span class="v num">${m.avgShare ? m.avgShare.toFixed(1) + '%' : '—'}</span></div>
-        <div class="pm"><span class="k">Typisk deal</span><span class="v num">${p.medianDeal ? 'kr ' + (p.medianDeal/1000).toFixed(0) + 'k' : '—'}</span></div>
-        <div class="pm"><span class="k">Største deal</span><span class="v num">${m.largest ? 'kr ' + (m.largest.received/1000000).toFixed(1) + 'M' : '—'}</span></div>
-      </div>
-    </div>
-
-    <div class="profile-grid">
-      <div class="profile-panel">
-        <div class="panel-label">Investeret pr. sæson</div>
-        <div class="strip-bars profile-strip">${bars}</div>
-      </div>
-      <div class="profile-panel">
-        <div class="panel-label">Mønstre</div>
-        <div class="pattern-row"><span class="k">Største deal</span><span class="v">${m.largest ? `<span class="company-name" data-company="${esc(m.largest.name)}">${esc(m.largest.name)}</span> · kr ${(m.largest.received/1000000).toFixed(1)}M` : '—'}</span></div>
-        <div class="pattern-row"><span class="k">Solo / sammen</span><span class="v num">${p.solo} / ${p.shared}</span></div>
-        <div class="pattern-row pattern-partners"><span class="k">Hyppigste partnere</span></div>
-        <div class="partner-chips">${partnerChips}</div>
-      </div>
-    </div>
-
-    <div class="profile-panel profile-table">
-      <div class="panel-label">Alle deals (${p.dealList.length})</div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Virksomhed</th>
-              <th>Sæson</th>
-              <th class="num">Søger</th>
-              <th class="num col-secondary">Tilbudt andel</th>
-              <th class="num col-secondary">Val. før</th>
-              <th class="num">Modtaget</th>
-              <th class="num col-secondary">Solgt andel</th>
-              <th class="num col-secondary">Val. efter</th>
-              <th class="num col-secondary">Ændring</th>
-              <th>Investorer</th>
-            </tr>
-          </thead>
-          <tbody>${p.dealList.map(renderDealRow).join('')}</tbody>
-        </table>
-      </div>
-    </div>
-    </div>
-    </div>`;
+    <article class="investor-profile company-profile">
+      <header class="company-profile-header">
+        <div class="profile-eyebrow">Investor i Løvens Hule · panelperiode ${span}</div>
+        <h1>${esc(m.name)}</h1>
+        <p>Profilen viser registrerede TV-aftaler og panelhistorik. Beløbene beskriver vilkårene i udsendelsen — ikke nødvendigvis den endelige investering.</p>
+        <div class="profile-status-row"><span class="status-label status-${m.status === 'aktiv' ? 'aktiv' : 'ukendt'}">${statusLabel}</span><span>${span}</span><span class="num">${p.companyCount} virksomheder</span></div>
+      </header>
+      <nav class="profile-nav" aria-label="På denne side">
+        <a href="#overblik">Overblik</a><a href="#saesoner">Sæsoner</a><a href="#aftaler">TV-aftaler</a><a href="#relationer">Relationer og metode</a>
+      </nav>
+      <section class="profile-section" id="overblik">
+        <div class="section-heading"><span class="section-kicker">01 · Overblik</span><h2>Panelhistorik og registrerede aftaler</h2></div>
+        <dl class="fact-grid">
+          <div><dt>Panelperiode</dt><dd class="num">${span}</dd></div>
+          <div><dt>Pitches i panelperiodens datasæt</dt><dd class="num">${p.panelPitchCount}</dd></div>
+          <div><dt>Registrerede TV-aftaler</dt><dd class="num">${m.deals}</dd></div>
+          <div><dt>Registreret TV-beløb</dt><dd class="num">${fmt(m.received)}</dd></div>
+          <div><dt>Gennemsnitlig registreret andel</dt><dd class="num ${m.avgShare == null ? 'unknown' : ''}">${m.avgShare == null ? 'Ikke dokumenteret' : pct(Number(m.avgShare.toFixed(1)))}</dd></div>
+          <div><dt>Typisk registreret TV-beløb</dt><dd class="num ${p.medianDeal == null ? 'unknown' : ''}">${knownMoney(p.medianDeal)}</dd></div>
+        </dl>
+        <p class="context-note">Pitchtallet er summen af registrerede pitches i investorens panelsæsoner. Datasættet viser ikke, hvilke enkelte pitches investoren personligt overværede, og sæson 1–4 har ufuldstændig pitchdækning.</p>
+      </section>
+      <section class="profile-section" id="saesoner">
+        <div class="section-heading"><span class="section-kicker">02 · Sæsoner</span><h2>Registreret TV-beløb pr. sæson</h2><p>Søjler uden højde betyder, at der ikke er en aftale knyttet til investoren i sæsonen — ikke nødvendigvis at investoren var fraværende.</p></div>
+        <div class="strip-bars profile-strip season-strip" aria-label="Registreret TV-beløb pr. sæson">${bars}</div>
+      </section>
+      <section class="profile-section" id="aftaler">
+        <div class="section-heading"><span class="section-kicker">03 · TV-aftaler</span><h2>${p.dealList.length} registrerede aftaler</h2><p>Alle beløb og andele er de registrerede vilkår fra udsendelsen. Ukendte værdier markeres eksplicit.</p></div>
+        <div class="table-wrap"><table><thead><tr><th>Virksomhed</th><th>Sæson</th><th>Udfald</th><th class="num">Søgte</th><th class="num">Tilbudt andel</th><th class="num">TV-beløb</th><th class="num">Andel i TV-aftale</th><th>Investorer</th><th>Kategori</th><th>Status</th></tr></thead><tbody>${p.dealList.map(renderDealRow).join('')}</tbody></table></div>
+      </section>
+      <section class="profile-section" id="relationer">
+        <div class="section-heading"><span class="section-kicker">04 · Relationer og metode</span><h2>Medinvestorer og datagrænser</h2></div>
+        <div class="documentation-grid"><div><h3>Hyppigste medinvestorer</h3><div class="text-links">${partnerChips}</div></div><div><h3>Datagrundlag</h3><p class="context-note">${p.solo} aftaler er registreret alene og ${p.shared} med andre investorer. ${p.knownAmountCount} af ${p.dealList.length} aftaler har et registreret TV-beløb; ${p.knownShareCount} har en registreret andel. Arkivet dokumenterer ikke automatisk, om aftalen blev gennemført efter optagelsen.</p></div></div>
+      </section>
+    </article>`;
 }
 
 // Virksomheds-profil — mini-dashboard (hero + kapitalhistorik + netværk).
@@ -295,51 +270,6 @@ function renderEditorialStat(label, value, note) {
   return `<div class="editorial-stat"><dt>${esc(label)}</dt><dd class="num">${esc(value)}</dd><span>${esc(note)}</span></div>`;
 }
 
-/* ── Forside-dashboard (A+) ── */
-
-// KPI-tile: stort nøgletal i guld + mono-undertekst
-function renderKpiTile(label, value, sub) {
-  return `
-    <div class="kpi">
-      <div class="k">${esc(label)}</div>
-      <div class="v">${esc(value)}</div>
-      <div class="s num">${esc(sub)}</div>
-    </div>`;
-}
-
-// Kompakt deal-række til "Seneste deals"-panelet (4 kolonner)
-function renderLatestDealRow(d) {
-  return `
-    <tr>
-      <td class="co"><a class="company-name" href="${companyUrl(d.name)}">${esc(d.name)}</a></td>
-      <td><span class="ep num">S${d.season}${d.episode ? `E` + d.episode : ``}</span></td>
-      <td class="amt num">${fmt(d.received)}</td>
-      <td class="inv">${esc(d.investorList.join(', '))}</td>
-    </tr>`;
-}
-
-// Højdepunkts-række (label + stort tal + kontekst)
-function renderStoryRow(label, value, context, deltaHtml) {
-  return `
-    <div class="story">
-      <div class="k">${esc(label)}</div>
-      <div class="v">${esc(value)}${deltaHtml || ''}</div>
-      <div class="c">${esc(context)}</div>
-    </div>`;
-}
-
-// Aktiv løve-række: navn + proportional guld-bar + deals·beløb (mono)
-function renderLionRow(m, maxDeals) {
-  const w = Math.max(10, Math.round(m.latestSeasonDeals / maxDeals * 96));
-  return `
-    <div class="lion" data-name="${esc(m.name)}" tabindex="0" role="link" aria-label="${esc(m.name)} — åbn profil">
-      <span class="dot"></span>
-      <span class="n">${esc(m.name)}</span>
-      <span class="bar" style="width:${w}px"></span>
-      <span class="d num">${m.latestSeasonDeals} · ${(m.latestSeasonReceived/1000000).toFixed(1)}M</span>
-    </div>`;
-}
-
 // Skeleton-placeholders — vises mens data hentes (styles i style.css §SKELETON)
 function renderSkeletonCards(count) {
   return Array.from({ length: count }, () => '<div class="skeleton skeleton-card"></div>').join('');
@@ -349,31 +279,9 @@ function renderSkeletonRows(count, cols) {
     `<tr class="skeleton-row"><td colspan="${cols}"><div class="skeleton skeleton-line"></div></td></tr>`).join('');
 }
 
-// Sparkline: deals pr. sæson som mini-søjler (inline SVG — ingen Chart.js pr. kort)
-function renderSeasonSparkline(m, latestSeason) {
-  const max = Math.max(...Object.values(m.bySeason).map(b => b.deals));
-  const W = 6, GAP = 3, H = 28;
-  let bars = '';
-  for (let s = 1; s <= latestSeason; s++) {
-    const b = m.bySeason[s];
-    const h = b ? Math.max(4, Math.round(b.deals / max * (H - 2))) : 2;
-    bars += `<rect x="${(s - 1) * (W + GAP)}" y="${H - h}" width="${W}" height="${h}" rx="1" class="${b ? 'spark-on' : 'spark-off'}"><title>S${s}: ${b ? b.deals + ' deal' + (b.deals === 1 ? '' : 's') : 'ingen deals'}</title></rect>`;
-  }
-  const width = latestSeason * (W + GAP) - GAP;
-  return `<svg class="inv-spark" viewBox="0 0 ${width} ${H}" width="${width}" height="${H}" role="img" aria-label="Deals pr. sæson">${bars}</svg>`;
-}
-
-// Investorkort v2 — kompakt primærvisning (seneste sæson for aktive løver),
-// dybere data folder ud ved hover/focus. Klik/Enter åbner fuld profil.
-// m er et element fra buildInvestorIndex().investors.
+// Redaktionelt investorkort. M er et element fra buildInvestorIndex().investors.
 function renderInvestorCard(m, latestSeason) {
   const isActive = m.status === 'aktiv';
-
-  const badge = isActive
-    ? '<span class="inv-badge inv-badge--active">● Aktiv løve</span>'
-    : m.status === 'gaest'
-      ? '<span class="inv-badge">Gæsteløve</span>'
-      : '<span class="inv-badge">Tidligere løve</span>';
 
   // Spænd-chippen viser PANEL-sæsoner (hvornår de sad i hulen), ikke kun deal-sæsoner
   const seasons = m.panelSeasons;
@@ -381,22 +289,68 @@ function renderInvestorCard(m, latestSeason) {
     ? `S${seasons[0]}`
     : `S${seasons[0]}–S${seasons[seasons.length - 1]}`;
 
-  const heroLabel  = isActive ? `Sæson ${latestSeason}` : 'Karriere i hulen';
-  const heroDeals  = isActive ? m.latestSeasonDeals : m.deals;
-  const heroAmount = isActive ? m.latestSeasonReceived : m.received;
-
   return `
-    <a class="kartei-kort kartei-kort--person${isActive ? ' er-aktiv' : ''}" href="${investorUrl(m.name)}" data-name="${esc(m.name)}" aria-label="${esc(m.name)} — træk personakten frem">
-      <span class="kk-kant">
-        <span class="kk-nr num">${span}</span>
-        <span class="kk-navn">${esc(m.name)}</span>
-        <span class="kk-spaend num">${heroDeals} deal${heroDeals === 1 ? '' : 's'} · kr ${(heroAmount/1000000).toFixed(1).replace('.', ',')}M</span>
-        <span class="kk-maerke ${isActive ? 'aktiv' : m.status === 'gaest' ? 'ukendt' : 'inaktiv'}" title="${isActive ? 'aktiv løve' : m.status === 'gaest' ? 'gæsteløve' : 'tidligere løve'}"></span>
+    <a class="entity-card investor-entity-card" href="${investorUrl(m.name)}">
+      <span class="entity-card-main">
+        <span class="entity-card-kicker">${isActive ? `Aktiv investor · sæson ${latestSeason}` : m.status === 'gaest' ? 'Gæsteinvestor' : 'Tidligere investor'}</span>
+        <strong>${esc(m.name)}</strong>
+        <span class="entity-card-summary">${m.deals} registrerede TV-aftaler · ${fmt(m.received)} i registreret TV-beløb</span>
       </span>
-      <span class="kk-front">
-        <span class="kk-linje">${m.deals} deals i alt · <b class="num">kr ${(m.received/1000000).toFixed(1).replace('.', ',')}M</b> investeret${m.avgShare ? ` · gns. andel ${m.avgShare.toFixed(1).replace('.', ',')} %` : ''}</span>
-        ${m.largest ? `<span class="kk-linje dim">Største aftale: ${esc(m.largest.name)} (kr ${(m.largest.received/1000000).toFixed(1).replace('.', ',')}M)</span>` : ''}
-        <span class="kk-traek">træk personakten frem →</span>
-      </span>
+      <span class="entity-card-meta"><span>Panelperiode ${span}</span><span>${m.largest ? `Største registrerede aftale: ${esc(m.largest.name)} · ${fmt(m.largest.received)}` : 'Ingen TV-aftale registreret'}</span></span>
+      <span class="entity-card-action" aria-hidden="true">Se investor →</span>
     </a>`;
+}
+
+// Sæsonprofil — færdigkomponerede sæsondata fra Trykpressen.
+function renderSeasonProfile(p) {
+  const panelLinks = p.panel.map(person =>
+    `<a class="text-link" href="/loever/${esc(person.slug)}/">${esc(person.name)}${person.role === 'gaest' ? ' · gæst' : ''}</a>`
+  ).join('');
+  const rows = p.deals.map(deal => `
+    <tr>
+      <td><a class="company-name" href="${companyUrl(deal.name)}">${esc(deal.name)}</a></td>
+      <td class="num">${deal.episode == null ? 'Ikke dokumenteret' : deal.episode}</td>
+      <td><span class="deal-outcome ${deal.aftale ? 'has-deal' : 'no-deal'}">${deal.aftale ? 'Aftale på TV' : 'Ingen aftale på TV'}</span></td>
+      <td class="num">${deal.aftale ? knownMoney(deal.received) : 'Ikke relevant'}</td>
+      <td>${deal.investorList.length ? esc(deal.investorList.join(', ')) : 'Ingen investorer'}</td>
+      <td class="num">${deal.afterlifeCount}</td>
+    </tr>`).join('');
+  const events = p.events.length
+    ? p.events.map(item => `<div class="season-event"><a class="season-event-company" href="${companyUrl(item.companyName)}">${esc(item.companyName)}</a>${renderArchiveEvent(item.event)}</div>`).join('')
+    : '<div class="empty-state"><strong>Ingen efterlivshændelser er knyttet til sæsonen endnu.</strong><span>Det beskriver arkivets nuværende kildedækning, ikke nødvendigvis virksomhedernes faktiske udvikling.</span></div>';
+  return `
+    <article class="season-profile company-profile">
+      <header class="company-profile-header">
+        <div class="profile-eyebrow">Løvens Hule · ${esc(p.year)}</div>
+        <h1>Sæson ${p.season}</h1>
+        <p>Et samlet opslag over registrerede pitches, TV-aftaler, panel og dokumenteret efterliv. TV-vilkår og senere hændelser vises som to forskellige datalag.</p>
+      </header>
+      <nav class="profile-nav" aria-label="På denne side"><a href="#overblik">Overblik</a><a href="#panel">Panel</a><a href="#pitches">Pitches</a><a href="#efterliv">Efterliv</a></nav>
+      <section class="profile-section" id="overblik">
+        <div class="section-heading"><span class="section-kicker">01 · Overblik</span><h2>Sæsonen i arkivet</h2></div>
+        <dl class="fact-grid">
+          <div><dt>År</dt><dd class="num">${esc(p.year)}</dd></div><div><dt>Registrerede pitches</dt><dd class="num">${p.deals.length}</dd></div>
+          <div><dt>TV-aftaler</dt><dd class="num">${p.closedCount}</dd></div><div><dt>Uden TV-aftale</dt><dd class="num">${p.deals.length - p.closedCount}</dd></div>
+          <div><dt>Registreret TV-beløb</dt><dd class="num">${fmt(p.amount)}</dd></div><div><dt>Dokumenterede efterlivshændelser</dt><dd class="num">${p.events.length}</dd></div>
+        </dl>
+        ${p.season <= 4 ? '<p class="context-note"><strong>Dækningsforbehold:</strong> Pitchdækningen for sæson 1–4 er ufuldstændig. Antal og rater kan derfor ikke sammenlignes direkte med senere sæsoner.</p>' : ''}
+      </section>
+      <section class="profile-section" id="panel"><div class="section-heading"><span class="section-kicker">02 · Panel</span><h2>Investorer i sæsonen</h2></div><div class="text-links">${panelLinks}</div></section>
+      <section class="profile-section" id="pitches">
+        <div class="section-heading"><span class="section-kicker">03 · TV-laget</span><h2>Alle registrerede pitches</h2><p>Efterlivskolonnen tæller kun kildebelagte hændelser i arkivet.</p></div>
+        <div class="table-wrap"><table><thead><tr><th>Virksomhed</th><th class="num">Afsnit</th><th>Udfald</th><th class="num">TV-beløb</th><th>Investorer</th><th class="num">Efterliv</th></tr></thead><tbody>${rows}</tbody></table></div>
+      </section>
+      <section class="profile-section" id="efterliv"><div class="section-heading"><span class="section-kicker">04 · Efter kameraerne</span><h2>Dokumenteret efterliv</h2><p>Hændelserne sorteres efter dato og viser kildernes confidence.</p></div><div class="timeline season-timeline">${events}</div></section>
+      <nav class="adjacent-nav" aria-label="Andre sæsoner">${p.previous ? `<a href="/saesoner/${p.previous}/">← Sæson ${p.previous}</a>` : '<span></span>'}${p.next ? `<a href="/saesoner/${p.next}/">Sæson ${p.next} →</a>` : ''}</nav>
+    </article>`;
+}
+
+// Registerpost — samme komponent på tværs af eventtyper.
+function renderRegisterEntry(item) {
+  return `
+    <article class="register-entry">
+      <header><div><span class="section-kicker">${EVENT_TYPE_LABELS[item.event.event_type] || 'Hændelse'} · ${fmtEventDate(item.event.event_date, item.event.date_precision)}</span><h2><a href="${companyUrl(item.companyName)}">${esc(item.companyName)}</a></h2></div><a class="section-link" href="${companyUrl(item.companyName)}#efterliv">Se hele sagen →</a></header>
+      <p class="register-tv-context">${esc(item.dealSummary)}</p>
+      ${renderArchiveEvent(item.event).trimStart()}
+    </article>`;
 }

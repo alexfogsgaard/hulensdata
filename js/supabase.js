@@ -18,7 +18,6 @@ var SEASON_YEARS = {};
 // læses af companyUrl() i helpers.js og slug-opslag på companies.html.
 var COMPANY_SLUGS = {};   // name → slug
 var COMPANY_NAMES = {};   // slug → name
-var COMPANY_IDS = {};     // name → id (journalnummer: "Sag № 022")
 var COMPANIES = {};       // name → fuld virksomhedsidentitet
 
 // Læsestien går gennem det trykte arkiv (/data/arkiv.json fra seneste
@@ -62,7 +61,6 @@ async function loadDeals() {
   SEASON_YEARS = Object.fromEntries(seasons.map(s => [s.season_number, s.year]));
   COMPANY_SLUGS = Object.fromEntries(companies.map(c => [c.name, c.slug]));
   COMPANY_NAMES = Object.fromEntries(companies.map(c => [c.slug, c.name]));
-  COMPANY_IDS = Object.fromEntries(companies.map(c => [c.name, c.id]));
   COMPANIES = Object.fromEntries(companies.map(c => [c.name, c]));
 
   return rows.map(row => {

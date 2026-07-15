@@ -6,9 +6,12 @@
 <title>Pitches og aftaler fra Løvens Hule — Hulens Data</title>
 <meta name="description" content="Filtrér registrerede pitches og TV-aftaler fra Løvens Hule efter sæson og investor. Se beløb, andele og udfald.">
 <link rel="canonical" href="https://hulensdata.dk/deals.html">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Hulens Data"><meta property="og:locale" content="da_DK">
+<meta property="og:title" content="Pitches og aftaler fra Løvens Hule — Hulens Data"><meta property="og:description" content="Filtrér registrerede pitches og TV-aftaler efter sæson, investor, udfald, kategori og status."><meta property="og:url" content="https://hulensdata.dk/deals.html">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <script src="js/layout.js"></script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Dataset","name":"Registrerede pitches og TV-aftaler fra Løvens Hule","url":"https://hulensdata.dk/deals.html","description":"Filtrerbar oversigt over registrerede pitches, TV-aftaler, beløb, andele og investorer."}</script>
 </head>
 <body>
 
@@ -18,32 +21,35 @@
 <main id="main-content" class="page-main">
   <header class="index-header"><p class="section-kicker">TV-laget</p><h1 class="page-title">Pitches & aftaler</h1><p>Registrerede vilkår og udfald fra udsendelserne. En TV-aftale er ikke nødvendigvis en endelig investering.</p></header>
 
-  <div class="filters">
-    <label>Sæson</label>
+  <div class="filters deals-filters">
+    <label>Sæson
     <select id="filter-season">
       <option value="">Alle</option>
-    </select>
-    <label>Investor</label>
+    </select></label>
+    <label>Investor
     <select id="filter-investor">
       <option value="">Alle</option>
-    </select>
-    <input type="text" id="filter-search" placeholder="Søg virksomhed…" style="min-width:160px">
+    </select></label>
+    <label>Udfald<select id="filter-outcome"><option value="">Alle</option><option value="aftale">Aftale på TV</option><option value="ingen">Ingen aftale på TV</option></select></label>
+    <label>Kategori<select id="filter-category"><option value="">Alle</option></select></label>
+    <label>Virksomhedsstatus<select id="filter-status"><option value="">Alle</option></select></label>
+    <label>Søg virksomhed<input type="search" id="filter-search" placeholder="Skriv et navn…"></label>
   </div>
 
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          <th data-sort="name">Virksomhed <span class="sort-icon">↕</span></th>
-          <th data-sort="season">Sæson <span class="sort-icon">↕</span></th>
-          <th data-sort="asked" class="num">Søger <span class="sort-icon">↕</span></th>
-          <th data-sort="shareOffered" class="num col-secondary">Tilbudt andel <span class="sort-icon">↕</span></th>
-          <th data-sort="valBefore" class="num col-secondary">Val. før <span class="sort-icon">↕</span></th>
-          <th data-sort="received" class="num">Modtaget <span class="sort-icon">↕</span></th>
-          <th data-sort="shareSold" class="num col-secondary">Solgt andel <span class="sort-icon">↕</span></th>
-          <th data-sort="valAfter" class="num col-secondary">Val. efter <span class="sort-icon">↕</span></th>
-          <th class="num col-secondary">Ændring</th>
+          <th data-sort="name"><button type="button">Virksomhed <span aria-hidden="true">↕</span></button></th>
+          <th data-sort="season"><button type="button">Sæson <span aria-hidden="true">↕</span></button></th>
+          <th data-sort="aftale"><button type="button">Udfald <span aria-hidden="true">↕</span></button></th>
+          <th data-sort="asked" class="num"><button type="button">Søgte <span aria-hidden="true">↕</span></button></th>
+          <th data-sort="shareOffered" class="num col-secondary"><button type="button">Tilbudt andel <span aria-hidden="true">↕</span></button></th>
+          <th data-sort="received" class="num"><button type="button">TV-beløb <span aria-hidden="true">↕</span></button></th>
+          <th data-sort="shareSold" class="num col-secondary"><button type="button">Andel i TV-aftale <span aria-hidden="true">↕</span></button></th>
           <th>Investorer</th>
+          <th data-sort="category"><button type="button">Kategori <span aria-hidden="true">↕</span></button></th>
+          <th data-sort="status"><button type="button">Status <span aria-hidden="true">↕</span></button></th>
         </tr>
       </thead>
       <tbody id="deals-tbody"></tbody>
@@ -51,6 +57,7 @@
   </div>
   <p class="table-count" id="table-count"></p>
 </main>
+<footer class="site-footer"><span>Hulens Data · uofficielt dataarkiv</span><a href="/#metode">Metode og kilder</a></footer>
 
 <script src="js/helpers.js"></script>
 <script src="js/supabase.js"></script>
@@ -76,16 +83,34 @@ function populateFilters() {
     opt.value = inv; opt.textContent = inv;
     isel.appendChild(opt);
   });
+
+  const addOptions = (id, values) => {
+    const select = document.getElementById(id);
+    values.filter(Boolean).sort((a, b) => a.localeCompare(b, 'da')).forEach(value => {
+      const option = document.createElement('option');
+      option.value = value; option.textContent = value;
+      select.appendChild(option);
+    });
+  };
+  addOptions('filter-category', [...new Set(allDeals.map(d => d.category))]);
+  addOptions('filter-status', [...new Set(allDeals.map(d => d.status))]);
 }
 
 function getFiltered() {
   const season   = document.getElementById('filter-season').value;
   const investor = document.getElementById('filter-investor').value;
   const search   = document.getElementById('filter-search').value.toLowerCase();
+  const outcome  = document.getElementById('filter-outcome').value;
+  const category = document.getElementById('filter-category').value;
+  const status   = document.getElementById('filter-status').value;
 
   return allDeals.filter(d => {
     if (season   && d.season != season) return false;
     if (investor && !d.investorList.includes(investor)) return false;
+    if (outcome === 'aftale' && !d.aftale) return false;
+    if (outcome === 'ingen' && d.aftale) return false;
+    if (category && d.category !== category) return false;
+    if (status && d.status !== status) return false;
     if (search   && !d.name.toLowerCase().includes(search)) return false;
     return true;
   });
@@ -95,6 +120,18 @@ function sortBy(key) {
   if (sortKey === key) sortDir *= -1;
   else { sortKey = key; sortDir = 1; }
   renderTable();
+}
+
+function updateUrl() {
+  const params = new URLSearchParams();
+  const fields = { season: 'filter-season', investor: 'filter-investor', outcome: 'filter-outcome', category: 'filter-category', status: 'filter-status', q: 'filter-search' };
+  Object.entries(fields).forEach(([key, id]) => {
+    const value = document.getElementById(id).value.trim();
+    if (value) params.set(key, value);
+  });
+  if (sortKey !== 'season') params.set('sort', sortKey);
+  if (sortDir !== 1) params.set('dir', 'desc');
+  history.replaceState({}, '', `${location.pathname}${params.size ? '?' + params : ''}`);
 }
 
 function renderTable() {
@@ -112,14 +149,22 @@ function renderTable() {
 
   // Markér aktiv sorteringskolonne (guld sort-ikon via thead th.sorted i style.css)
   document.querySelectorAll('thead th[data-sort]').forEach(th =>
-    th.classList.toggle('sorted', th.dataset.sort === sortKey));
+    {
+      const active = th.dataset.sort === sortKey;
+      th.classList.toggle('sorted', active);
+      th.setAttribute('aria-sort', active ? (sortDir === 1 ? 'ascending' : 'descending') : 'none');
+    });
 
   document.getElementById('table-count').textContent = `Viser ${data.length} af ${allDeals.length} pitches`;
+  updateUrl();
 }
 
 // Event-wiring — ingen inline handlers i markup
 document.getElementById('filter-season').addEventListener('change', renderTable);
 document.getElementById('filter-investor').addEventListener('change', renderTable);
+document.getElementById('filter-outcome').addEventListener('change', renderTable);
+document.getElementById('filter-category').addEventListener('change', renderTable);
+document.getElementById('filter-status').addEventListener('change', renderTable);
 document.getElementById('filter-search').addEventListener('input', renderTable);
 
 document.querySelector('thead').addEventListener('click', e => {
@@ -132,6 +177,15 @@ async function init() {
   allDeals = await loadDeals();
   renderHeaderStats(allDeals);
   populateFilters();
+  const params = new URLSearchParams(location.search);
+  const fields = { season: 'filter-season', investor: 'filter-investor', outcome: 'filter-outcome', category: 'filter-category', status: 'filter-status', q: 'filter-search' };
+  Object.entries(fields).forEach(([key, id]) => {
+    const value = params.get(key);
+    if (value) document.getElementById(id).value = value;
+  });
+  const allowedSorts = new Set(['name', 'season', 'aftale', 'asked', 'shareOffered', 'received', 'shareSold', 'category', 'status']);
+  if (allowedSorts.has(params.get('sort'))) sortKey = params.get('sort');
+  sortDir = params.get('dir') === 'desc' ? -1 : 1;
   renderTable();
 }
 

@@ -46,18 +46,6 @@ function sourcesFor(entityType, entityId) {
   return (typeof SOURCES !== 'undefined' && SOURCES[entityType + ':' + entityId]) || [];
 }
 
-// Journalnummer ("Sag № 022") og bind (sæson som romertal) — kartotekets mærker
-function sagsNr(name) {
-  const id = typeof COMPANY_IDS !== 'undefined' ? COMPANY_IDS[name] : null;
-  return id ? String(id).padStart(3, '0') : null;
-}
-function romertal(n) {
-  const t = [[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
-  let r = '';
-  for (const [v, s] of t) while (n >= v) { r += s; n -= v; }
-  return r;
-}
-
 // Arkivdato med præcisionsærlighed: "2018" ≠ "17.04.2018"
 function fmtEventDate(isoDate, precision) {
   const [y, m, d] = isoDate.split('-');
@@ -117,6 +105,7 @@ function avg(arr) {
 // mønstre, der kun bruges på profilsiden (median, partnere, solo-andel)
 function buildInvestorProfile(m, allDeals) {
   const dealList = allDeals.filter(d => d.investorList.includes(m.name));
+  const panelDeals = allDeals.filter(d => m.panelSeasons.includes(d.season));
   const received = dealList.map(d => d.received).filter(v => v).sort((a, b) => a - b);
   const mid = received.length / 2;
   const medianDeal = received.length
@@ -134,7 +123,18 @@ function buildInvestorProfile(m, allDeals) {
     .sort((a, b) => b[1] - a[1])
     .map(([name, count]) => ({ name, count }));
 
-  return { m, dealList, medianDeal, partners, solo, shared: dealList.length - solo };
+  return {
+    m,
+    dealList,
+    panelPitchCount: panelDeals.length,
+    knownAmountCount: dealList.filter(d => d.received != null).length,
+    knownShareCount: dealList.filter(d => d.shareSold != null).length,
+    companyCount: new Set(dealList.map(d => d.name)).size,
+    medianDeal,
+    partners,
+    solo,
+    shared: dealList.length - solo,
+  };
 }
 
 // Profildata for én virksomhed — kapitalhistorik, investornetværk og sæsonkontekst
@@ -178,21 +178,16 @@ function buildCompanyProfile(name, allDeals) {
     };
   });
 
-  // Arkivlaget: efterlivs-events (med kilder) + stempel + revisionsdato.
+  // Arkivlaget: efterlivs-events (med kilder) + revisionsdato.
   // Events bor i COMPANY_EVENTS (loadCompanyArchive) — tom liste hvis ikke loadet.
   const slug = typeof COMPANY_SLUGS !== 'undefined' ? COMPANY_SLUGS[name] : null;
   const events = ((typeof COMPANY_EVENTS !== 'undefined' && COMPANY_EVENTS[slug]) || [])
     .map(e => ({ ...e, sources: sourcesFor('company_event', e.id) }));
-  const STAMP_TYPES = { bankruptcy: 'Konkurs', closed: 'Lukket', exit: 'Exit', cancelled: 'Deal kollapset' };
-  const stampEvent = [...events].reverse().find(e => STAMP_TYPES[e.event_type]);
-  const stamp = stampEvent
-    ? { text: STAMP_TYPES[stampEvent.event_type], gold: stampEvent.event_type === 'exit' }
-    : null;
   const revisionDates = events.map(event => event.updated_at).filter(Boolean).sort();
   const revised = revisionDates.length ? revisionDates[revisionDates.length - 1].slice(0, 10) : null;
 
   const company = (typeof COMPANIES !== 'undefined' && COMPANIES[name]) || {
-    id: typeof COMPANY_IDS !== 'undefined' ? COMPANY_IDS[name] : null,
+    id: null,
     name,
     slug,
     category: latest.category || null,

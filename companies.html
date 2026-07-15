@@ -6,9 +6,12 @@
 <title>Virksomheder fra Løvens Hule — Hulens Data</title>
 <meta name="description" content="Søg og filtrér virksomheder fra Løvens Hule. Se pitch, TV-aftale, dokumenteret efterliv, CVR og kilder.">
 <link rel="canonical" href="https://hulensdata.dk/companies.html">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Hulens Data"><meta property="og:locale" content="da_DK">
+<meta property="og:title" content="Virksomheder fra Løvens Hule — Hulens Data"><meta property="og:description" content="Søg virksomheder og se TV-aftaler, CVR, dokumenteret efterliv og kilder."><meta property="og:url" content="https://hulensdata.dk/companies.html">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <script src="js/layout.js"></script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Virksomheder fra Løvens Hule","url":"https://hulensdata.dk/companies.html","description":"Søgbar oversigt over virksomheder, TV-aftaler, CVR og dokumenteret efterliv."}</script>
 </head>
 <body>
 
@@ -44,6 +47,7 @@
   </div>
 
 </main>
+<footer class="site-footer"><span>Hulens Data · uofficielt dataarkiv</span><a href="/#metode">Metode og kilder</a></footer>
 
 <script src="js/helpers.js"></script>
 <script src="js/supabase.js"></script>
@@ -115,7 +119,7 @@ document.getElementById('filter-status').addEventListener('change', renderGrid);
 document.getElementById('filter-category').addEventListener('change', renderGrid);
 document.getElementById('filter-search').addEventListener('input', renderGrid);
 
-// Kartei-kortene er ægte links (<a>) — ingen delegation nødvendig.
+// Registerkortene er ægte links (<a>) — ingen delegation nødvendig.
 
 document.getElementById('back-btn').addEventListener('click', e => {
   e.preventDefault();
@@ -134,15 +138,6 @@ function showDetail(name, push = true) {
 
   if (push) window.history.pushState({}, '', '?co=' + encodeURIComponent(COMPANY_SLUGS[name] || name));
 }
-
-// Exploration loops i profilen: relateret virksomhed → dens profil (samme side),
-// investor-chip → investorprofilen
-document.getElementById('detail-body').addEventListener('click', e => {
-  const rel = e.target.closest('.related-chip');
-  if (rel) { showDetail(rel.dataset.name); return; }
-  const inv = e.target.closest('.partner-chip');
-  if (inv) window.location = 'investors.html?name=' + encodeURIComponent(inv.dataset.name);
-});
 
 function showGrid(push = true) {
   document.getElementById('grid-view').style.display = 'block';

@@ -6,10 +6,13 @@
 <title>Analyser af Løvens Hule — Hulens Data</title>
 <meta name="description" content="Analyser af pitches, TV-aftaler, investorer og beløb på tværs af sæsoner i Løvens Hule.">
 <link rel="canonical" href="https://hulensdata.dk/charts.html">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Hulens Data"><meta property="og:locale" content="da_DK">
+<meta property="og:title" content="Analyser af Løvens Hule — Hulens Data"><meta property="og:description" content="Forklarede analyser af pitches, TV-aftaler, investorer og registrerede beløb."><meta property="og:url" content="https://hulensdata.dk/charts.html">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Archivo:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <script src="js/layout.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Analyser af Løvens Hule","url":"https://hulensdata.dk/charts.html","description":"Forklarede analyser af registrerede pitches, TV-aftaler, investorer og beløb på tværs af sæsoner."}</script>
 </head>
 <body>
 
@@ -20,24 +23,13 @@
   <header class="index-header"><p class="section-kicker">Data på tværs</p><h1 class="page-title">Analyser</h1><p>Fire visninger af sæsoner, investorer, beløb og TV-aftaler. Tidlige sæsoner har ufuldstændig pitchdækning.</p></header>
 
   <div class="chart-grid">
-    <div class="chart-card">
-      <h3>Deals pr. <span>sæson</span></h3>
-      <div class="chart-container"><canvas id="chart-seasons"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <h3>Investorer — <span>antal deals</span></h3>
-      <div class="chart-container"><canvas id="chart-investors"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <h3>Beløb søgt vs. <span>modtaget</span></h3>
-      <div class="chart-container"><canvas id="chart-amounts"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <h3>Deal-rate pr. <span>sæson</span></h3>
-      <div class="chart-container"><canvas id="chart-dealrate"></canvas></div>
-    </div>
+    <article class="chart-card"><p class="section-kicker">Spørgsmål 01</p><h2>Hvor mange TV-aftaler er registreret pr. sæson?</h2><p>Hver søjle tæller pitches med et dokumenteret aftaleudfald på TV. Den siger ikke, om aftalerne senere blev gennemført.</p><div class="chart-container"><canvas id="chart-seasons" role="img" aria-label="Søjlediagram over registrerede TV-aftaler pr. sæson">Diagram: registrerede TV-aftaler pr. sæson.</canvas></div><p class="chart-note"><strong>Enhed:</strong> antal TV-aftaler. <strong>Datagrænse:</strong> sæson 1–4 har ufuldstændig pitchdækning.</p></article>
+    <article class="chart-card"><p class="section-kicker">Spørgsmål 02</p><h2>Hvilke investorer har flest registrerede TV-aftaler?</h2><p>Optællingen er investor-tilknytninger til TV-aftaler. En fælles aftale tæller én gang hos hver medinvestor.</p><div class="chart-container"><canvas id="chart-investors" role="img" aria-label="Søjlediagram over investorer med flest registrerede TV-aftaler">Diagram: de 12 investorer med flest registrerede TV-aftaler.</canvas></div><p class="chart-note"><strong>Enhed:</strong> investor-tilknytninger. <strong>Datagrænse:</strong> ikke realiserede investeringer eller afkast.</p></article>
+    <article class="chart-card"><p class="section-kicker">Spørgsmål 03</p><h2>Hvor meget blev der søgt om og aftalt på TV?</h2><p>De to serier summerer registrerede beløb pr. sæson. Manglende beløb bidrager ikke til summen og bliver ikke estimeret.</p><div class="chart-container"><canvas id="chart-amounts" role="img" aria-label="Grupperet søjlediagram over beløb søgt og registreret TV-beløb pr. sæson">Diagram: søgte beløb og registrerede TV-beløb i millioner kroner.</canvas></div><p class="chart-note"><strong>Enhed:</strong> mio. kr. <strong>Læsning:</strong> mønster og tydelige etiketter adskiller serierne ud over farven.</p></article>
+    <article class="chart-card"><p class="section-kicker">Spørgsmål 04</p><h2>Hvor stor en andel af de registrerede pitches fik en TV-aftale?</h2><p>Raten bruger kun de pitches, der findes i arkivet: TV-aftaler divideret med registrerede pitches i samme sæson.</p><div class="chart-container"><canvas id="chart-dealrate" role="img" aria-label="Linjediagram over andelen af registrerede pitches med TV-aftale pr. sæson">Diagram: andel af registrerede pitches med TV-aftale.</canvas></div><p class="chart-note"><strong>Enhed:</strong> procent af registrerede pitches. <strong>Vigtigt:</strong> sæson 1–4 kan ikke sammenlignes direkte med senere sæsoner på grund af ufuldstændig pitchdækning.</p></article>
   </div>
 </main>
+<footer class="site-footer"><span>Hulens Data · uofficielt dataarkiv</span><a href="/#metode">Metode og kilder</a></footer>
 
 <script src="js/helpers.js"></script>
 <script src="js/supabase.js"></script>
@@ -49,15 +41,15 @@ const CHART_DEFAULTS = {
   color: TOKEN('--gold') + 'd9',
   colorMedium: TOKEN('--gold') + '4d',
   colorLight: TOKEN('--gold') + '33',
-  grid: 'rgba(255,255,255,0.05)',
+  grid: TOKEN('--border'),
   text: TOKEN('--muted'),
   surface: TOKEN('--surface2'),
   border: TOKEN('--border'),
   textStrong: TOKEN('--text'),
-  font: 'DM Sans',
+  font: 'Archivo',
 };
 
-function chartOptions(extra = {}) {
+function chartOptions({ xTitle = '', yTitle = '', percent = false } = {}) {
   return {
     responsive: true,
     maintainAspectRatio: false,
@@ -72,10 +64,9 @@ function chartOptions(extra = {}) {
       }
     },
     scales: {
-      x: { ticks: { color: CHART_DEFAULTS.text, font: { family: CHART_DEFAULTS.font } }, grid: { color: CHART_DEFAULTS.grid } },
-      y: { ticks: { color: CHART_DEFAULTS.text, font: { family: CHART_DEFAULTS.font } }, grid: { color: CHART_DEFAULTS.grid } },
+      x: { title: { display: Boolean(xTitle), text: xTitle, color: CHART_DEFAULTS.text }, ticks: { color: CHART_DEFAULTS.text, font: { family: CHART_DEFAULTS.font } }, grid: { color: CHART_DEFAULTS.grid } },
+      y: { beginAtZero: true, title: { display: Boolean(yTitle), text: yTitle, color: CHART_DEFAULTS.text }, ticks: { color: CHART_DEFAULTS.text, callback: percent ? value => value + '%' : undefined, font: { family: CHART_DEFAULTS.font } }, grid: { color: CHART_DEFAULTS.grid } },
     },
-    ...extra,
   };
 }
 
@@ -88,9 +79,9 @@ function renderCharts(deals) {
     type: 'bar',
     data: {
       labels: seasons.map(s => 'S' + s),
-      datasets: [{ data: dealsBySeason, backgroundColor: CHART_DEFAULTS.color, borderRadius: 4 }]
+      datasets: [{ label: 'TV-aftaler', data: dealsBySeason, backgroundColor: CHART_DEFAULTS.color, borderColor: CHART_DEFAULTS.textStrong, borderWidth: 1, borderRadius: 2 }]
     },
-    options: chartOptions(),
+    options: chartOptions({ xTitle: 'Sæson', yTitle: 'Antal TV-aftaler' }),
   });
 
   // 2. Investorer — antal deals
@@ -105,9 +96,9 @@ function renderCharts(deals) {
     type: 'bar',
     data: {
       labels: topInv.map(([name]) => name.split(' ')[0]),
-      datasets: [{ data: topInv.map(([,n]) => n), backgroundColor: CHART_DEFAULTS.color, borderRadius: 4 }]
+      datasets: [{ label: 'TV-aftaler', data: topInv.map(([,n]) => n), backgroundColor: CHART_DEFAULTS.color, borderColor: CHART_DEFAULTS.textStrong, borderWidth: 1, borderRadius: 2 }]
     },
-    options: chartOptions(),
+    options: chartOptions({ xTitle: 'Investor', yTitle: 'Antal TV-aftaler' }),
   });
 
   // 3. Søgt vs modtaget pr. sæson
@@ -118,17 +109,17 @@ function renderCharts(deals) {
     data: {
       labels: seasons.map(s => 'S' + s),
       datasets: [
-        { label: 'Søgt (mio.)',     data: asked,    backgroundColor: CHART_DEFAULTS.colorMedium, borderRadius: 4 },
-        { label: 'Modtaget (mio.)', data: received, backgroundColor: CHART_DEFAULTS.color,   borderRadius: 4 },
+        { label: 'Søgt (mio. kr.)', data: asked, backgroundColor: CHART_DEFAULTS.colorMedium, borderColor: CHART_DEFAULTS.textStrong, borderWidth: 1, borderDash: [5, 3], borderRadius: 2 },
+        { label: 'Registreret TV-beløb (mio. kr.)', data: received, backgroundColor: CHART_DEFAULTS.color, borderColor: CHART_DEFAULTS.textStrong, borderWidth: 1, borderRadius: 2 },
       ]
     },
     options: {
-      ...chartOptions(),
+      ...chartOptions({ xTitle: 'Sæson', yTitle: 'Millioner kroner' }),
       plugins: {
         ...chartOptions().plugins,
         legend: {
           display: true,
-          labels: { color: CHART_DEFAULTS.text, font: { family: CHART_DEFAULTS.font } }
+          labels: { usePointStyle: true, color: CHART_DEFAULTS.text, font: { family: CHART_DEFAULTS.font } }
         }
       }
     },
@@ -145,15 +136,15 @@ function renderCharts(deals) {
     data: {
       labels: seasons.map(s => 'S' + s),
       datasets: [{
-        data: rates,
+        label: 'Andel med TV-aftale', data: rates,
         borderColor: CHART_DEFAULTS.color,
         backgroundColor: CHART_DEFAULTS.colorLight,
         fill: true,
         tension: 0.3,
-        pointBackgroundColor: CHART_DEFAULTS.color,
+        pointBackgroundColor: CHART_DEFAULTS.textStrong, pointBorderColor: CHART_DEFAULTS.textStrong, pointRadius: 4,
       }]
     },
-    options: chartOptions(),
+    options: chartOptions({ xTitle: 'Sæson', yTitle: 'Andel af registrerede pitches', percent: true }),
   });
 }
 
