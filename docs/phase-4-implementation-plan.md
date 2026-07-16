@@ -111,17 +111,29 @@ Dette er et change forecast, ikke filer oprettet i denne planlægningsrunde:
 
 ## Implementeringsrækkefølge i små commits
 
-Hvert commit skal være reviewbart, have egne fixtures og efterlade eksisterende produktion uændret, indtil apply-trinnet særskilt godkendes.
+> Revideret 2026-07-16 efter Fable-review (se `docs/phase-4-fable-review.md`): backupmanifest-verifikation rykkes før coverage (i overensstemmelse med risikoregistrets egen anbefaling), revisionsloggen er et selvstændigt 4A-commit, og apply-plan-dokumentet er flyttet til fase 4B.
+
+Hvert commit skal være reviewbart, have egne fixtures, holde `npm run verify` grønt og efterlade eksisterende produktion uændret, indtil apply-trinnet særskilt godkendes.
+
+**Verify-afgrænsning:** `npm run verify` (og dermed Netlify-deploy-gaten) må kun validere *schemas og committede fixtures* — deterministiske artefakter. Levende inbox-/ledger-filer valideres af en separat kommando (fx `verify:editorial`), så en halvfærdig redaktionel kø aldrig kan blokere publicering af sitet.
+
+**Netværksforbud i 4A:** dry-run og alle editorial-værktøjer må ikke importere Supabase-klienten eller læse `SUPABASE_URL`; en guard-test skal bevise nul netværkskald og nul filændringer (fx hash af inputfilerne før/efter kørsel).
 
 1. **`test: add phase 4 contract fixtures`** — materialisér de fire schemas fra data-contract-dokumentet, gyldige minimale fixtures og én ugyldig fixture pr. invarians. Ingen DB-adgang.
 2. **`feat: validate editorial inbox files`** — ren filvalidator med størrelse/dybdegrænse, `additionalProperties: false`, duplikatkontrol og stabile fejlkoder. Kun read-only.
-3. **`feat: compare inbox proposals with snapshot`** — semantisk dry-run mod `data/arkiv.json`: target-resolution, preconditions, before/after-diff og konfliktrapport. Ingen SQL-generering eller skrivning endnu.
-4. **`feat: generate coverage backlog from snapshot`** — deterministiske regel-id'er for manglende CVR, kategori, kilder, efterliv og kendte NULL-felter. Fravær skal være `unknown`, aldrig automatisk negativt udfald.
-5. **`feat: create and verify backup manifests`** — ny eksport til tempmappe, Range-pagination, hash/bytes/rækker/schema-head og atomisk rename/`complete`-status. Bevar den gamle eksportsti, til paritet er bevist.
-6. **`test: add phase 4 mutation guards`** — korruption, afkortning, path traversal, dubletter, stale precondition, orphan source, delvis backup og hashfejl; alle mutationer i temp-fixtures.
-7. **`feat: emit reviewed apply plan`** — generér et deterministisk, menneskeligt reviewbart operationsdokument fra en godkendt inbox. Stadig ingen automatisk produktionsskrivning.
-8. **`feat: apply approved editorial changes transactionally`** — kun efter særskilt produktbeslutning og credential-design. Én transaktion, preconditions, rollback ved enhver fejl, read-back, revisionspost og backupreference. Hvis behovet kan dækkes sikkert med manuel MCP/SQL, kan dette commit helt undgås.
-9. **`docs: document phase 4 editorial operations`** — opdatér vaultens workflow, restore/runbook og credentials; kør fuld verify og restore rehearsal før aktivering.
+**Fase 4A (filbaseret, ingen credentials, ingen produktionsskrivning):**
+
+3. **`feat: compare inbox proposals with snapshot`** — semantisk dry-run mod `data/arkiv.json`: target-resolution (inkl. `local_ref` for inserts), preconditions mod baseline, before/after-diff i kanonisk sortering (entitet → id → felt) og konfliktrapport (samme felt rørt af to operationer = fejl). Ingen SQL-generering eller skrivning endnu.
+4. **`feat: verify backup manifests against existing exports`** — manifest + verifikation af den eksisterende `backup/<dato>/`-eksport (hash, bytes, rækker, komplethed): 100 % filbaseret. En ny eksportkørsel med Range-pagination, tempmappe og atomisk rename/`complete` kan følge som separat commit (anon read-only netværk); den gamle `backup.sh` bevares, til paritet er bevist.
+5. **`feat: generate coverage backlog from snapshot`** — deterministiske regel-id'er (regel + database-id) for manglende CVR, kategori, kilder og kendte NULL-felter + overlay-mekanismen til manuel status. Fravær skal være `unknown`, aldrig automatisk negativt udfald. Ingen netværkstjek af kilde-URL'er i generatoren (determinisme).
+6. **`feat: add editorial revisions ledger (NDJSON)`** — append-only ledger for forslag/valideret/afvist/planlagt med prefix-verifikation; ingen `applied`-entries kan opstå, før et apply-trin findes.
+7. **`test: add phase 4 mutation guards`** — korruption, afkortning, path traversal, symlinks, `__proto__`, dubletter, stale precondition, same-field-konflikt, orphan source, ukendt `local_ref`, slugændring uden `redirect_from`, delvis backup og hashfejl; alle mutationer i temp-fixtures, som altid gendannes.
+8. **`docs: document phase 4 editorial operations`** — opdatér vaultens workflow-, bevarings- og databasenoter efter godkendt implementering.
+
+**Fase 4B (kræver særskilt godkendelse; bygges ikke i 4A):**
+
+9. **`feat: emit reviewed apply plan`** — deterministisk, menneskeligt reviewbart operationsdokument fra en godkendt inbox; ingen eksekverbar SQL og stadig ingen skrivning.
+10. **`feat: apply approved editorial changes transactionally`** — kun efter særskilt produktbeslutning og credential-design. Én transaktion, preconditions, rollback ved enhver fejl, read-back, revisionspost og backupreference. Hvis behovet kan dækkes sikkert med manuel MCP/SQL, kan dette trin helt undgås. Gennemført restore rehearsal i isoleret miljø er en forudsætning.
 
 ## Test-fixtures og mutationstests
 
