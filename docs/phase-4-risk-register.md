@@ -1,6 +1,8 @@
 # Fase 4 — risikoregister
 
 > Read-only vurdering, 2026-07-16. Ingen risici er “løst” af dette dokument; de er gates for en senere implementering.
+>
+> **Revideret 2026-07-16 efter Fable-review:** R29–R30 tilføjet; grants-påstanden i R11 er uafhængigt verificeret mod livekataloget (anon/authenticated har i dag fulde tabelprivilegier på alle ni objekter — kun SELECT-only RLS-policies beskytter mod skrivning).
 
 ## Risikoskala og beslutningsregel
 
@@ -36,6 +38,8 @@ Sandsynlighed og konsekvens vurderes som lav/middel/høj. En høj konsekvens kr�
 | R26 | **Backup/restore af view eller generated/identity-felter fejler.** `investor_status` skal genskabes, `aftale` er generated, identity-id'er skal bevares. | M/H | Restore-order og column allowlists; indsæt ikke view/generated felt; `OVERRIDING SYSTEM VALUE` kun i kontrolleret restore; sekvensafstemning efter restore. | Restore rehearsal |
 | R27 | **Snapshot og live data blandes.** Fase 3 beskytter browserfallback, men nye værktøjer kan blande en delvis filbaseline med REST. | M/H | Ét input-mode pr. kørsel; snapshot er atomisk og komplet eller hele run bruger frisk REST-baseline; baseline-hash i alle outputs. | Tooling |
 | R28 | **Revision af publicerede noter eksponerer følsomt researchmateriale.** Source-note og event-description er offentlige via snapshot/profiler. | M/M | Inbox kan have privat reviewnote, men apply-allowlist må kun overføre eksplicit publicerbare felter. Fixture med intern note. | Redaktion/privacy |
+| R29 | **Redaktionel kø blokerer publicering.** Netlify kører `npm run verify` som build-kommando; hvis levende inbox-/ledger-filer valideres dér, kan en halvfærdig redaktionel fil vælte site-deploys. | M/H | Verify validerer kun schemas + committede fixtures; levende artefakter valideres af separat `verify:editorial`. Test: en bevidst ugyldig inbox-fil uden for fixtures må ikke ændre verify-exitcode. | Tooling |
+| R30 | **Editorial-artefakter i offentligt repo.** Inbox, ledger og overlay kan rumme intern research, afviste hypoteser og actor-spor; repoet er offentligt, og alt i publish-roden kan serveres af Netlify. | M/H | Beslut placering før commit 2: privat mappe uden for repo (vault/privat repo) eller repo-mappe, der er udelukket fra deploy og dokumenteret offentlig. Pseudonym-actor-regel håndhæves af validator. | Alexander |
 
 ## Kontroller før nogen produktionsskrivning
 

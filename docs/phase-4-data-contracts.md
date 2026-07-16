@@ -1,6 +1,8 @@
 # Fase 4 — foreslåede datakontrakter
 
 > Dokumentationsforslag, 2026-07-16. JSON Schema-eksemplerne er ikke produktionskode, er ikke installeret og ændrer ikke Supabase. De bruger JSON Schema Draft 2020-12.
+>
+> **Revideret 2026-07-16 efter Fable-review** (se `docs/phase-4-fable-review.md`): insert-targets har fået `local_ref`, `supports` kan udtrykke helhedskilder, precondition-semantikken er entydig pr. batch, slugændringer kræver redirect, coverage-generatorens output er adskilt fra manuel status, og revisionsloggen anbefales som NDJSON.
 
 ## Fælles konventioner
 
@@ -10,7 +12,9 @@
 - SHA-256 skrives som 64 lowercase hextegn og beregnes over rå bytes, ikke reparset JSON.
 - `additionalProperties: false` er standard. Udvidelser kræver schema-version, ikke tavse felter.
 - NULL må kun bruges, hvor kontrakten siger det. `unknown`, `not_applicable`, `known` og `blocked` er separate tilstande; manglende data er aldrig automatisk `false`.
-- Ingen kontrakt må indeholde API-nøgler, cookies, Authorization-headere, build-hook-URL'er eller andre secrets.
+- **Sammenligningssemantik:** `expected_before` sammenlignes med snapshottets værdi ved dyb strukturel lighed uden nogen typekoercion — tal er tal, strenge er strenge, `null` er kun lig `null`, og manglende felt er en valideringsfejl (ukendt felt), aldrig et implicit `null`. Snapshottet serialiserer numeriske kolonner som JSON-tal; kontraktværdier skal bruge samme type.
+- **Actor-identitet er pseudonym:** `actor.id` skal være et kort holdnavn fra en aftalt liste (fx `alexander`, `codex`, `fable`, `system`) — aldrig e-mail, fulde navne på tredjeparter eller andre persondata.
+- Ingen kontrakt må indeholde API-nøgler, cookies, Authorization-headere, build-hook-URL'er eller andre secrets. Validatorer skal aktivt secret-scanne artefakter (mønstre som `eyJ`, `apikey`, `authorization`, `service_role`) og fejle ved fund.
 - Workflowfiler refererer til eksisterende `companies`, `deals`, `investors`, `seasons`, `company_events` og `sources`; de kopierer ikke hele produktionsrækker som en ny sandhed.
 
 ## Editorial inbox
@@ -40,7 +44,7 @@ Inboxen er en kø af afgrænsede forslag. Hver operation har target, preconditio
         "git_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
       }
     },
-    "status": { "enum": ["new", "triaged", "in_review", "accepted", "rejected", "blocked", "applied"] },
+    "status": { "enum": ["new", "triaged", "in_review", "accepted", "rejected", "blocked"] },
     "review": {
       "type": ["object", "null"],
       "additionalProperties": false,
@@ -76,8 +80,10 @@ Inboxen er en kø af afgrænsede forslag. Hver operation har target, preconditio
       "required": ["entity_type", "record_id"],
       "properties": {
         "entity_type": { "enum": ["company", "deal", "investor", "season", "company_event", "source", "deal_investor", "panel_membership"] },
-        "record_id": { "type": "integer", "minimum": 1 },
+        "record_id": { "type": ["integer", "null"], "minimum": 1 },
+        "local_ref": { "type": ["string", "null"], "pattern": "^new:[a-z0-9][a-z0-9-]{0,60}$" },
         "secondary_id": { "type": ["integer", "null"], "minimum": 1 },
+        "secondary_local_ref": { "type": ["string", "null"], "pattern": "^new:[a-z0-9][a-z0-9-]{0,60}$" },
         "slug": { "type": ["string", "null"], "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
       }
     },
@@ -90,7 +96,7 @@ Inboxen er en kø af afgrænsede forslag. Hver operation har target, preconditio
         "source_url": { "type": ["string", "null"], "format": "uri", "pattern": "^https?://" },
         "source_date": { "type": ["string", "null"], "format": "date" },
         "confidence": { "enum": ["confirmed", "likely", "uncertain"] },
-        "supports": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 80 } },
+        "supports": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 80 } },
         "note": { "type": ["string", "null"], "maxLength": 2000 }
       }
     },
@@ -123,11 +129,22 @@ Inboxen er en kø af afgrænsede forslag. Hver operation har target, preconditio
 }
 ```
 
-Semantiske regler uden for grundschemaet: operation-id'er er unikke; dependencies skal danne en acyklisk graf; `expected_before` skal matche baseline; target skal kunne opløses entydigt; tilladte felter og værdityper kommer fra en eksplicit allowlist; event-insert kræver mindst én source; `clear` skal have `value: null`; insert-id'er må ikke opfindes før databasen har reserveret dem; link/unlink må kun ramme relationstabeller. `applied` kræver revisions-id og read-back i en senere kontraktversion.
+Semantiske regler uden for grundschemaet:
+
+- Operation-id'er er unikke, og dependencies skal danne en acyklisk graf.
+- **Insert-targets:** `kind: insert` kræver `record_id: null` og en `local_ref` (`new:<navn>`), der er unik i batchen. Databasen reserverer det rigtige id ved et senere apply; id'er må aldrig opfindes i filen. Andre operationer i samme batch kan referere den nye række via `local_ref` i deres target (fx en source, der knyttes til et event oprettet i samme batch, eller en `link` til en ny relation). Update/link/unlink mod eksisterende rækker bruger `record_id` og må ikke have `local_ref`.
+- **Preconditions:** `expected_before` evalueres altid mod baselinen (snapshottet). Derfor må samme (entitet, felt) højst ændres af én operation pr. batch — to operationer, der rører samme felt, er en valideringsfejl (`OPERATION_CONFLICT`), ikke en sekvens. Det holder dry-run deterministisk og gør stale-detektion entydig.
+- **Helhedskilder:** `supports: []` betyder eksplicit, at kilden dækker hele entiteten og mappes til `sources.field_name = NULL`. Et ikke-tomt `supports`-array mappes til én `sources`-række pr. feltnavn. Feltnavne skal findes i felt-allowlisten for target-entiteten.
+- **Slugændringer kræver redirect:** en `set`-ændring af `companies.slug` eller `investors.slug` skal have et `redirect_from`-felt på operationen (den gamle slug), og dry-run skal udskrive den `_redirects`-linje, der skal committes sammen med gentrykket. Gamle URL'er må aldrig dø tavst (jf. `docs/AI-WORKFLOW.md`).
+- Tilladte felter og værdityper kommer fra en eksplicit allowlist pr. entitet, afledt af `validate-data.mjs`-reglerne; `aftale` er en genereret kolonne og må aldrig være et target-felt.
+- Event-insert kræver mindst én source; `clear` skal have `value: null`; link/unlink må kun ramme relationstabellerne (`deal_investor`, `panel_membership`).
+- `applied` findes ikke som inbox-status i 1.0.0 — anvendthed dokumenteres af revisionsloggen, ikke af inboxen. En senere kontraktversion kan tilføje `applied` sammen med et obligatorisk `applied_revision`-felt, når et apply-trin overhovedet er godkendt.
 
 ## Revisionslog
 
 Loggen er append-only på procesniveau. Den gemmer hashes og et struktureret changeset, ikke secrets eller ukontrollerede fulde databasedumps.
+
+**Filformat (revideret):** loggen lagres som **NDJSON** — én entry pr. linje, valideret enkeltvis mod entry-schemaet nedenfor. Det gør append-only naturligt (nye linjer tilføjes kun i bunden), gør prefix-verifikation triviel (gammel fil skal være byte-præfiks af ny) og undgår git-mergekonflikter i et fælles JSON-array. `log_id`/`entries`-indpakningen nedenfor beskriver derfor kun den logiske model; på disk er hver linje ét entry-objekt. Rettelser til en tidligere revision udtrykkes med et nyt entry, hvis `supersedes`-felt (uuid, optional) peger på den reviderede revision — historik overskrives aldrig.
 
 ```json
 {
@@ -194,7 +211,9 @@ Loggen er append-only på procesniveau. Den gemmer hashes og et struktureret cha
 }
 ```
 
-Append-only kan ikke håndhæves af JSON Schema. Validatoren skal kræve, at en ny fil har den gamle log som eksakt prefix, at revision-id'er er unikke, og at `applied` har approver, after-hash og backup-id. En rollback er en ny entry; historik overskrives aldrig.
+Append-only kan ikke håndhæves af JSON Schema. Validatoren skal kræve, at en ny fil har den gamle log som eksakt byte-præfiks, at revision-id'er er unikke, og at `applied` har approver, after-hash og backup-id. En rollback er en ny entry; historik overskrives aldrig.
+
+**Hvad loggen kan og ikke kan:** den dokumenterer det redaktionelle workflow (forslag, validering, godkendelse, planlagt/afvist) og kobler batch, git-SHA, backup-id og snapshot-hashes. Den kan ikke *bevise* databasehistorik — `updated_at` og en fremtidig read-back er databasens egen evidens. `published` skal ikke være et manuelt felt: publicering udledes af det efterfølgende gentryk (git-SHA + snapshottets `trykt`-dato), og et afstemningsværktøj kan advare, hvis ledgerens `after_sha256` ikke genfindes i et senere snapshot (ude-af-sync-detektion — advarsel, ikke blocker, så længe apply ikke findes).
 
 ## Coverage backlog
 
@@ -218,7 +237,7 @@ Backloggen er et deterministisk arbejdsprodukt af snapshot+regelsæt. Den må ik
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["item_id", "rule_id", "dimension", "entity", "observed_state", "priority", "workflow_status", "reason"],
+        "required": ["item_id", "rule_id", "dimension", "entity", "observed_state", "priority", "reason"],
         "properties": {
           "item_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._:-]+$" },
           "rule_id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
@@ -235,11 +254,8 @@ Backloggen er et deterministisk arbejdsprodukt af snapshot+regelsæt. Den må ik
           },
           "observed_state": { "enum": ["unknown", "known", "not_applicable", "blocked", "ambiguous"] },
           "priority": { "enum": ["critical", "high", "medium", "low"] },
-          "workflow_status": { "enum": ["open", "in_review", "resolved", "dismissed"] },
           "reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
-          "evidence_refs": { "type": "array", "uniqueItems": true, "items": { "type": "string", "maxLength": 200 } },
-          "blocked_by": { "type": ["string", "null"], "maxLength": 500 },
-          "resolved_by_revision": { "type": ["string", "null"], "format": "uuid" }
+          "evidence_refs": { "type": "array", "uniqueItems": true, "items": { "type": "string", "maxLength": 200 } }
         }
       }
     }
@@ -250,7 +266,7 @@ Backloggen er et deterministisk arbejdsprodukt af snapshot+regelsæt. Den må ik
 }
 ```
 
-`item_id` bør være deterministisk, fx `COMPANY_CVR_UNKNOWN:174`, så samme hul ikke duplikeres mellem builds. Manuelle statusfelter må ligge i et lille overlay knyttet til item-id og snapshot-hash; generatoroutputtet selv regenereres. Et bortfaldet item er ikke bevis for, at research er korrekt, før en revision eller en eksplicit `not_applicable`-afgørelse findes.
+`item_id` skal være deterministisk, fx `COMPANY_CVR_UNKNOWN:174` (regel + stabilt database-id, aldrig navn/slug — så overlever id'et navnerettelser). **Generatorens output indeholder ingen manuelle felter** (revideret: `workflow_status`, `blocked_by` og `resolved_by_revision` er fjernet fra det genererede schema). Manuel status bor i en separat overlay-fil (`coverage-overlay.json`) med `{ item_id, workflow_status ∈ open/in_review/resolved/dismissed, blocked_by, resolved_by_revision, decided_by, decided_at }`, og et deterministisk merge-værktøj kombinerer de to. Et item, der forsvinder fra generatoroutputtet, er dermed lukket af data — et item, der lukkes i overlayet uden dataændring, kræver en eksplicit `not_applicable`/`dismissed`-afgørelse med begrundelse. Backloggen blokerer aldrig deploy; kun `validate-data`-blockers gør.
 
 ## Backupmanifest
 
@@ -263,7 +279,7 @@ Manifestet beskriver én afsluttet eksport. `complete` må først sættes efter 
   "title": "Hulens Data backup manifest",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "backup_id", "created_at", "status", "source", "migration_head", "git_sha", "artifacts", "restore_order", "verification"],
+  "required": ["schema_version", "backup_id", "created_at", "status", "source", "tool", "consistency", "migration_head", "git_sha", "artifacts", "restore_order", "verification"],
   "properties": {
     "schema_version": { "const": "1.0.0" },
     "backup_id": { "type": "string", "format": "uuid" },
@@ -272,14 +288,26 @@ Manifestet beskriver én afsluttet eksport. `complete` må først sættes efter 
     "source": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["provider", "project_ref", "database_version", "read_role"],
+      "required": ["provider", "project_ref", "environment", "database_version", "read_role"],
       "properties": {
         "provider": { "const": "supabase" },
-        "project_ref": { "type": "string", "pattern": "^[a-z]{20}$" },
+        "project_ref": { "type": "string", "pattern": "^[a-z0-9]{20}$" },
+        "environment": { "enum": ["production", "branch", "isolated"] },
         "database_version": { "type": "string", "minLength": 1, "maxLength": 50 },
         "read_role": { "enum": ["anon", "authenticated", "service_role", "database_role"] }
       }
     },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "version": { "type": "string", "minLength": 1, "maxLength": 40 }
+      }
+    },
+    "consistency": { "enum": ["sequential_per_table", "single_transaction", "unknown"] },
+    "published_snapshot_sha256": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
     "migration_head": { "type": "string", "pattern": "^[0-9]{14}_[a-z0-9_]+$" },
     "git_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
     "artifacts": {
@@ -329,6 +357,8 @@ Manifestet beskriver én afsluttet eksport. `complete` må først sættes efter 
 ```
 
 Et `complete` manifest skal semantisk kræve alle otte tabeller, viewet, migrationsliste og en schema-/policy-/grant-repræsentation. `content_range_total` skal matche `rows`, når REST leverer total. Manifest og artefakter skal først flyttes atomisk fra en tempmappe efter succes. Credentials, headers og fulde connection strings må aldrig skrives i `query` eller andre felter.
+
+Revideret efter review: `environment` skelner produktionsbackup fra branch/isoleret miljø, `tool` + `version` identificerer eksportværktøjet, `consistency` er et eksplicit felt (den nuværende REST-eksport er `sequential_per_table` — ikke transaktionelt konsistent, og det skal manifestet sige ærligt), og `published_snapshot_sha256` kan valgfrit koble backuppen til det samtidigt publicerede `arkiv.json`. En anon-REST-eksport kan aldrig få `kind: schema_ddl`/`policy_dump`/`grant_dump`-artefakter — et manifest uden dem er en *dataeksport*, og verifikationsafsnittet må ikke kalde den en fuld databasebackup.
 
 ## Mapping til eksisterende produktionsmodel
 
