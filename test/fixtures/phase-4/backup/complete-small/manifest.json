@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "backup_id": "00000000-0000-4000-8000-000000000401",
+  "created_at": "2026-01-02T03:04:05Z",
+  "status": "complete",
+  "backup_scope": "data_export",
+  "source": {
+    "provider": "supabase",
+    "project_ref": "fixture00000000000000",
+    "environment": "isolated",
+    "database_version": "17-fixture",
+    "read_role": "anon"
+  },
+  "tool": { "name": "fixture-export", "version": "1.0.0" },
+  "consistency": "sequential_per_table",
+  "published_snapshot_sha256": null,
+  "migration_head": "20260102030405_fixture_only",
+  "git_sha": "1111111111111111111111111111111111111111",
+  "artifacts": [
+    { "kind": "table_json", "object_name": "seasons", "relative_path": "seasons.json", "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570", "bytes": 3, "rows": 0, "query": null, "content_range_total": 0 },
+    { "kind": "table_json", "object_name": "investors", "relative_path": "investors.json", "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570", "bytes": 3, "rows": 0, "query": null, "content_range_total": 0 },
+    { "kind": "table_json", "object_name": "panel_memberships", "relative_path": "panel_memberships.json", "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570", "bytes": 3, "rows": 0, "query": null, "content_range_total": 0 },
+    { "kind": "table_json", "object_name": "companies", "relative_path": "companies.json", "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570", "bytes": 3, "rows": 0, "query": null, "content_range_total": 0 },
+    { "kind": "table_json", "object_name": "deals", "relative_path": "deals.json", "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570", "bytes": 3, "rows": 0, "query": null, "content_range_total": 0 },
+    { "kind": "table_json", "object_name": "deal_investors", "relative_path": "deal_investors.json", "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570", "bytes": 3, "rows": 0, "query": null, "content_range_total": 0 },
+    { "kind": "table_json", "object_name": "company_events", "relative_path": "company_events.json", "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570", "bytes": 3, "rows": 0, "query": null, "content_range_total": 0 },
+    { "kind": "table_json", "object_name": "sources", "relative_path": "sources.json", "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570", "bytes": 3, "rows": 0, "query": null, "content_range_total": 0 },
+    { "kind": "view_json", "object_name": "investor_status", "relative_path": "investor_status.json", "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570", "bytes": 3, "rows": 0, "query": null, "content_range_total": 0 },
+    { "kind": "migration_list", "object_name": null, "relative_path": "schema-migrations.txt", "sha256": "d3e0e94b417ca21df9fba402ca4b9c9ba309d12f9b797f3fc3da3f2ab0a95307", "bytes": 28, "rows": null, "query": null, "content_range_total": null }
+  ],
+  "restore_order": ["seasons", "investors", "panel_memberships", "companies", "deals", "deal_investors", "company_events", "sources"],
+  "verification": {
+    "verified_at": "2026-01-02T03:05:00Z",
+    "hashes_ok": true,
+    "json_parse_ok": true,
+    "row_counts_ok": true,
+    "references_ok": true,
+    "restore_rehearsed": false,
+    "restore_rehearsed_at": null,
+    "notes": "Syntetisk dataeksport; ikke et fuldt database-recovery-set."
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hulensdata.dk/schemas/coverage-overlay-1.0.0.json",
+  "title": "Hulens Data private coverage decisions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "items"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["item_id", "workflow_status", "blocked_by", "resolved_by_revision", "reason", "decided_by", "decided_at"],
+        "properties": {
+          "item_id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+:[0-9]+$" },
+          "workflow_status": { "enum": ["open", "in_review", "resolved", "dismissed"] },
+          "blocked_by": { "type": ["string", "null"], "maxLength": 500 },
+          "resolved_by_revision": { "type": ["string", "null"], "format": "uuid" },
+          "reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
+          "decided_by": { "enum": ["alexander", "codex", "fable", "system"] },
+          "decided_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

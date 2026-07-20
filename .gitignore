@@ -10,3 +10,6 @@ saesoner/
 metode/
 data/
 sitemap.xml
+
+# Levende fase 4A-artefakter er private og må ikke committes/deployes.
+editorial-private/
