@@ -41,7 +41,7 @@ Systemgrænserne er rigtigt tænkt: Supabase forbliver eneste redigerbare sandhe
 
 | Prioritet | Indhold | Eksempler fra det aktuelle datasæt | Blokerer deploy? |
 |---|---|---|---|
-| critical | Identitetskonflikter under afklaring (`identity_review`/`ambiguous`) — aldrig automatiske negative slutninger | Lady box (161) ↔ Ladybox ApS (162) mulig dublet/comeback; Sorelle (270) ↔ "Slut Smyk ApS" | Nej |
+| critical | Identitetskonflikter under afklaring (`identity_review`/`ambiguous`) — aldrig automatiske negative slutninger | Historisk: Ladybox-konflikten er løst i `8a2f44d`; øvrige levende cases må ikke committes som fixture | Nej |
 | high | Manglende CVR på virksomheder **med gennemført TV-aftale**; `inaktiv` status uden kurateret event (registerfakta-listen); åbne leads med CVR-dateret exit-kandidat | That's Mine, Bubbles, Vinhuset; de 14 registerfakta-selskaber | Nej |
 | medium | Manglende kategori; K12-arv (ukendt afsnit/søgt beløb); company-status uden kilde | 242 virksomheder uden kategori | Nej |
 | low | Intet dokumenteret efterliv (ren researchopgave; fravær er `unknown`) | 308 virksomheder uden events | Nej |
@@ -89,7 +89,7 @@ Behold den ærlige skelnen: git-historik (kode+dokumenter) ≠ Netlify-rollback 
 3. **Backup-retention og offline-kopi (R17):** iCloud er synk, ikke uafhængig retention; beslut om en periodisk immutable kopi.
 4. **Om 4B-apply overhovedet skal bygges** eller om manuel MCP/SQL + 4A-artefakterne er tilstrækkeligt i praksis (planen holder selv døren åben — enig).
 5. **Migrationskilde (R20):** eksport af de 16 live-migrationer til versionsstyring, og hvor de skal bo (repo vs. vault).
-6. **Redaktionelle afklaringer, der bør være de første coverage-cases:** Lady box/Ladybox-dubletten og Sorelle↔Slut Smyk ApS.
+6. **Historisk fixture-idé:** Lady box/Ladybox-dubletten var nævnt i reviewet, men blev løst på `main` i `8a2f44d` før fase 4A og må ikke genafspilles. Fase 4A bruger kun syntetiske fixtures; eventuelle øvrige levende afklaringer forbliver private.
 
 ## Konklusion
 

@@ -1,6 +1,6 @@
 # Fase 4 — foreslåede datakontrakter
 
-> Dokumentationsforslag, 2026-07-16. JSON Schema-eksemplerne er ikke produktionskode, er ikke installeret og ændrer ikke Supabase. De bruger JSON Schema Draft 2020-12.
+> Historisk kontraktforslag, 2026-07-16. De materialiserede filer i `schemas/` er fra 2026-07-20 den maskinlæsbare sandhed for fase 4A; indlejrede eksempler nedenfor forklarer beslutninger, men må ikke bruges i stedet for de faktiske schemas. Implementeringen ændrer ikke Supabase.
 >
 > **Revideret 2026-07-16 efter Fable-review** (se `docs/phase-4-fable-review.md`): insert-targets har fået `local_ref`, `supports` kan udtrykke helhedskilder, precondition-semantikken er entydig pr. batch, slugændringer kræver redirect, coverage-generatorens output er adskilt fra manuel status, og revisionsloggen anbefales som NDJSON.
 
@@ -144,7 +144,7 @@ Semantiske regler uden for grundschemaet:
 
 Loggen er append-only på procesniveau. Den gemmer hashes og et struktureret changeset, ikke secrets eller ukontrollerede fulde databasedumps.
 
-**Filformat (revideret):** loggen lagres som **NDJSON** — én entry pr. linje, valideret enkeltvis mod entry-schemaet nedenfor. Det gør append-only naturligt (nye linjer tilføjes kun i bunden), gør prefix-verifikation triviel (gammel fil skal være byte-præfiks af ny) og undgår git-mergekonflikter i et fælles JSON-array. `log_id`/`entries`-indpakningen nedenfor beskriver derfor kun den logiske model; på disk er hver linje ét entry-objekt. Rettelser til en tidligere revision udtrykkes med et nyt entry, hvis `supersedes`-felt (uuid, optional) peger på den reviderede revision — historik overskrives aldrig.
+**Filformat (revideret):** loggen lagres som **NDJSON** — én entry pr. linje, valideret enkeltvis mod `schemas/revision-entry.schema.json`. Det gør append-only naturligt, gør prefix-verifikation triviel og undgår en fælles JSON-array-wrapper. Den efterfølgende indlejrede wrapper er historisk designskitse; den implementerede fil har ingen `log_id`/`entries`-indpakning. Rettelser bruger et nyt entry med `supersedes`; historik overskrives aldrig.
 
 ```json
 {
@@ -356,7 +356,7 @@ Manifestet beskriver én afsluttet eksport. `complete` må først sættes efter 
 }
 ```
 
-Et `complete` manifest skal semantisk kræve alle otte tabeller, viewet, migrationsliste og en schema-/policy-/grant-repræsentation. `content_range_total` skal matche `rows`, når REST leverer total. Manifest og artefakter skal først flyttes atomisk fra en tempmappe efter succes. Credentials, headers og fulde connection strings må aldrig skrives i `query` eller andre felter.
+Et `complete` manifest med `backup_scope: data_export` kræver semantisk alle otte tabeller, viewet og migrationslisten. Kun `backup_scope: full_recovery_set` kræver derudover schema-DDL, policy- og grant-artefakter. `content_range_total` skal matche `rows`, når REST leverer total. Credentials, headers og fulde connection strings må aldrig skrives i `query` eller andre felter. Fase 4A bygger/verificerer kun allerede eksisterende filer og udfører ingen eksport eller atomisk publicering.
 
 Revideret efter review: `environment` skelner produktionsbackup fra branch/isoleret miljø, `tool` + `version` identificerer eksportværktøjet, `consistency` er et eksplicit felt (den nuværende REST-eksport er `sequential_per_table` — ikke transaktionelt konsistent, og det skal manifestet sige ærligt), og `published_snapshot_sha256` kan valgfrit koble backuppen til det samtidigt publicerede `arkiv.json`. En anon-REST-eksport kan aldrig få `kind: schema_ddl`/`policy_dump`/`grant_dump`-artefakter — et manifest uden dem er en *dataeksport*, og verifikationsafsnittet må ikke kalde den en fuld databasebackup.
 

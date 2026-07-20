@@ -1,6 +1,6 @@
 # Fase 4 — implementeringsplan
 
-> Planlægningsdokument, 2026-07-16. Ingen fase 4-produktionskode eller dataændringer er udført. Baseline er `main` på `9ba919f` (merge af fase 3). Aktuelt publiceret snapshot er trykt 2026-07-15.
+> Historisk planlægningsdokument, 2026-07-16. Planens oprindelige baseline var `main` på `9ba919f`; den er ikke aktuel statistik. Fase 4A er materialiseret som read-only filværktøjer 2026-07-20 og dokumenteret i `docs/phase-4a-operations.md`. Der er fortsat ingen fase 4-produktionsskrivning eller schemaændring.
 
 ## Formål og afgrænsning
 
@@ -27,7 +27,7 @@ Runde 7 viser både styrken og svagheden: metoden gav fem events, 19 kilder og s
 ### Backup og restore
 
 - Vaultens `tools/backup.sh` eksporterer otte tabeller og `investor_status`-viewet til `backup/<dato>/` med den offentlige anon-nøgle.
-- Seneste eksport er `backup/2026-07-15/`; rækketallene matcher snapshot'et for alle ni objekter: 329 deals, 300 deal-investor-relationer, 18 investorer, 18 view-rækker, 11 sæsoner, 61 panelrelationer, 326 virksomheder, 21 events og 61 kilder.
+- Ved planlægningen var `backup/2026-07-15/` seneste eksport; de daværende rækketal er historiske og må ikke bruges som aktuel baseline. Den aktuelle read-only inventering af `backup/2026-07-20/` står i `docs/phase-4a-operations.md`.
 - Scriptet bruger `limit=10000`, sekventielle kald og kun en `deals > 300`-sanity check. Et stort limit omgår ikke nødvendigvis serverens max-rows.
 - Eksporten har ikke hash, byteantal, query, Content-Range, schema-version, samlet succesmarkør eller atomisk publicering. En afbrudt kørsel kan efterlade en mappe, der ligner en backup.
 - Restore-proceduren og FK-rækkefølgen er dokumenteret i `bevaring.md`, men der findes ingen automatiseret restore rehearsal. JSON-eksporten er data, ikke en fuld databasebackup af DDL, funktioner, triggers, policies, grants og sekvenser.
@@ -96,13 +96,15 @@ Inbox, revisionslog, coverage-backlog og backupmanifest kan alle implementeres s
 Dette er et change forecast, ikke filer oprettet i denne planlægningsrunde:
 
 - `schemas/editorial-inbox.schema.json`
-- `schemas/revisions-log.schema.json`
+- `schemas/revision-entry.schema.json` (ét NDJSON-entry)
 - `schemas/coverage-backlog.schema.json`
+- `schemas/coverage-overlay.schema.json`
 - `schemas/backup-manifest.schema.json`
 - `tools/validate-editorial.mjs`
 - `tools/build-coverage-backlog.mjs`
-- `tools/create-backup-manifest.mjs`
-- `tools/test-phase-4-guards.mjs`
+- `tools/build-backup-manifest.mjs`
+- `tools/verify-backup-manifest.mjs`
+- `tools/test-phase-4a.mjs`
 - `test/fixtures/phase-4/...`
 - `package.json` for additive scripts; `verify` udvides først, når scripts er stabile
 - vaultens `redaktion.md`, `bevaring.md`, `database.md` og `known-issues.md` efter godkendt implementering
@@ -145,7 +147,7 @@ Præcise fixtures foreslås under `test/fixtures/phase-4/`:
 - `inbox/multi-investor-deal.json`: én deal med flere relationer uden beløbsdobbelttælling.
 - `inbox/unknown-episode.json`: legitimt ukendt afsnit.
 - `inbox/stale-company-update.json`: korrekt target, forkert before-hash.
-- `coverage/round-7-snapshot.json`: kendte 326/155/84/21/61-tællinger som regressionsfixture, ikke som hardcodede produktmål.
+- `snapshot/minimal.json`: lille syntetisk regressionsfixture; aktuelle produktionstal må altid afledes af det seneste snapshot.
 - `backup/complete-small/`: alle otte tabeller + view, manifest og hashes.
 - `backup/partial-missing-sources/`, `backup/truncated-deals/` og `backup/tampered-hash/`.
 
