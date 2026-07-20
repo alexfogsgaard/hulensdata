@@ -6,7 +6,7 @@
   "backup_scope": "data_export",
   "source": {
     "provider": "supabase",
-    "project_ref": "fixture00000000000000",
+    "project_ref": "fixture0000000000000",
     "environment": "isolated",
     "database_version": "17-fixture",
     "read_role": "anon"
