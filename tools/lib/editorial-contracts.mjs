@@ -218,6 +218,12 @@ export function validateRevisionEntries(entries) {
   return entries;
 }
 
+export function assertLedgerPrefix(currentText, previousText) {
+  if (!currentText.startsWith(previousText)) {
+    throw new EditorialError('LEDGER_PREFIX', 'Ny ledger omskriver eksisterende bytes');
+  }
+}
+
 export function validateManifestShape(manifest) {
   assertSchema(manifest, SCHEMAS.manifest, 'backup manifest');
   return manifest;
