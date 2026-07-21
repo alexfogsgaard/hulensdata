@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0.0",
+  "inbox_id": "00000000-0000-4000-8000-000000000101",
+  "created_at": "2026-01-03T09:00:00Z",
+  "created_by": { "kind": "agent", "id": "codex" },
+  "baseline": {
+    "snapshot_sha256": "18f9a9ec68beeded6acd55c77130807eb3af7b45b06ebc98de19af6ca9b30116",
+    "snapshot_date": "2026-01-02",
+    "git_sha": "1111111111111111111111111111111111111111"
+  },
+  "status": "in_review",
+  "review": null,
+  "operations": [
+    {
+      "operation_id": "00000000-0000-4000-8000-000000000201",
+      "kind": "update",
+      "target": { "entity_type": "company", "record_id": 20, "local_ref": null, "secondary_id": null, "secondary_local_ref": null, "slug": "eksempel" },
+      "redirect_from": "eksempel",
+      "reason": "Syntetisk slugrettelse med obligatorisk redirect.",
+      "changes": [
+        { "field": "slug", "action": "set", "expected_before": "eksempel", "value": "eksempel-arkiv" }
+      ],
+      "sources": [
+        { "source_name": "Syntetisk navnekilde", "source_url": "https://example.invalid/navn", "source_date": "2026-01-02", "confidence": "confirmed", "supports": ["slug"], "note": "Fixture — ikke levende research." }
+      ],
+      "depends_on": []
+    },
+    {
+      "operation_id": "00000000-0000-4000-8000-000000000202",
+      "kind": "insert",
+      "target": { "entity_type": "company_event", "record_id": null, "local_ref": "new:event-eksempel", "secondary_id": null, "secondary_local_ref": null, "slug": null },
+      "redirect_from": null,
+      "reason": "Syntetisk event til local_ref-test.",
+      "changes": [
+        { "field": "company_id", "action": "set", "expected_before": null, "value": 20 },
+        { "field": "event_date", "action": "set", "expected_before": null, "value": "2025-06-01" },
+        { "field": "date_precision", "action": "set", "expected_before": null, "value": "month" },
+        { "field": "event_type", "action": "set", "expected_before": null, "value": "other" },
+        { "field": "title", "action": "set", "expected_before": null, "value": "Syntetisk hændelse" },
+        { "field": "description", "action": "set", "expected_before": null, "value": null },
+        { "field": "amount", "action": "set", "expected_before": null, "value": null }
+      ],
+      "sources": [],
+      "depends_on": []
+    },
+    {
+      "operation_id": "00000000-0000-4000-8000-000000000203",
+      "kind": "insert",
+      "target": { "entity_type": "source", "record_id": null, "local_ref": "new:source-eksempel", "secondary_id": null, "secondary_local_ref": "new:event-eksempel", "slug": null },
+      "redirect_from": null,
+      "reason": "Syntetisk helhedskilde knyttet til batch-lokalt event.",
+      "changes": [
+        { "field": "entity_type", "action": "set", "expected_before": null, "value": "company_event" },
+        { "field": "entity_id", "action": "set", "expected_before": null, "value": "new:event-eksempel" },
+        { "field": "field_name", "action": "set", "expected_before": null, "value": null },
+        { "field": "source_name", "action": "set", "expected_before": null, "value": "Syntetisk eventkilde" },
+        { "field": "source_url", "action": "set", "expected_before": null, "value": "https://example.invalid/event" },
+        { "field": "source_date", "action": "set", "expected_before": null, "value": "2025-06-02" },
+        { "field": "note", "action": "set", "expected_before": null, "value": null },
+        { "field": "confidence", "action": "set", "expected_before": null, "value": "confirmed" }
+      ],
+      "sources": [],
+      "depends_on": ["00000000-0000-4000-8000-000000000202"]
+    }
+  ]
+}

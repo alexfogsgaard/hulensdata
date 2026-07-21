@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hulensdata.dk/schemas/coverage-backlog-1.0.0.json",
+  "title": "Hulens Data generated coverage backlog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generated_at", "generator_version", "snapshot_sha256", "items"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "generator_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "snapshot_sha256": { "$ref": "#/$defs/sha256" },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["item_id", "rule_id", "dimension", "entity", "observed_state", "priority", "reason", "evidence_refs"],
+        "properties": {
+          "item_id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+:[0-9]+$" },
+          "rule_id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+          "dimension": { "enum": ["cvr", "category", "company_status", "source", "afterlife", "episode", "asked_amount", "deal_equity", "investor_profile", "identity_review"] },
+          "entity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "id", "slug"],
+            "properties": {
+              "type": { "enum": ["company", "deal", "investor", "season"] },
+              "id": { "type": "integer", "minimum": 1 },
+              "slug": { "type": ["string", "null"], "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+            }
+          },
+          "observed_state": { "enum": ["unknown", "known", "not_applicable", "blocked", "ambiguous"] },
+          "priority": { "enum": ["critical", "high", "medium", "low"] },
+          "reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
+          "evidence_refs": { "type": "array", "uniqueItems": true, "items": { "type": "string", "maxLength": 200 } }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

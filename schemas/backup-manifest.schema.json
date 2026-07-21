@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hulensdata.dk/schemas/backup-manifest-1.0.0.json",
+  "title": "Hulens Data backup manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "backup_id", "created_at", "status", "backup_scope", "source", "tool", "consistency", "migration_head", "git_sha", "artifacts", "restore_order", "verification"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "backup_id": { "type": "string", "format": "uuid" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "status": { "enum": ["in_progress", "complete", "failed"] },
+    "backup_scope": { "enum": ["data_export", "full_recovery_set"] },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "project_ref", "environment", "database_version", "read_role"],
+      "properties": {
+        "provider": { "const": "supabase" },
+        "project_ref": { "type": "string", "pattern": "^[a-z0-9]{20}$" },
+        "environment": { "enum": ["production", "branch", "isolated"] },
+        "database_version": { "type": "string", "minLength": 1, "maxLength": 50 },
+        "read_role": { "enum": ["anon", "authenticated", "service_role", "database_role"] }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "version": { "type": "string", "minLength": 1, "maxLength": 40 }
+      }
+    },
+    "consistency": { "enum": ["sequential_per_table", "single_transaction", "unknown"] },
+    "published_snapshot_sha256": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+    "migration_head": { "type": "string", "pattern": "^[0-9]{14}_[a-z0-9_]+$" },
+    "git_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "object_name", "relative_path", "sha256", "bytes", "rows", "query", "content_range_total"],
+        "properties": {
+          "kind": { "enum": ["table_json", "view_json", "schema_ddl", "migration_list", "policy_dump", "grant_dump", "publication_snapshot"] },
+          "object_name": { "type": ["string", "null"], "pattern": "^[a-z_][a-z0-9_]*$" },
+          "relative_path": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$" },
+          "sha256": { "$ref": "#/$defs/sha256" },
+          "bytes": { "type": "integer", "minimum": 1 },
+          "rows": { "type": ["integer", "null"], "minimum": 0 },
+          "query": { "type": ["string", "null"], "maxLength": 2000 },
+          "content_range_total": { "type": ["integer", "null"], "minimum": 0 }
+        }
+      }
+    },
+    "restore_order": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["seasons", "investors", "panel_memberships", "companies", "deals", "deal_investors", "company_events", "sources"] }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verified_at", "hashes_ok", "json_parse_ok", "row_counts_ok", "references_ok", "restore_rehearsed", "restore_rehearsed_at", "notes"],
+      "properties": {
+        "verified_at": { "type": "string", "format": "date-time" },
+        "hashes_ok": { "type": "boolean" },
+        "json_parse_ok": { "type": "boolean" },
+        "row_counts_ok": { "type": "boolean" },
+        "references_ok": { "type": "boolean" },
+        "restore_rehearsed": { "type": "boolean" },
+        "restore_rehearsed_at": { "type": ["string", "null"], "format": "date-time" },
+        "notes": { "type": ["string", "null"], "maxLength": 2000 }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

@@ -13,6 +13,8 @@
     "check:seo": "node tools/check-seo.mjs",
     "check:a11y": "node tools/check-a11y.mjs",
     "test:validation-guards": "node tools/test-validation-guards.mjs",
-    "verify": "npm run check:syntax && npm run test:pagination && npm run test:data-loading && npm run prepare:data && npm run validate:data && npm run build && npm run validate:build && npm run check:links && npm run check:seo && npm run check:a11y && npm run test:validation-guards"
+    "test:phase-4a": "node tools/test-phase-4a.mjs",
+    "verify:editorial": "node tools/validate-editorial.mjs",
+    "verify": "npm run check:syntax && npm run test:pagination && npm run test:data-loading && npm run prepare:data && npm run validate:data && npm run build && npm run validate:build && npm run check:links && npm run check:seo && npm run check:a11y && npm run test:validation-guards && npm run test:phase-4a"
   }
 }

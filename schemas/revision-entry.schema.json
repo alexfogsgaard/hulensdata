@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hulensdata.dk/schemas/revision-entry-1.0.0.json",
+  "title": "Hulens Data revision entry (one NDJSON line)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "revision_id", "recorded_at", "actor", "inbox_id", "operation_ids", "result", "baseline_sha256", "after_sha256", "git_sha", "backup_id", "changes", "reason", "error_code"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "revision_id": { "$ref": "#/$defs/uuid" },
+    "recorded_at": { "type": "string", "format": "date-time" },
+    "actor": { "$ref": "#/$defs/actor" },
+    "approved_by": { "oneOf": [{ "$ref": "#/$defs/actor" }, { "type": "null" }] },
+    "supersedes": { "type": ["string", "null"], "format": "uuid" },
+    "inbox_id": { "$ref": "#/$defs/uuid" },
+    "operation_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/uuid" } },
+    "result": { "enum": ["proposed", "validated", "approved", "applied", "rejected", "no_op", "rolled_back", "failed"] },
+    "baseline_sha256": { "$ref": "#/$defs/sha256" },
+    "after_sha256": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+    "git_sha": { "type": ["string", "null"], "pattern": "^[0-9a-f]{40}$" },
+    "backup_id": { "type": ["string", "null"], "format": "uuid" },
+    "reason": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["entity_type", "record_key", "field", "before_hash", "after_hash"],
+        "properties": {
+          "entity_type": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+          "record_key": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "field": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+          "before_hash": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+          "after_hash": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] }
+        }
+      }
+    },
+    "error_code": { "type": ["string", "null"], "pattern": "^[A-Z][A-Z0-9_]*$" }
+  },
+  "$defs": {
+    "uuid": { "type": "string", "format": "uuid" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": { "enum": ["human", "agent", "system"] },
+        "id": { "enum": ["alexander", "codex", "fable", "system"] }
+      }
+    }
+  }
+}

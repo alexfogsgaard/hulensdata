@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "items": [
+    {
+      "item_id": "COMPANY_CVR_UNKNOWN:20",
+      "workflow_status": "in_review",
+      "blocked_by": null,
+      "resolved_by_revision": null,
+      "reason": "Syntetisk fixture til manuel reviewstatus.",
+      "decided_by": "alexander",
+      "decided_at": "2026-01-03T10:00:00Z"
+    }
+  ]
+}
