@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Push og pull_request for samme branch deler gruppe. Det nyeste run overtager,
+# så hurtige pushes og det parallelle PR-event ikke bruger runner-tid dobbelt.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: npm run verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Hent repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+
+      - name: Brug låst Node-version
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: .nvmrc
+          check-latest: false
+          cache: npm
+          cache-dependency-path: package-lock.json
+          package-manager-cache: false
+
+      - name: Installer låste dependencies
+        run: npm ci
+
+      - name: Bekræft uafhængighed af private redaktionsfiler
+        run: test ! -e editorial-private
+
+      - name: Verificér data, build og publiceringskontrakter
+        run: npm run verify
+
+      - name: Bekræft reproducerbart build
+        run: git diff --exit-code
