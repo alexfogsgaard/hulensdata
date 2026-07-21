@@ -37,6 +37,7 @@ Denne fil er den fælles arbejdsregel for Codex, Claude og andre implementører 
 ## Verifikation før review
 
 - Kør `npm run verify`. Den samlede publiceringskontrol omfatter JavaScript-syntaks, simuleret REST-pagination, dataintegritet, deterministisk snapshot-build, interne links, redirects, sitemap, canonical URLs, strukturerede data og statiske tilgængelighedsregler.
+- GitHub Actions kører samme kommando uafhængigt af Netlify og private redaktionsfiler. Checket `CI / npm run verify` skal være grønt som merge-gate; se [`docs/CI.md`](CI.md).
 - Test desktop og mobil, tastaturnavigation, global søgning, fokus, reduceret bevægelse, tomme/ukendte tilstande, 404, interne links og browserkonsol.
 - Test virksomhed med og uden aftale, ukendt afsnit, flere investorer, efterliv og kilder samt profil uden efterliv.
 - En ændring er ikke klar til merge, før build og relevante tests er grønne, og en anden part har reviewet den.
