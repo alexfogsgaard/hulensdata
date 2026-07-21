@@ -10,3 +10,9 @@ saesoner/
 metode/
 data/
 sitemap.xml
+
+# Lokal Supabase-state og credentials må aldrig committes
+supabase/.temp/
+supabase/.branches/
+supabase/.env
+supabase/.env.*

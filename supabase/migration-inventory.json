@@ -1,0 +1,27 @@
+{
+  "format_version": 1,
+  "project_ref": "upaxzfytumsijnbhjihd",
+  "captured_at": "2026-07-22",
+  "source": "Read-only Supabase migrations API and schema_migrations catalog metadata",
+  "baseline_status": "inventory_only_not_replayable",
+  "history_replayable": false,
+  "remote_head": "20260714212928",
+  "migrations": [
+    { "version": "20260710002859", "name": "drop_legacy_companies_cvr_skeleton", "body_status": "stored_remote_not_reviewed", "remote_statement_count": 1, "remote_statements_md5": "6243627e29d8cfa6145df1ea10e9778d" },
+    { "version": "20260710002924", "name": "create_seasons_and_investors", "body_status": "stored_remote_not_reviewed", "remote_statement_count": 1, "remote_statements_md5": "1823d434a21bbe67563df2e4cc0bfbc5" },
+    { "version": "20260710002949", "name": "create_panel_memberships", "body_status": "stored_remote_not_reviewed", "remote_statement_count": 1, "remote_statements_md5": "96535e5a3feec97dc1a395def1e58f12" },
+    { "version": "20260710003009", "name": "create_companies_from_deals", "body_status": "stored_remote_not_reviewed", "remote_statement_count": 1, "remote_statements_md5": "429a3729e5621739b9364c526605efe4" },
+    { "version": "20260710003022", "name": "add_deals_company_fk", "body_status": "stored_remote_not_reviewed", "remote_statement_count": 1, "remote_statements_md5": "f3844286bc7a53291969c7050b13709c" },
+    { "version": "20260710003040", "name": "create_deal_investors", "body_status": "stored_remote_not_reviewed", "remote_statement_count": 1, "remote_statements_md5": "fc5d8cb227ec432648045deafd5e2901" },
+    { "version": "20260710003102", "name": "create_investor_status_view_and_policies", "body_status": "stored_remote_not_reviewed", "remote_statement_count": 1, "remote_statements_md5": "acdd8db55c3a22778f8d58e7809c7289" },
+    { "version": "20260710003313", "name": "fix_view_invoker_and_function_grants", "body_status": "stored_remote_not_reviewed", "remote_statement_count": 1, "remote_statements_md5": "003606345f78b52c2999100592cf0194" },
+    { "version": "20260710182227", "name": "soak_cleanup_drop_investor_text_and_backups", "body_status": "stored_remote_not_reviewed", "remote_statement_count": 1, "remote_statements_md5": "546344d738cc6fdb9d67c4864fca5b3b" },
+    { "version": "20260711161231", "name": "create_company_events", "body_status": "stored_remote_not_reviewed", "remote_statement_count": 1, "remote_statements_md5": "58b1f908ec6bed744b7acfdd0e06ccf2" },
+    { "version": "20260711161251", "name": "create_sources", "body_status": "stored_remote_not_reviewed", "remote_statement_count": 1, "remote_statements_md5": "4d4cbb6b64df78aef27929b9e2ae6c98" },
+    { "version": "20260712034247", "name": "updated_at_triggers_and_source_url_check", "body_status": "stored_remote_not_reviewed", "remote_statement_count": 1, "remote_statements_md5": "f82384ee6adae184d8b758a115460175" },
+    { "version": "20260712035152", "name": "fk_indexes_and_index_cleanup", "body_status": "stored_remote_not_reviewed", "remote_statement_count": 1, "remote_statements_md5": "f640fd3fae099365cdf8b118fb2b71da" },
+    { "version": "20260712035501", "name": "drop_redundant_deals_columns", "body_status": "stored_remote_not_reviewed", "remote_statement_count": 1, "remote_statements_md5": "c497b6d108b419731e5a1f24dde25607" },
+    { "version": "20260714210037", "name": "apply_category_taxonomy", "body_status": "stored_remote_not_reviewed", "remote_statement_count": 1, "remote_statements_md5": "1080385b101a8d3a70ee5f23e600c14e" },
+    { "version": "20260714212928", "name": "allow_unknown_episode", "body_status": "stored_remote_not_reviewed", "remote_statement_count": 1, "remote_statements_md5": "aa49ba2073408cc1acea42145acd606b" }
+  ]
+}
