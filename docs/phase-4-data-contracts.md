@@ -138,6 +138,7 @@ Semantiske regler uden for grundschemaet:
 - **Slugændringer kræver redirect:** en `set`-ændring af `companies.slug` eller `investors.slug` skal have et `redirect_from`-felt på operationen (den gamle slug), og dry-run skal udskrive den `_redirects`-linje, der skal committes sammen med gentrykket. Gamle URL'er må aldrig dø tavst (jf. `docs/AI-WORKFLOW.md`).
 - Tilladte felter og værdityper kommer fra en eksplicit allowlist pr. entitet, afledt af `validate-data.mjs`-reglerne; `aftale` er en genereret kolonne og må aldrig være et target-felt.
 - Event-insert kræver mindst én source; `clear` skal have `value: null`; link/unlink må kun ramme relationstabellerne (`deal_investor`, `panel_membership`).
+- **Entydig NULL-repræsentation (præciseret i 4A-implementeringen):** på update er `clear` den eneste måde at sætte et felt til NULL (`set` med `value: null` afvises — `SET_NULL_USE_CLEAR`); på insert er `set` med `value: null` den legitime startværdi, og `clear` afvises (`INSERT_CLEAR`).
 - `applied` findes ikke som inbox-status i 1.0.0 — anvendthed dokumenteres af revisionsloggen, ikke af inboxen. En senere kontraktversion kan tilføje `applied` sammen med et obligatorisk `applied_revision`-felt, når et apply-trin overhovedet er godkendt.
 
 ## Revisionslog

@@ -41,6 +41,11 @@ node tools/verify-backup-manifest.mjs \
 
 `tools/build-backup-manifest.mjs` kan inventere en eksisterende eksport og udskriver et manifest til stdout. Operatøren skal give eksplicit metadata; værktøjet henter ikke metadata, eksporterer ikke data og skriver ikke manifestet. Et manglende obligatorisk artifact giver `status: failed` og non-zero exit.
 
+## Kendte kontraktgrænser (dry-run og NULL)
+
+- **Felter uden snapshot-dækning:** allowlisten tillader enkelte kolonner, som det publicerede snapshot ikke medtager (fx `companies.website`/`description` og investor-biofelter). En update af dem blokerer korrekt med `PRECONDITION_FIELD`, fordi preconditions ikke kan efterprøves mod en baseline, der mangler feltet. Skal de redigeres via dette workflow, skal Trykpressens snapshot-query først udvides — indtil da hører de til manuel kuratering.
+- **Entydig NULL-disciplin:** på **update** udtrykkes "ryd feltet" altid med `action: clear` (`set` med `value: null` afvises med `SET_NULL_USE_CLEAR`); på **insert** er `set` med `value: null` den legitime startværdi, og `clear` afvises (`INSERT_CLEAR`). Dermed kan diffs og revisioner altid skelne "sat til værdi", "ryddet" og "ukendt ved oprettelse".
+
 ## Coverage og NULL
 
 Backloggen afledes deterministisk af snapshot-hash, stabile database-id'er og versionsstyrede regler. Manglende CVR, kategori, status, kilde, efterliv, afsnit, søgt beløb eller ejerandel udtrykkes som `observed_state: unknown`; fravær bliver aldrig automatisk til “findes ikke”. Manuelle workflowvalg ligger i et separat privat overlay og kan ikke ændre generatorens observation.
