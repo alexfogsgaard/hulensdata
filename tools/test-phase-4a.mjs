@@ -61,6 +61,20 @@ test('dubleret operation_id afvises', () => {
   rejectsCode('OPERATION_ID_DUPLICATE', () => validateInbox(value));
 });
 
+test('set med value:null på update afvises — clear er eneste NULL-repræsentation', () => {
+  const value = inbox();
+  value.operations[0].changes = [{ field: 'category', action: 'set', expected_before: 'Service', value: null }];
+  value.operations[0].redirect_from = null;
+  rejectsCode('SET_NULL_USE_CLEAR', () => validateInbox(value));
+});
+
+test('clear på insert afvises — NULL er en startværdi, ikke en rydning', () => {
+  const value = inbox();
+  const insert = value.operations.find(operation => operation.kind === 'insert' && operation.target.entity_type === 'company_event');
+  insert.changes.find(change => change.field === 'description').action = 'clear';
+  rejectsCode('INSERT_CLEAR', () => validateInbox(value));
+});
+
 test('ukendt local_ref afvises', () => {
   const value = inbox();
   value.operations[2].target.secondary_local_ref = 'new:mangler';

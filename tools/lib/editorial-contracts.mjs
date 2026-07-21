@@ -142,6 +142,10 @@ export function validateInbox(inbox) {
     }
     for (const change of operation.changes) {
       if (change.action === 'clear' && change.value !== null) throw new EditorialError('CLEAR_VALUE', 'clear kræver value:null', `${operation.operation_id}:${change.field}`);
+      // NULL-disciplin: på eksisterende rækker er `clear` den eneste repræsentation
+      // af "ryd feltet"; på insert er NULL en startværdi, og `clear` giver ikke mening.
+      if (operation.kind !== 'insert' && change.action === 'set' && change.value === null) throw new EditorialError('SET_NULL_USE_CLEAR', 'NULL på eksisterende rækker skal udtrykkes med action:clear', `${operation.operation_id}:${change.field}`);
+      if (operation.kind === 'insert' && change.action === 'clear') throw new EditorialError('INSERT_CLEAR', 'clear kan ikke bruges på insert — angiv set med value:null', `${operation.operation_id}:${change.field}`);
       if (operation.kind === 'insert' && change.expected_before !== null) throw new EditorialError('INSERT_PRECONDITION', 'Insert-felter kræver expected_before:null', `${operation.operation_id}:${change.field}`);
       assertFieldValue(target.entity_type, change.field, change.value, `${operation.operation_id}:${change.field}`);
       const conflict = `${targetKey(target)}:${change.field}`;
