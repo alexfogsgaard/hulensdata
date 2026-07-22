@@ -1,0 +1,11 @@
+\set ON_ERROR_STOP on
+
+-- LOCAL REPLAY PRECONDITION ONLY.
+-- Creates only the Supabase-compatible database roles needed for RLS/ACL tests
+-- and the project extension dependency. Never run against a linked/remote DB.
+
+CREATE ROLE anon NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
+CREATE ROLE authenticated NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
+
+CREATE SCHEMA extensions AUTHORIZATION postgres;
+CREATE EXTENSION moddatetime WITH SCHEMA extensions;

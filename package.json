@@ -20,7 +20,9 @@
     "test:schema-dump-review": "node tools/test-schema-dump-review.mjs",
     "check:project-baseline-draft": "node tools/check-project-baseline-draft.mjs",
     "test:project-baseline-draft": "node tools/test-project-baseline-draft.mjs",
+    "check:local-baseline-replay": "node tools/check-local-baseline-replay.mjs",
+    "test:local-baseline-replay": "node tools/test-local-baseline-replay.mjs",
     "test:validation-guards": "node tools/test-validation-guards.mjs",
-    "verify": "npm run check:syntax && npm run check:database-foundation && npm run test:database-foundation && npm run check:baseline-capture && npm run test:baseline-capture && npm run check:schema-dump-review && npm run test:schema-dump-review && npm run check:project-baseline-draft && npm run test:project-baseline-draft && npm run test:pagination && npm run test:data-loading && npm run prepare:data && npm run validate:data && npm run build && npm run validate:build && npm run check:links && npm run check:seo && npm run check:a11y && npm run test:validation-guards"
+    "verify": "npm run check:syntax && npm run check:database-foundation && npm run test:database-foundation && npm run check:baseline-capture && npm run test:baseline-capture && npm run check:schema-dump-review && npm run test:schema-dump-review && npm run check:project-baseline-draft && npm run test:project-baseline-draft && npm run check:local-baseline-replay && npm run test:local-baseline-replay && npm run test:pagination && npm run test:data-loading && npm run prepare:data && npm run validate:data && npm run build && npm run validate:build && npm run check:links && npm run check:seo && npm run check:a11y && npm run test:validation-guards"
   }
 }
