@@ -9,6 +9,9 @@ live Supabase og indeholder ingen credentials eller produktionsdata.
   migrationshistorik pr. 2026-07-22.
 - `baseline-capture-review.json` er sanitiseret metadata fra den private
   read-only capture; den indeholder fingerprints og sikkerhedsflag, ikke SQL.
+- `schema-dump-review.json` er sanitiseret inventory og katalogdiff fra ét
+  privat PostgreSQL 17 schema-only dump; den indeholder ingen dump-SQL,
+  credentials eller private paths.
 - `migrations/` indeholder endnu ingen SQL-migrationer.
 - Baseline er derfor **ikke replaybar** fra repository'et endnu.
 
@@ -45,6 +48,8 @@ npm run check:database-foundation
 npm run test:database-foundation
 npm run check:baseline-capture
 npm run test:baseline-capture
+npm run check:schema-dump-review
+npm run test:schema-dump-review
 ```
 
 Kontrollerne er filbaserede. De forbinder ikke til Supabase og kan ikke skrive

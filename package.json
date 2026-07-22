@@ -16,7 +16,9 @@
     "test:database-foundation": "node tools/test-database-foundation.mjs",
     "check:baseline-capture": "node tools/check-baseline-capture.mjs",
     "test:baseline-capture": "node tools/test-baseline-capture.mjs",
+    "check:schema-dump-review": "node tools/check-schema-dump-review.mjs",
+    "test:schema-dump-review": "node tools/test-schema-dump-review.mjs",
     "test:validation-guards": "node tools/test-validation-guards.mjs",
-    "verify": "npm run check:syntax && npm run check:database-foundation && npm run test:database-foundation && npm run check:baseline-capture && npm run test:baseline-capture && npm run test:pagination && npm run test:data-loading && npm run prepare:data && npm run validate:data && npm run build && npm run validate:build && npm run check:links && npm run check:seo && npm run check:a11y && npm run test:validation-guards"
+    "verify": "npm run check:syntax && npm run check:database-foundation && npm run test:database-foundation && npm run check:baseline-capture && npm run test:baseline-capture && npm run check:schema-dump-review && npm run test:schema-dump-review && npm run test:pagination && npm run test:data-loading && npm run prepare:data && npm run validate:data && npm run build && npm run validate:build && npm run check:links && npm run check:seo && npm run check:a11y && npm run test:validation-guards"
   }
 }

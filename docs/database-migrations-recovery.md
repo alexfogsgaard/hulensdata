@@ -116,7 +116,7 @@ Baseline etableres i gates. Ingen gate må springes over.
 Bevar de 16 eksterne versionsnumre/navne og det observerede schema som evidens.
 Markér historikken `inventory_only_not_replayable`. Opret ingen tomme SQL-filer.
 
-### Gate 1 — privat, read-only schemafangst (delvist opfyldt 2026-07-22)
+### Gate 1 — privat, read-only schemafangst (opfyldt 2026-07-22)
 
 Med særskilt godkendte, kortlivede read-credentials tages en schema-only eksport
 til et privat tempområde. Eksporten skal omfatte projekt-ejede extensions,
@@ -125,12 +125,16 @@ funktioner, triggers, viewdefinitioner, RLS, policies, grants, default privilege
 comments og migrationstabellen. Ownership, platform-ejede schemas, passwords og
 følsomme settings skal bortfiltreres og reviewes før noget kan committes.
 
-Read-only MCP-capture har nu hentet alle 16 statements og et high-fidelity
+Read-only MCP-capture har hentet alle 16 statements og et high-fidelity
 katalogsnapshot privat; sanitiseret resultat og provenance står i
 [`database-baseline-readonly-capture.md`](database-baseline-readonly-capture.md).
-Et officielt schema-only `pg_dump` mangler fortsat, fordi der ikke blev indført
-CLI/databasecredentials. Brug ikke `db pull` mod produktion i denne gate, fordi
-kommandoen har en ekstern historik-sideeffekt. Brug heller ikke `migration repair`.
+Et efterfølgende PostgreSQL 17.10 `pg_dump --schema-only --no-owner
+--no-privileges` er nu gennemført én gang read-only og afstemt objekt-for-objekt
+mod katalogcapturen. Resultat, sikkerhedsscan og den præcise projekt/platform-
+afgrænsning står i
+[`database-schema-dump-readonly-review.md`](database-schema-dump-readonly-review.md).
+Rå dump/log er fortsat private. Brug ikke `db pull`, `migration repair` eller
+andre remote-state-kommandoer i denne gate.
 
 ### Gate 2 — vælg én ærlig baselineform
 
@@ -184,6 +188,8 @@ Denne branch tilføjer:
 ```bash
 npm run check:database-foundation
 npm run test:database-foundation
+npm run check:schema-dump-review
+npm run test:schema-dump-review
 ```
 
 De validerer inventarformat, streng versionsorden, remote head, eksplicit
@@ -209,7 +215,7 @@ Forbudt i disse checks: produktionscredentials, `--linked` reset, `db push`,
 | Risiko | Konsekvens | Næste beslutning |
 |---|---|---|
 | Historisk SQL er privat fanget, men kæden mangler det oprindelige `deals`-schema | Repo kan ikke genskabe schemaet fra de 16 statements | Byg squashed current-state baseline efter officielt schema-only dump |
-| JSON-backup er ikke full-fidelity | Funktioner, policies, grants og sequences kan mangle | Bevis logisk full-schema/data-restore isoleret |
+| Schema-dump er fanget, men endnu ikke replayet | Capture-paritet beviser ikke restore eller portabel DDL | Udled en project-only baseline og bevis replay isoleret |
 | Brede anon/auth grants | Større blast radius ved fremtidig policy/RLS-fejl | Separat privilege-hardening-migration efter baseline |
 | Polymorf `sources.entity_id` | Orphans kan omgå database-FK | Bevar build-check og tilføj restore-integritetsquery |
 | `ON DELETE CASCADE` for events | Company-delete kan fjerne historik | Ingen delete uden dependency-preview og recovery-gate |
@@ -217,7 +223,8 @@ Forbudt i disse checks: produktionscredentials, `--linked` reset, `db push`,
 | Platform-/project-DDL blandes | Baseline kan blive støjende eller skrøbelig | Reviewet allowlist og normaliseret schema-diff |
 | Credentials i dump/log | Hemmeligheder kan havne i git/CI | Privat temp, secret scan, sanitering og manuel review |
 
-Den første anbefalede efterfølgende branch er et credentialed-but-read-only,
-officielt schema-only dump i et privat arbejdsområde efterfulgt af katalogdiff.
-Den må ikke committe rå dumps eller kobles til production-writes. Baseline-SQL er
-først næste branch, når dumpet og denne captures scopeklassifikation er reviewet.
+Den første anbefalede efterfølgende branch er en filbaseret, project-only
+baseline-draft udledt af den private capture efter scope-review. Den må ikke
+forbinde til produktion, kopiere platformschemas eller markere remote historik
+som afstemt. Baseline-SQL må først blive commit-kandidat efter isoleret replay,
+normaliseret diff og særskilt review af `SECURITY DEFINER`, event trigger og ACL.

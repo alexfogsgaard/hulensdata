@@ -132,14 +132,25 @@ Derudover indeholder historikken syv DML-statements, fire destruktive statements
 ingen rollback-arrays og ingen idempotency keys. Et uændret replay kan både fejle
 på manglende legacy-state og ændre/slette data i en forkert targettilstand.
 
+## Opfølgning: schema-only dump gennemført
+
+**Dokumenteret fakta 2026-07-22:** Punkt 1–2 nedenfor er siden gennemført som en
+separat read-only gate med PostgreSQL 17.10. Dumpet indeholder ingen tabeldata,
+custom-role-DDL eller executable owner/ACL-statements, og public-objekterne
+matcher katalogcapturen. Se
+[`database-schema-dump-readonly-review.md`](database-schema-dump-readonly-review.md).
+Rå dump/log forbliver private, og ingen baseline eller replay er udført.
+
 ## Anbefaling til replayfasen
 
 **Anbefalet næste skridt — ikke udført:**
 
-1. Tag et officielt schema-only `pg_dump`/`supabase db dump` read-only til samme
-   private område med kortlivede credentials og matchende PostgreSQL 17-klient.
-2. Sammenlign dumpet objekt-for-objekt med katalogcapturen; forklar alle
-   forskelle i owners, platformextensions, grants, event triggers og publication.
+1. ~~Tag et officielt schema-only `pg_dump` read-only med matchende PostgreSQL
+   17-klient.~~ **Gennemført privat 2026-07-22.**
+2. ~~Sammenlign dumpet objekt-for-objekt med katalogcapturen.~~ **Gennemført;**
+   de eneste forventede repræsentationsforskelle er initialschemaet `public` og
+   den indbyggede `plpgsql`-extension. Owner/ACL er inventariseret fra kataloget,
+   fordi dumpet bevidst brugte `--no-owner --no-privileges`.
 3. Byg én squashed, current-state schema-baseline fra det saniterede dump — ikke
    de 16 historiske statements som tom-database-kæde.
 4. Hold historikmetadata og fingerprints som auditspor. Flyt historisk DML til
@@ -153,6 +164,7 @@ på manglende legacy-state og ændre/slette data i en forkert targettilstand.
 
 ## Stopgrænse
 
-Denne branch leverer capture og reviewforberedelse. Den committer ingen rå SQL,
-ingen `pg_dump`, ingen credentials og ingen baseline-migration. Den kører heller
-ikke replay, deploy, `db pull`, `migration repair` eller `db push`.
+Denne capturebranch committer ingen rå SQL, credentials eller baseline-migration.
+Det efterfølgende schema-dump-review committer tilsvarende kun sanitiseret
+metadata og checks. Ingen af dem kører replay, deploy, `db pull`,
+`migration repair` eller `db push`.

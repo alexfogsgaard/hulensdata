@@ -1,0 +1,494 @@
+{
+  "format_version": 1,
+  "captured_at": "2026-07-22T17:21:36.210Z",
+  "project_ref": "upaxzfytumsijnbhjihd",
+  "base_commit": "bfd621886dd78cf7744d2e3c9db27843b693f14f",
+  "provenance": {
+    "method": "direct PostgreSQL pg_dump 17.10 over the Supabase session pooler",
+    "supabase_cli_used": false,
+    "cli_fallback_reason": "Supabase CLI was not installed; direct pg_dump allowed password isolation through PGPASSFILE without putting credentials in process arguments",
+    "database_operation_count": 1,
+    "database_operations": [
+      "pg_dump --schema-only"
+    ],
+    "remote_state_changes": false,
+    "database_writes_performed": false,
+    "migrations_commands_performed": false,
+    "replay_performed": false,
+    "connection": {
+      "host": "aws-0-eu-west-1.pooler.supabase.com",
+      "port": 5432,
+      "database": "postgres",
+      "user_pattern": "postgres.upaxzfytumsijnbhjihd",
+      "sslmode": "verify-full",
+      "password_transport": "PGPASSFILE outside repository; value never logged",
+      "default_transaction_read_only": true
+    },
+    "dump_flags": [
+      "--schema-only",
+      "--no-owner",
+      "--no-privileges",
+      "--lock-wait-timeout=5s"
+    ],
+    "raw_files_committed": false,
+    "private_paths_committed": false
+  },
+  "private_artifacts": {
+    "dump": {
+      "name": "production-schema-only.raw.sql",
+      "bytes": 183514,
+      "lines": 5806,
+      "sha256": "b2b592e5e512878bd6c7f2e0dee5fa9b0b861c3d5749dcee8a4600c8e2bd059e",
+      "mode_private": true
+    },
+    "log": {
+      "name": "production-schema-only.pg_dump.log",
+      "bytes": 25901,
+      "lines": 436,
+      "sha256": "d9ac41e5025e003b97c7dc8d1a1809a8e8a8120699ab3d6c0e68f982cfec1eef",
+      "mode_private": true,
+      "warning_count": 0,
+      "failure_count": 0
+    }
+  },
+  "versions": {
+    "server": "17.6",
+    "pg_dump": "17.10"
+  },
+  "safety_scan": {
+    "data_signals": {
+      "data_sections": 0,
+      "copy_from_stdin": 0,
+      "insert_statements": 0,
+      "update_statements": 0,
+      "delete_statements": 0,
+      "truncate_statements": 0,
+      "sequence_values": 0,
+      "large_object_data": 0
+    },
+    "role_and_acl_signals": {
+      "create_role": 0,
+      "alter_role": 0,
+      "owner_statements": 0,
+      "grant_statements": 0,
+      "revoke_statements": 0
+    },
+    "credential_signals": {
+      "private_keys": 0,
+      "supabase_secret_keys": 0,
+      "jwt_values": 0,
+      "credential_uris": 0,
+      "password_literals": 0
+    },
+    "personal_data_signals": {
+      "email_addresses": 0,
+      "cpr_candidates": 0
+    },
+    "environment_signals": {
+      "project_ref": 0,
+      "supabase_hosts": 0,
+      "database_settings": 0,
+      "extension_objects": 5,
+      "event_triggers": 7,
+      "publications": 1,
+      "owner_annotations": 0
+    }
+  },
+  "safety_summary": {
+    "contains_table_rows": false,
+    "contains_custom_role_ddl": false,
+    "contains_executable_owner_or_acl_statements": false,
+    "contains_possible_credentials": false,
+    "contains_email_or_cpr_candidates": false,
+    "raw_dump_safe_to_commit": false,
+    "reason": "The raw dump contains platform-managed and environment-specific schema metadata and is held private even though automated credential and row-data scans are clear."
+  },
+  "object_inventory": {
+    "header_count": 386,
+    "by_type": {
+      "CHECK CONSTRAINT": 1,
+      "COMMENT": 39,
+      "CONSTRAINT": 59,
+      "DEFAULT": 2,
+      "EVENT TRIGGER": 7,
+      "EXTENSION": 5,
+      "FK CONSTRAINT": 29,
+      "FUNCTION": 45,
+      "INDEX": 72,
+      "POLICY": 8,
+      "PUBLICATION": 1,
+      "ROW SECURITY": 33,
+      "SCHEMA": 9,
+      "SEQUENCE": 7,
+      "SEQUENCE OWNED BY": 2,
+      "TABLE": 43,
+      "TRIGGER": 8,
+      "TYPE": 15,
+      "VIEW": 1
+    },
+    "by_schema": {
+      "-": 27,
+      "auth": 188,
+      "extensions": 10,
+      "graphql_public": 1,
+      "pgbouncer": 1,
+      "public": 61,
+      "realtime": 33,
+      "storage": 62,
+      "supabase_migrations": 3
+    },
+    "project_schema": {
+      "schemas": [],
+      "tables": [
+        "companies",
+        "company_events",
+        "deal_investors",
+        "deals",
+        "investors",
+        "panel_memberships",
+        "seasons",
+        "sources"
+      ],
+      "columns": [
+        "companies.category",
+        "companies.created_at",
+        "companies.cvr_nummer",
+        "companies.description",
+        "companies.id",
+        "companies.name",
+        "companies.slug",
+        "companies.status",
+        "companies.updated_at",
+        "companies.website",
+        "company_events.amount",
+        "company_events.company_id",
+        "company_events.created_at",
+        "company_events.date_precision",
+        "company_events.description",
+        "company_events.event_date",
+        "company_events.event_type",
+        "company_events.id",
+        "company_events.title",
+        "company_events.updated_at",
+        "deal_investors.amount",
+        "deal_investors.deal_id",
+        "deal_investors.equity",
+        "deal_investors.investor_id",
+        "deals.afsnit",
+        "deals.aftale",
+        "deals.andel_solgt",
+        "deals.andel_tilbudt",
+        "deals.beloeb_modtaget",
+        "deals.company_id",
+        "deals.id",
+        "deals.saeson",
+        "deals.soeger",
+        "investors.bio",
+        "investors.canonical_name",
+        "investors.created_at",
+        "investors.id",
+        "investors.initials",
+        "investors.proff_url",
+        "investors.short_bio",
+        "investors.slug",
+        "investors.updated_at",
+        "investors.website_url",
+        "panel_memberships.investor_id",
+        "panel_memberships.role",
+        "panel_memberships.season_number",
+        "seasons.note",
+        "seasons.season_number",
+        "seasons.year",
+        "sources.confidence",
+        "sources.created_at",
+        "sources.entity_id",
+        "sources.entity_type",
+        "sources.field_name",
+        "sources.id",
+        "sources.note",
+        "sources.source_date",
+        "sources.source_name",
+        "sources.source_url"
+      ],
+      "sequences": [
+        "companies_id_seq",
+        "company_events_id_seq",
+        "deals_id_seq",
+        "investors_id_seq",
+        "sources_id_seq"
+      ],
+      "views": [
+        "investor_status"
+      ],
+      "functions": [
+        "rls_auto_enable"
+      ],
+      "triggers": [
+        "companies.set_updated_at",
+        "company_events.set_updated_at",
+        "investors.set_updated_at"
+      ],
+      "indexes": [
+        "company_events_company_idx",
+        "deal_investors_investor_id_idx",
+        "deals_company_id_idx",
+        "idx_deals_aftale",
+        "idx_deals_saeson",
+        "panel_memberships_investor_id_idx",
+        "sources_entity_idx"
+      ],
+      "constraints": [
+        "companies.companies_category_taxonomy",
+        "companies.companies_name_key",
+        "companies.companies_pkey",
+        "companies.companies_slug_key",
+        "companies.companies_status_check",
+        "company_events.company_events_company_id_fkey",
+        "company_events.company_events_date_precision_check",
+        "company_events.company_events_event_type_check",
+        "company_events.company_events_pkey",
+        "deal_investors.deal_investors_deal_id_fkey",
+        "deal_investors.deal_investors_investor_id_fkey",
+        "deal_investors.deal_investors_pkey",
+        "deals.deals_company_id_fkey",
+        "deals.deals_pkey",
+        "investors.investors_canonical_name_key",
+        "investors.investors_pkey",
+        "investors.investors_slug_key",
+        "panel_memberships.panel_memberships_investor_id_fkey",
+        "panel_memberships.panel_memberships_pkey",
+        "panel_memberships.panel_memberships_role_check",
+        "panel_memberships.panel_memberships_season_number_fkey",
+        "seasons.seasons_pkey",
+        "sources.sources_confidence_check",
+        "sources.sources_entity_type_check",
+        "sources.sources_pkey",
+        "sources.sources_url_scheme"
+      ],
+      "policies": [
+        "companies.anon_read",
+        "company_events.anon_read",
+        "deal_investors.anon_read",
+        "deals.Public read access",
+        "investors.anon_read",
+        "panel_memberships.anon_read",
+        "seasons.anon_read",
+        "sources.anon_read"
+      ],
+      "row_security": [
+        "companies",
+        "company_events",
+        "deal_investors",
+        "deals",
+        "investors",
+        "panel_memberships",
+        "seasons",
+        "sources"
+      ]
+    },
+    "database_wide": {
+      "extensions": [
+        "moddatetime",
+        "pg_stat_statements",
+        "pgcrypto",
+        "supabase_vault",
+        "uuid-ossp"
+      ],
+      "publications": [
+        "supabase_realtime"
+      ],
+      "event_triggers": [
+        "ensure_rls",
+        "issue_graphql_placeholder",
+        "issue_pg_cron_access",
+        "issue_pg_graphql_access",
+        "issue_pg_net_access",
+        "pgrst_ddl_watch",
+        "pgrst_drop_watch"
+      ]
+    },
+    "classification": {
+      "project_specific": [
+        "public schema objects",
+        "public.rls_auto_enable()",
+        "ensure_rls event trigger"
+      ],
+      "supabase_managed_schemas": [
+        "auth",
+        "extensions",
+        "graphql_public",
+        "pgbouncer",
+        "realtime",
+        "storage",
+        "supabase_migrations"
+      ],
+      "database_wide_review_required": [
+        "extensions",
+        "event triggers",
+        "publication",
+        "owners and ACLs from catalog capture"
+      ]
+    }
+  },
+  "catalog_comparison": {
+    "comparisons": {
+      "schemas": {
+        "catalog_count": 1,
+        "dump_count": 0,
+        "missing_in_dump": [
+          "public"
+        ],
+        "allowed_missing": [
+          "public"
+        ],
+        "extra_in_dump": [],
+        "match": true
+      },
+      "tables": {
+        "catalog_count": 8,
+        "dump_count": 8,
+        "missing_in_dump": [],
+        "allowed_missing": [],
+        "extra_in_dump": [],
+        "match": true
+      },
+      "columns": {
+        "catalog_count": 59,
+        "dump_count": 59,
+        "missing_in_dump": [],
+        "allowed_missing": [],
+        "extra_in_dump": [],
+        "match": true
+      },
+      "sequences": {
+        "catalog_count": 5,
+        "dump_count": 5,
+        "missing_in_dump": [],
+        "allowed_missing": [],
+        "extra_in_dump": [],
+        "match": true
+      },
+      "views": {
+        "catalog_count": 1,
+        "dump_count": 1,
+        "missing_in_dump": [],
+        "allowed_missing": [],
+        "extra_in_dump": [],
+        "match": true
+      },
+      "functions": {
+        "catalog_count": 1,
+        "dump_count": 1,
+        "missing_in_dump": [],
+        "allowed_missing": [],
+        "extra_in_dump": [],
+        "match": true
+      },
+      "triggers": {
+        "catalog_count": 3,
+        "dump_count": 3,
+        "missing_in_dump": [],
+        "allowed_missing": [],
+        "extra_in_dump": [],
+        "match": true
+      },
+      "indexes": {
+        "catalog_count": 7,
+        "dump_count": 7,
+        "missing_in_dump": [],
+        "allowed_missing": [],
+        "extra_in_dump": [],
+        "match": true
+      },
+      "constraints": {
+        "catalog_count": 26,
+        "dump_count": 26,
+        "missing_in_dump": [],
+        "allowed_missing": [],
+        "extra_in_dump": [],
+        "match": true
+      },
+      "policies": {
+        "catalog_count": 8,
+        "dump_count": 8,
+        "missing_in_dump": [],
+        "allowed_missing": [],
+        "extra_in_dump": [],
+        "match": true
+      },
+      "row_security": {
+        "catalog_count": 8,
+        "dump_count": 8,
+        "missing_in_dump": [],
+        "allowed_missing": [],
+        "extra_in_dump": [],
+        "match": true
+      },
+      "extensions": {
+        "catalog_count": 6,
+        "dump_count": 5,
+        "missing_in_dump": [
+          "plpgsql"
+        ],
+        "allowed_missing": [
+          "plpgsql"
+        ],
+        "extra_in_dump": [],
+        "match": true
+      },
+      "publications": {
+        "catalog_count": 1,
+        "dump_count": 1,
+        "missing_in_dump": [],
+        "allowed_missing": [],
+        "extra_in_dump": [],
+        "match": true
+      },
+      "event_triggers": {
+        "catalog_count": 7,
+        "dump_count": 7,
+        "missing_in_dump": [],
+        "allowed_missing": [],
+        "extra_in_dump": [],
+        "match": true
+      }
+    },
+    "all_project_objects_match": true,
+    "extensions_match_with_documented_builtin_exception": true,
+    "catalog_acl_inventory": {
+      "database_acl_entries": 5,
+      "relation_privilege_entries": 348,
+      "default_acl_entries": 300,
+      "schema_acl_entries": 6,
+      "function_acl_entries": 2,
+      "dump_acl_statements_expected": 0,
+      "reason": "--no-owner and --no-privileges intentionally omit executable owner and ACL statements"
+    },
+    "catalog_owner_inventory": {
+      "event_triggers:postgres": 1,
+      "event_triggers:supabase_admin": 6,
+      "extensions:postgres": 3,
+      "extensions:supabase_admin": 3,
+      "functions:postgres": 1,
+      "publications:postgres": 1,
+      "relations:postgres": 14,
+      "schemas:pg_database_owner": 1
+    }
+  },
+  "portability": {
+    "platform_schemas_must_not_be_copied_to_project_baseline": true,
+    "owner_annotations_present_in_comments": false,
+    "executable_owner_statements_omitted": true,
+    "executable_grants_omitted": true,
+    "builtin_extension_exception": "plpgsql is present in the catalog capture but intentionally not emitted as a CREATE EXTENSION object by pg_dump",
+    "required_project_extension_candidate": "moddatetime",
+    "security_definer_and_event_trigger_review_required": true
+  },
+  "baseline_gate": {
+    "status": "ready_for_sanitized_baseline_draft_in_separate_phase",
+    "baseline_sql_committed": false,
+    "replay_authorized": false,
+    "remote_history_alignment_authorized": false,
+    "next_gate": "Manually derive project-only SQL, review function/policy/ACL portability, then replay only in an unlinked isolated PostgreSQL 17 environment."
+  }
+}

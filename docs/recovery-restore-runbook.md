@@ -26,7 +26,7 @@ isoleret restore rehearsal. RPO og RTO er ikke målt eller besluttet.
 | Redaktionel data | Private JSON-eksporter i vault | Bevist full-fidelity restore |
 | Schemahistorik | 16 navne/versioner i live historik + vaultnoter | Komplet SQL i repo |
 | Platformbackup | Afhænger af Supabase-plan/konfiguration | Storage-objekter og custom role passwords |
-| Denne branch | Inventar, værn og runbook | En faktisk baseline eller restore rehearsal |
+| Read-only baselinegates | 16 statementfingeraftryk, katalogcapture og privat schema-only dump med objektparitet | En committet baseline eller restore rehearsal |
 
 Hvis Storage senere tages i brug, skal objekter og metadata have en særskilt
 backup-/restore-plan; databasebackup alene gendanner ikke objekterne.
