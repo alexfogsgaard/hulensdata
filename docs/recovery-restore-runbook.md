@@ -6,9 +6,10 @@
 ## 1. Dokumenteret fakta og recovery-mål
 
 **Dokumenteret fakta:** Produktionen har ét Supabase-projekt og en statisk
-Trykpresse-publicering. Private JSON-eksporter bevarer public-data, men der findes
-endnu ingen repo-versioneret, replay-testet SQL-baseline eller dokumenteret
-isoleret restore rehearsal. RPO og RTO er ikke målt eller besluttet.
+Trykpresse-publicering. Private JSON-eksporter bevarer public-data. Repository'et
+har nu en project-only SQL-draft, men fortsat ingen replay-testet eller promoveret
+SQL-baseline og ingen dokumenteret isoleret restore rehearsal. RPO og RTO er ikke
+målt eller besluttet.
 
 **Anbefalet mål:** Recovery skal bevise fire uafhængige egenskaber:
 
@@ -26,7 +27,8 @@ isoleret restore rehearsal. RPO og RTO er ikke målt eller besluttet.
 | Redaktionel data | Private JSON-eksporter i vault | Bevist full-fidelity restore |
 | Schemahistorik | 16 navne/versioner i live historik + vaultnoter | Komplet SQL i repo |
 | Platformbackup | Afhænger af Supabase-plan/konfiguration | Storage-objekter og custom role passwords |
-| Read-only baselinegates | 16 statementfingeraftryk, katalogcapture og privat schema-only dump med objektparitet | En committet baseline eller restore rehearsal |
+| Read-only baselinegates | 16 statementfingeraftryk, katalogcapture og privat schema-only dump med objektparitet | En replaybevist/promoveret baseline eller restore rehearsal |
+| Project-only baseline-draft | Deterministisk SQL-draft og inventory med fuld project-objectparitet | Replaybevis, ACL-kontrakt, migrationspromotion og restore rehearsal |
 
 Hvis Storage senere tages i brug, skal objekter og metadata have en særskilt
 backup-/restore-plan; databasebackup alene gendanner ikke objekterne.
@@ -126,10 +128,10 @@ unlinked-target-kontrol.
 Kør checker og mutationstests. Resultatet beviser format-/historikværn og at
 fundamentet ikke påstår replayability. Det beviser **ikke** database-restore.
 
-### Bevis B — syntetisk lokal restore (ingen production-credentials)
+### Bevis B — syntetisk lokal restore (næste gate; ingen production-credentials)
 
-Når baseline-SQL findes, start en unlinked lokal stack, replay fra tom database
-og indlæs en lille syntetisk fixture, der dækker:
+Brug en arbejdskopi af den nuværende draft i en unlinked lokal stack, replay fra
+tom database og indlæs en lille syntetisk fixture, der dækker:
 
 - virksomhed med to pitches og flere investorer;
 - no-deal med legitime NULL-felter og ukendt afsnit;

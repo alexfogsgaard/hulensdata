@@ -37,7 +37,7 @@ function parseHeaders(sql) {
   return headers;
 }
 
-function parsePublicTables(sql) {
+export function parsePublicTables(sql) {
   const tables = [];
   const pattern = /^CREATE TABLE public\.(?:"([^"]+)"|([A-Za-z_][A-Za-z0-9_]*)) \(\n([\s\S]*?)^\);$/gm;
   let match;

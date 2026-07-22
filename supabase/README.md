@@ -12,8 +12,12 @@ live Supabase og indeholder ingen credentials eller produktionsdata.
 - `schema-dump-review.json` er sanitiseret inventory og katalogdiff fra ét
   privat PostgreSQL 17 schema-only dump; den indeholder ingen dump-SQL,
   credentials eller private paths.
+- `baseline/project-schema-baseline.draft.sql` er en deterministisk,
+  project-only schema-draft. Dens inventory beviser objektparitet og
+  eksklusioner; draften er ikke replayet, en migration eller autoriseret til
+  remote brug.
 - `migrations/` indeholder endnu ingen SQL-migrationer.
-- Baseline er derfor **ikke replaybar** fra repository'et endnu.
+- Baseline er derfor fortsat **ikke replaybevist** fra repository'et.
 
 Det er bevidst. Tomme placeholder-filer med de historiske versionsnumre ville få
 lokal og ekstern historik til at se afstemt ud uden at kunne genskabe schemaet.
@@ -24,6 +28,9 @@ lokal og ekstern historik til at se afstemt ud uden at kunne genskabe schemaet.
 supabase/
 ├── README.md
 ├── migration-inventory.json
+├── baseline/
+│   ├── project-schema-baseline.draft.sql
+│   └── project-schema-baseline.draft.inventory.json
 ├── config.toml                    # senere: genereret lokalt, uden secrets
 ├── migrations/
 │   ├── README.md
@@ -50,6 +57,8 @@ npm run check:baseline-capture
 npm run test:baseline-capture
 npm run check:schema-dump-review
 npm run test:schema-dump-review
+npm run check:project-baseline-draft
+npm run test:project-baseline-draft
 ```
 
 Kontrollerne er filbaserede. De forbinder ikke til Supabase og kan ikke skrive

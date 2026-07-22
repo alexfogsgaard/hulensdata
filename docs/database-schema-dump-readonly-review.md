@@ -220,3 +220,10 @@ manglende/ekstra objekter. Begge checks er en del af `npm run verify`.
 Ingen baseline-SQL er oprettet eller committet. Ingen rå dump, log, `.pgpass`,
 password eller privat sti ligger i Git. Ingen replay, deploy, PR, merge eller
 Supabase-write er udført.
+
+## Senere opfølgning — 2026-07-23
+
+Stopgrænsen ovenfor beskriver denne capture-gate og er bevaret som historik. En
+senere branch har nu udledt en filbaseret project-only **draft** uden ny
+databaseforbindelse. Draften er ikke replayet eller promoveret til migration.
+Se [`database-project-baseline-draft.md`](database-project-baseline-draft.md).

@@ -1,0 +1,375 @@
+{
+  "format_version": 1,
+  "status": "draft_not_replayed",
+  "source_gate_commit": "14c53540d0d465745e41670b84a5462178fb9205",
+  "provenance": {
+    "method": "deterministic local extraction from verified private schema-only dump",
+    "database_connections": 0,
+    "database_writes": false,
+    "replay_performed": false,
+    "migration_history_changed": false,
+    "source_review_file": "supabase/schema-dump-review.json",
+    "source_review_sha256": "e7286c2675b24dd29687cffda55b9ae38fa37ed5eeb27805d7fcb8566a201352",
+    "private_source_dump_sha256": "b2b592e5e512878bd6c7f2e0dee5fa9b0b861c3d5749dcee8a4600c8e2bd059e",
+    "raw_dump_committed": false
+  },
+  "draft": {
+    "file": "supabase/baseline/project-schema-baseline.draft.sql",
+    "sha256": "cd3e13b826e278ced948d96fb75157834647dabeedb5654b20956bdbe2076e57",
+    "deterministic": true,
+    "migration": false,
+    "replay_authorized": false
+  },
+  "object_counts": {
+    "tables": 8,
+    "columns": 59,
+    "sequences": 5,
+    "views": 1,
+    "functions": 1,
+    "triggers": 3,
+    "indexes": 7,
+    "constraints": 26,
+    "policies": 8,
+    "row_security": 8
+  },
+  "object_inventory": {
+    "tables": [
+      "companies",
+      "company_events",
+      "deal_investors",
+      "deals",
+      "investors",
+      "panel_memberships",
+      "seasons",
+      "sources"
+    ],
+    "columns": [
+      "companies.category",
+      "companies.created_at",
+      "companies.cvr_nummer",
+      "companies.description",
+      "companies.id",
+      "companies.name",
+      "companies.slug",
+      "companies.status",
+      "companies.updated_at",
+      "companies.website",
+      "company_events.amount",
+      "company_events.company_id",
+      "company_events.created_at",
+      "company_events.date_precision",
+      "company_events.description",
+      "company_events.event_date",
+      "company_events.event_type",
+      "company_events.id",
+      "company_events.title",
+      "company_events.updated_at",
+      "deal_investors.amount",
+      "deal_investors.deal_id",
+      "deal_investors.equity",
+      "deal_investors.investor_id",
+      "deals.afsnit",
+      "deals.aftale",
+      "deals.andel_solgt",
+      "deals.andel_tilbudt",
+      "deals.beloeb_modtaget",
+      "deals.company_id",
+      "deals.id",
+      "deals.saeson",
+      "deals.soeger",
+      "investors.bio",
+      "investors.canonical_name",
+      "investors.created_at",
+      "investors.id",
+      "investors.initials",
+      "investors.proff_url",
+      "investors.short_bio",
+      "investors.slug",
+      "investors.updated_at",
+      "investors.website_url",
+      "panel_memberships.investor_id",
+      "panel_memberships.role",
+      "panel_memberships.season_number",
+      "seasons.note",
+      "seasons.season_number",
+      "seasons.year",
+      "sources.confidence",
+      "sources.created_at",
+      "sources.entity_id",
+      "sources.entity_type",
+      "sources.field_name",
+      "sources.id",
+      "sources.note",
+      "sources.source_date",
+      "sources.source_name",
+      "sources.source_url"
+    ],
+    "sequences": [
+      "companies_id_seq",
+      "company_events_id_seq",
+      "deals_id_seq",
+      "investors_id_seq",
+      "sources_id_seq"
+    ],
+    "views": [
+      "investor_status"
+    ],
+    "functions": [
+      "rls_auto_enable"
+    ],
+    "triggers": [
+      "companies.set_updated_at",
+      "company_events.set_updated_at",
+      "investors.set_updated_at"
+    ],
+    "indexes": [
+      "company_events_company_idx",
+      "deal_investors_investor_id_idx",
+      "deals_company_id_idx",
+      "idx_deals_aftale",
+      "idx_deals_saeson",
+      "panel_memberships_investor_id_idx",
+      "sources_entity_idx"
+    ],
+    "constraints": [
+      "companies.companies_category_taxonomy",
+      "companies.companies_name_key",
+      "companies.companies_pkey",
+      "companies.companies_slug_key",
+      "companies.companies_status_check",
+      "company_events.company_events_company_id_fkey",
+      "company_events.company_events_date_precision_check",
+      "company_events.company_events_event_type_check",
+      "company_events.company_events_pkey",
+      "deal_investors.deal_investors_deal_id_fkey",
+      "deal_investors.deal_investors_investor_id_fkey",
+      "deal_investors.deal_investors_pkey",
+      "deals.deals_company_id_fkey",
+      "deals.deals_pkey",
+      "investors.investors_canonical_name_key",
+      "investors.investors_pkey",
+      "investors.investors_slug_key",
+      "panel_memberships.panel_memberships_investor_id_fkey",
+      "panel_memberships.panel_memberships_pkey",
+      "panel_memberships.panel_memberships_role_check",
+      "panel_memberships.panel_memberships_season_number_fkey",
+      "seasons.seasons_pkey",
+      "sources.sources_confidence_check",
+      "sources.sources_entity_type_check",
+      "sources.sources_pkey",
+      "sources.sources_url_scheme"
+    ],
+    "policies": [
+      "companies.anon_read",
+      "company_events.anon_read",
+      "deal_investors.anon_read",
+      "deals.Public read access",
+      "investors.anon_read",
+      "panel_memberships.anon_read",
+      "seasons.anon_read",
+      "sources.anon_read"
+    ],
+    "row_security": [
+      "companies",
+      "company_events",
+      "deal_investors",
+      "deals",
+      "investors",
+      "panel_memberships",
+      "seasons",
+      "sources"
+    ]
+  },
+  "source_review_comparison": {
+    "comparisons": {
+      "tables": {
+        "expected_count": 8,
+        "actual_count": 8,
+        "missing": [],
+        "extra": [],
+        "match": true
+      },
+      "columns": {
+        "expected_count": 59,
+        "actual_count": 59,
+        "missing": [],
+        "extra": [],
+        "match": true
+      },
+      "sequences": {
+        "expected_count": 5,
+        "actual_count": 5,
+        "missing": [],
+        "extra": [],
+        "match": true
+      },
+      "views": {
+        "expected_count": 1,
+        "actual_count": 1,
+        "missing": [],
+        "extra": [],
+        "match": true
+      },
+      "functions": {
+        "expected_count": 1,
+        "actual_count": 1,
+        "missing": [],
+        "extra": [],
+        "match": true
+      },
+      "triggers": {
+        "expected_count": 3,
+        "actual_count": 3,
+        "missing": [],
+        "extra": [],
+        "match": true
+      },
+      "indexes": {
+        "expected_count": 7,
+        "actual_count": 7,
+        "missing": [],
+        "extra": [],
+        "match": true
+      },
+      "constraints": {
+        "expected_count": 26,
+        "actual_count": 26,
+        "missing": [],
+        "extra": [],
+        "match": true
+      },
+      "policies": {
+        "expected_count": 8,
+        "actual_count": 8,
+        "missing": [],
+        "extra": [],
+        "match": true
+      },
+      "row_security": {
+        "expected_count": 8,
+        "actual_count": 8,
+        "missing": [],
+        "extra": [],
+        "match": true
+      }
+    },
+    "all_match": true
+  },
+  "dependency_order": [
+    {
+      "phase": "01_function",
+      "label": "Project function",
+      "object_count": 1
+    },
+    {
+      "phase": "02_tables_and_sequences",
+      "label": "Tables and sequence/default wiring",
+      "object_count": 15
+    },
+    {
+      "phase": "03_primary_and_unique_constraints",
+      "label": "Primary-key and unique constraints",
+      "object_count": 12
+    },
+    {
+      "phase": "04_foreign_keys",
+      "label": "Foreign-key constraints",
+      "object_count": 6
+    },
+    {
+      "phase": "05_indexes",
+      "label": "Standalone indexes",
+      "object_count": 7
+    },
+    {
+      "phase": "06_view",
+      "label": "Security-invoker view",
+      "object_count": 1
+    },
+    {
+      "phase": "07_triggers",
+      "label": "Updated-at triggers",
+      "object_count": 3
+    },
+    {
+      "phase": "08_row_security",
+      "label": "RLS enablement",
+      "object_count": 8
+    },
+    {
+      "phase": "09_policies",
+      "label": "Read policies",
+      "object_count": 8
+    }
+  ],
+  "exclusions": {
+    "scan": {
+      "data": {
+        "data_sections": 0,
+        "copy_from_stdin": 0,
+        "insert": 0,
+        "update": 0,
+        "delete": 0,
+        "truncate": 0,
+        "sequence_values": 0
+      },
+      "credentials": {
+        "private_keys": 0,
+        "supabase_secret_keys": 0,
+        "jwt_values": 0,
+        "credential_uris": 0,
+        "password_literals": 0
+      },
+      "privileges": {
+        "owner_statements": 0,
+        "grant_statements": 0,
+        "revoke_statements": 0,
+        "create_role": 0,
+        "alter_role": 0
+      },
+      "platform": {
+        "forbidden_schema_references": {
+          "auth": 0,
+          "storage": 0,
+          "realtime": 0,
+          "supabase_migrations": 0,
+          "graphql_public": 0,
+          "pgbouncer": 0
+        },
+        "create_schema": 0,
+        "create_extension": 0,
+        "plpgsql_extension_ddl": 0,
+        "event_trigger_ddl": 0,
+        "publication_ddl": 0,
+        "migration_history_references": 0,
+        "moddatetime_references": 3,
+        "other_extension_references": 0,
+        "connection_references": 0,
+        "project_ref_candidates": 0
+      },
+      "security_definer_functions": 1
+    },
+    "table_data": true,
+    "historical_dml": true,
+    "owners_grants_and_roles": true,
+    "credentials": true,
+    "supabase_internal_objects": true,
+    "extension_ddl": true,
+    "migration_history": true,
+    "connection_configuration": true
+  },
+  "external_dependencies": [
+    "pre-existing public schema",
+    "PostgreSQL 17-compatible runtime",
+    "extensions.moddatetime(text)",
+    "separately reviewed least-privilege ACL contract"
+  ],
+  "risk_gate": {
+    "security_definer_function_preserved": true,
+    "event_trigger_excluded": true,
+    "executable_acl_excluded": true,
+    "local_replay_required_before_promotion": true,
+    "baseline_sql_promotion_authorized": false,
+    "remote_history_alignment_authorized": false
+  }
+}

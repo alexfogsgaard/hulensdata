@@ -136,7 +136,7 @@ afgrænsning står i
 Rå dump/log er fortsat private. Brug ikke `db pull`, `migration repair` eller
 andre remote-state-kommandoer i denne gate.
 
-### Gate 2 — vælg én ærlig baselineform
+### Gate 2 — vælg én ærlig baselineform (draft udarbejdet 2026-07-23)
 
 1. **Anbefalet efter capture-review:** opret én reviewet, squashed current-state
    schema-baseline fra et officielt, saniteret schema-only dump. Capturen beviser,
@@ -150,6 +150,12 @@ andre remote-state-kommandoer i denne gate.
 Der må ikke både vedligeholdes en deklarativ schemafil og ordnede SQL-migrationer
 som to parallelle sandheder. Supabases declarative schema/`pg-delta` er fortsat
 alpha pr. 2026-07-22; hulensdata bør bruge ordnede SQL-migrationer.
+
+En deterministisk, project-only SQL-draft og dens maskinelle inventory er nu
+udledt lokalt af det verificerede private dump. Den matcher den sanitiserede
+capture, men er hverken replayet, promoveret til migration eller afstemt med
+remote historik. Metode, eksklusioner og stopgrænse står i
+[`database-project-baseline-draft.md`](database-project-baseline-draft.md).
 
 ### Gate 3 — isoleret replay og schema-paritet
 
@@ -190,12 +196,16 @@ npm run check:database-foundation
 npm run test:database-foundation
 npm run check:schema-dump-review
 npm run test:schema-dump-review
+npm run check:project-baseline-draft
+npm run test:project-baseline-draft
 ```
 
 De validerer inventarformat, streng versionsorden, remote head, eksplicit
-ikke-replaybar status, filnavne, placeholder-SQL, lokal Supabase-state, symlinks
-og typiske credentialmønstre. Mutationstesten beviser non-zero exit ved dublet,
-forkert head, falsk replayability, placeholder-SQL og credentialfil.
+ikke-replaybar status, filnavne, placeholder-SQL, lokal Supabase-state, symlinks,
+typiske credentialmønstre samt draftens objektparitet, dependencyorden og
+eksklusioner. Mutationstestene beviser non-zero exit ved blandt andet dublet,
+forkert head, falsk replayability, placeholder-SQL, credential, indlejret DML,
+platform-DDL og objektdrift.
 
 Senere, når en lokal baseline findes, bør CI desuden kunne køre helt lokalt:
 
@@ -223,8 +233,8 @@ Forbudt i disse checks: produktionscredentials, `--linked` reset, `db push`,
 | Platform-/project-DDL blandes | Baseline kan blive støjende eller skrøbelig | Reviewet allowlist og normaliseret schema-diff |
 | Credentials i dump/log | Hemmeligheder kan havne i git/CI | Privat temp, secret scan, sanitering og manuel review |
 
-Den første anbefalede efterfølgende branch er en filbaseret, project-only
-baseline-draft udledt af den private capture efter scope-review. Den må ikke
-forbinde til produktion, kopiere platformschemas eller markere remote historik
-som afstemt. Baseline-SQL må først blive commit-kandidat efter isoleret replay,
-normaliseret diff og særskilt review af `SECURITY DEFINER`, event trigger og ACL.
+Den første anbefalede efterfølgende branch er nu en isoleret, lokal replay-gate
+for project-only draften. Den må ikke forbinde til produktion eller markere
+remote historik som afstemt. Baseline-SQL må først blive migrationskandidat efter
+normaliseret diff og særskilt review af `SECURITY DEFINER`, event trigger,
+`moddatetime` og ACL.
