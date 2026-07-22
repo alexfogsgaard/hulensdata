@@ -29,6 +29,7 @@ målt eller besluttet.
 | Platformbackup | Afhænger af Supabase-plan/konfiguration | Storage-objekter og custom role passwords |
 | Read-only baselinegates | 16 statementfingeraftryk, katalogcapture og privat schema-only dump med objektparitet | En replaybevist/promoveret baseline eller restore rehearsal |
 | Project-only baseline-draft | Deterministisk SQL-draft og inventory med fuld project-objectparitet | Replaybevis, ACL-kontrakt, migrationspromotion og restore rehearsal |
+| Lokal database-replay | To tomme PostgreSQL 17.10-clusters, identisk schemahash, RLS/ACL-/write-tests og syntetisk fixture | Full-service Supabase-test, productiongodkendt ACL, datarestore og migrationspromotion |
 
 Hvis Storage senere tages i brug, skal objekter og metadata have en særskilt
 backup-/restore-plan; databasebackup alene gendanner ikke objekterne.
@@ -128,7 +129,7 @@ unlinked-target-kontrol.
 Kør checker og mutationstests. Resultatet beviser format-/historikværn og at
 fundamentet ikke påstår replayability. Det beviser **ikke** database-restore.
 
-### Bevis B — syntetisk lokal restore (næste gate; ingen production-credentials)
+### Bevis B — syntetisk lokal schema-replay (database-lag udført; ingen production-credentials)
 
 Brug en arbejdskopi af den nuværende draft i en unlinked lokal stack, replay fra
 tom database og indlæs en lille syntetisk fixture, der dækker:
@@ -143,6 +144,10 @@ Mutér hver klasse: manglende migration, ændret constraint, orphan source,
 forkert row count/hash, afkortet fil, dublet-ID, falsk `complete`, disabled RLS,
 for bred write-policy/grant og sekvens bag max-ID. Hver mutation skal give
 non-zero exit og altid gendannes i tempområdet.
+
+Schema-, RLS-, SELECT-, trigger-, view- og negative write-delen er nu bevist i
+to lokale PostgreSQL 17.10-clusters. En fuld datarestore med sekvensmutationer,
+manifest/corruption-fixtures og hele Supabase-service-stacken mangler fortsat.
 
 ### Bevis C — privat snapshot-restore (**MANUEL/KRÆVER CREDENTIALS**)
 

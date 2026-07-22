@@ -157,13 +157,24 @@ capture, men er hverken replayet, promoveret til migration eller afstemt med
 remote historik. Metode, eksklusioner og stopgrænse står i
 [`database-project-baseline-draft.md`](database-project-baseline-draft.md).
 
-### Gate 3 — isoleret replay og schema-paritet
+### Gate 3 — isoleret replay og schema-paritet (database-lag gennemført 2026-07-23)
 
 Kør migrationerne på en tom lokal Postgres/Supabase-stack. Sammenlign et
 normaliseret schema-dump med den saniterede produktionsfangst. Diffen skal være
 tom eller have en reviewet allowlist for platform-ejede forskelle. Kør derefter
 RLS/grant-tests, integritetsqueries, advisors/lint og Trykpressen mod syntetiske
 eller saniterede fixtures.
+
+Project-only draften er nu replayet i to uafhængige PostgreSQL 17.10-clusters
+med identisk normaliseret schemahash, fuld objektparitet, 8/8 RLS-tabeller og
+48/48 afviste write-probes. Den eneste schema-allowlist er det pre-existing
+lokale `public`-schema. Se
+[`database-local-baseline-replay.md`](database-local-baseline-replay.md).
+
+Gate 3 er kun færdig for database-laget. Docker/Supabase CLI var ikke
+tilgængelig, så Auth, REST/PostgREST, Storage, Realtime og gateway mangler et
+separat full-service-smoketest. Baselinepromotion afventer desuden beslutning om
+`rls_auto_enable()`, `deals`-policyen og den endelige ACL-kontrakt.
 
 ### Gate 4 — autoriseret historikafstemning
 
@@ -198,6 +209,8 @@ npm run check:schema-dump-review
 npm run test:schema-dump-review
 npm run check:project-baseline-draft
 npm run test:project-baseline-draft
+npm run check:local-baseline-replay
+npm run test:local-baseline-replay
 ```
 
 De validerer inventarformat, streng versionsorden, remote head, eksplicit

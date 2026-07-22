@@ -169,3 +169,12 @@ En separat branch bør gøre følgende uden production-credentials:
 7. destroy target og bevar kun sanitiseret testbevis;
 8. stop igen før baselinepromotion, remote history alignment, `db push` eller
    `migration repair`.
+
+## Senere opfølgning — lokal replay 2026-07-23
+
+Database-lagets replay-gate er nu gennemført to gange i separate PostgreSQL
+17.10-clusters med identisk normaliseret schemahash og fuld project-objectparitet.
+Baseline-SQL blev ikke ændret. Gaten fandt default `PUBLIC EXECUTE` på
+`rls_auto_enable()` og den eksisterende `anon`-only policy på `deals`; begge
+kræver beslutning før promotion. Se
+[`database-local-baseline-replay.md`](database-local-baseline-replay.md).

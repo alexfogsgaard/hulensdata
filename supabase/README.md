@@ -16,6 +16,10 @@ live Supabase og indeholder ingen credentials eller produktionsdata.
   project-only schema-draft. Dens inventory beviser objektparitet og
   eksklusioner; draften er ikke replayet, en migration eller autoriseret til
   remote brug.
+- `baseline/local-replay-result.json` dokumenterer to isolerede PostgreSQL
+  17.10-replays og sikkerhedstest uden private paths eller credentials.
+- `baseline/project-schema-acl.contract.draft.sql` er et least-privilege-udkast,
+  der kun er anvendt lokalt. Det er ikke en migration eller productiongodkendt.
 - `migrations/` indeholder endnu ingen SQL-migrationer.
 - Baseline er derfor fortsat **ikke replaybevist** fra repository'et.
 
@@ -30,7 +34,9 @@ supabase/
 ├── migration-inventory.json
 ├── baseline/
 │   ├── project-schema-baseline.draft.sql
-│   └── project-schema-baseline.draft.inventory.json
+│   ├── project-schema-baseline.draft.inventory.json
+│   ├── project-schema-acl.contract.draft.sql
+│   └── local-replay-result.json
 ├── config.toml                    # senere: genereret lokalt, uden secrets
 ├── migrations/
 │   ├── README.md
@@ -59,6 +65,8 @@ npm run check:schema-dump-review
 npm run test:schema-dump-review
 npm run check:project-baseline-draft
 npm run test:project-baseline-draft
+npm run check:local-baseline-replay
+npm run test:local-baseline-replay
 ```
 
 Kontrollerne er filbaserede. De forbinder ikke til Supabase og kan ikke skrive
