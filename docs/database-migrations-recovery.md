@@ -116,7 +116,7 @@ Baseline etableres i gates. Ingen gate må springes over.
 Bevar de 16 eksterne versionsnumre/navne og det observerede schema som evidens.
 Markér historikken `inventory_only_not_replayable`. Opret ingen tomme SQL-filer.
 
-### Gate 1 — privat, read-only schemafangst
+### Gate 1 — privat, read-only schemafangst (delvist opfyldt 2026-07-22)
 
 Med særskilt godkendte, kortlivede read-credentials tages en schema-only eksport
 til et privat tempområde. Eksporten skal omfatte projekt-ejede extensions,
@@ -125,18 +125,23 @@ funktioner, triggers, viewdefinitioner, RLS, policies, grants, default privilege
 comments og migrationstabellen. Ownership, platform-ejede schemas, passwords og
 følsomme settings skal bortfiltreres og reviewes før noget kan committes.
 
-Brug ikke `db pull` mod produktion i denne gate, fordi kommandoen har en ekstern
-historik-sideeffekt. Brug heller ikke `migration repair`.
+Read-only MCP-capture har nu hentet alle 16 statements og et high-fidelity
+katalogsnapshot privat; sanitiseret resultat og provenance står i
+[`database-baseline-readonly-capture.md`](database-baseline-readonly-capture.md).
+Et officielt schema-only `pg_dump` mangler fortsat, fordi der ikke blev indført
+CLI/databasecredentials. Brug ikke `db pull` mod produktion i denne gate, fordi
+kommandoen har en ekstern historik-sideeffekt. Brug heller ikke `migration repair`.
 
 ### Gate 2 — vælg én ærlig baselineform
 
-1. **Foretrukket:** hent de 16 opbevarede statements read-only til et privat
-   tempområde, bekræft deres fingeraftryk, genskab filerne med de oprindelige
-   versionsnumre, secret-/DML-review hvert legeme og bevis replay fra tom database.
-2. **Fallback, hvis historisk SQL er ufuldstændig:** opret én reviewet, squashed
-   schema-baseline fra den saniterede schemaeksport. Den får et nyt CLI-genereret
-   timestamp og må først registreres som anvendt eksternt ved en særskilt,
-   eksplicit godkendt produktionshandling.
+1. **Anbefalet efter capture-review:** opret én reviewet, squashed current-state
+   schema-baseline fra et officielt, saniteret schema-only dump. Capturen beviser,
+   at de 16 historiske statements refererer til en præeksisterende `deals`-tabel,
+   som de ikke selv opretter; exact-history-kæden er derfor ikke tom-database-
+   replaybar.
+2. Bevar de 16 versionsnumre, hashes, klassifikationer og private statements som
+   auditspor. Flyt ikke historisk DML eller produktionsdata ukritisk ind i
+   schema-baselinen.
 
 Der må ikke både vedligeholdes en deklarativ schemafil og ordnede SQL-migrationer
 som to parallelle sandheder. Supabases declarative schema/`pg-delta` er fortsat
@@ -203,7 +208,7 @@ Forbudt i disse checks: produktionscredentials, `--linked` reset, `db push`,
 
 | Risiko | Konsekvens | Næste beslutning |
 |---|---|---|
-| Historisk SQL mangler | Repo kan ikke genskabe schemaet | Vælg exact-history eller squashed baseline efter privat schemafangst |
+| Historisk SQL er privat fanget, men kæden mangler det oprindelige `deals`-schema | Repo kan ikke genskabe schemaet fra de 16 statements | Byg squashed current-state baseline efter officielt schema-only dump |
 | JSON-backup er ikke full-fidelity | Funktioner, policies, grants og sequences kan mangle | Bevis logisk full-schema/data-restore isoleret |
 | Brede anon/auth grants | Større blast radius ved fremtidig policy/RLS-fejl | Separat privilege-hardening-migration efter baseline |
 | Polymorf `sources.entity_id` | Orphans kan omgå database-FK | Bevar build-check og tilføj restore-integritetsquery |
@@ -212,7 +217,7 @@ Forbudt i disse checks: produktionscredentials, `--linked` reset, `db push`,
 | Platform-/project-DDL blandes | Baseline kan blive støjende eller skrøbelig | Reviewet allowlist og normaliseret schema-diff |
 | Credentials i dump/log | Hemmeligheder kan havne i git/CI | Privat temp, secret scan, sanitering og manuel review |
 
-Den første anbefalede efterfølgende branch er en credentialed-but-read-only
-schema-capture i et privat arbejdsområde. Den må ikke committe rå dumps og må
-ikke kobles til production-writes. Baseline-SQL er først næste branch, når
-fangsten og scopeklassifikationen er reviewet.
+Den første anbefalede efterfølgende branch er et credentialed-but-read-only,
+officielt schema-only dump i et privat arbejdsområde efterfulgt af katalogdiff.
+Den må ikke committe rå dumps eller kobles til production-writes. Baseline-SQL er
+først næste branch, når dumpet og denne captures scopeklassifikation er reviewet.

@@ -16,3 +16,5 @@ supabase/.temp/
 supabase/.branches/
 supabase/.env
 supabase/.env.*
+supabase/**/*.raw.*
+supabase/**/capture-manifest.private.json

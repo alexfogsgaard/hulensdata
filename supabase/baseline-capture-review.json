@@ -1,0 +1,777 @@
+{
+  "format_version": 1,
+  "captured_at": "2026-07-22T00:35:26.467103+00:00",
+  "project_ref": "upaxzfytumsijnbhjihd",
+  "base_commit": "a576c70e0c9426fecf61237849602a5d939a396b",
+  "provenance": {
+    "method": "Supabase MCP execute_sql with committed SELECT-only capture queries",
+    "migration_query": "tools/sql/capture-migrations-readonly.sql",
+    "migration_query_sha256": "2990f3b396380d41a2f39975b8be056b93a9165a2ddd7faac963c09dd25dd726",
+    "schema_query": "tools/sql/capture-project-schema-readonly.sql",
+    "schema_query_sha256": "dbf14b27721170bd8a1584d3288bf09257dbadefd46760119e08a84078281e01",
+    "raw_files_committed": false,
+    "database_writes_performed": false,
+    "schema_capture_kind": "project-schema catalog snapshot; not an official pg_dump archive"
+  },
+  "fingerprint_summary": {
+    "expected": 16,
+    "captured": 16,
+    "matching": 16,
+    "all_match": true
+  },
+  "classification_summary": {
+    "DDL": 15,
+    "DML": 7,
+    "permissions": 2,
+    "policy": 3,
+    "function/view": 2,
+    "other": 0
+  },
+  "security_summary": {
+    "statements_with_possible_credentials": 0,
+    "statements_with_personal_or_public_person_data": 4,
+    "statements_with_environment_references": 4,
+    "statements_with_dml": 7,
+    "statements_with_destructive_sql": 4,
+    "statements_with_dynamic_sql": 0,
+    "schema_possible_credentials": false,
+    "schema_personal_data": false,
+    "schema_contains_table_row_data": false,
+    "schema_environment_references": true
+  },
+  "capture_metadata_summary": {
+    "migrations_with_created_by": 16,
+    "migrations_with_idempotency_key": 0,
+    "migrations_with_rollback_statements": 0
+  },
+  "schema_summary": {
+    "captured_at": "2026-07-22T00:39:52.864772+00:00",
+    "server_version": "17.6",
+    "relation_names": [
+      "companies",
+      "companies_id_seq",
+      "company_events",
+      "company_events_id_seq",
+      "deal_investors",
+      "deals",
+      "deals_id_seq",
+      "investor_status",
+      "investors",
+      "investors_id_seq",
+      "panel_memberships",
+      "seasons",
+      "sources",
+      "sources_id_seq"
+    ],
+    "relation_count": 14,
+    "column_count": 67,
+    "constraint_count": 26,
+    "index_count": 19,
+    "sequence_count": 5,
+    "view_count": 1,
+    "function_count": 1,
+    "trigger_count": 3,
+    "policy_count": 8,
+    "relation_privilege_count": 348,
+    "default_acl_count": 300,
+    "extension_count": 6,
+    "event_trigger_count": 7,
+    "publication_count": 1
+  },
+  "chain_assessment": {
+    "creates_base_deals_table": false,
+    "references_deals_table": true,
+    "empty_database_replay_claim": false,
+    "reason": "The captured history references the pre-existing deals table but does not create its base schema."
+  },
+  "migrations": [
+    {
+      "version": "20260710002859",
+      "name": "drop_legacy_companies_cvr_skeleton",
+      "statement_count": 1,
+      "byte_length": 333,
+      "registered_md5": "6243627e29d8cfa6145df1ea10e9778d",
+      "captured_md5": "6243627e29d8cfa6145df1ea10e9778d",
+      "fingerprint_match": true,
+      "classifications": [
+        "DDL"
+      ],
+      "safety_scan": {
+        "credential_signals": {
+          "jwt": false,
+          "secret_key": false,
+          "private_key": false,
+          "credential_uri": false,
+          "password_literal": false
+        },
+        "personal_data_signals": {
+          "email": false,
+          "public_person_names": false,
+          "cpr_candidate": false
+        },
+        "environment_signals": {
+          "supabase_roles": false,
+          "project_ref": false,
+          "urls": false,
+          "extensions": false
+        },
+        "contains_dml": false,
+        "contains_destructive_sql": true,
+        "contains_dynamic_sql": false,
+        "contains_id_referencing_dml": false
+      },
+      "commit_status": "hold_raw_private",
+      "replay_status": "unsafe_unmodified",
+      "review_reasons": [
+        "baseline_sql_not_authorized_in_this_phase",
+        "contains_destructive_sql"
+      ]
+    },
+    {
+      "version": "20260710002924",
+      "name": "create_seasons_and_investors",
+      "statement_count": 1,
+      "byte_length": 2737,
+      "registered_md5": "1823d434a21bbe67563df2e4cc0bfbc5",
+      "captured_md5": "1823d434a21bbe67563df2e4cc0bfbc5",
+      "fingerprint_match": true,
+      "classifications": [
+        "DDL",
+        "DML"
+      ],
+      "safety_scan": {
+        "credential_signals": {
+          "jwt": false,
+          "secret_key": false,
+          "private_key": false,
+          "credential_uri": false,
+          "password_literal": false
+        },
+        "personal_data_signals": {
+          "email": false,
+          "public_person_names": true,
+          "cpr_candidate": false
+        },
+        "environment_signals": {
+          "supabase_roles": false,
+          "project_ref": false,
+          "urls": true,
+          "extensions": false
+        },
+        "contains_dml": true,
+        "contains_destructive_sql": false,
+        "contains_dynamic_sql": false,
+        "contains_id_referencing_dml": true
+      },
+      "commit_status": "hold_raw_private",
+      "replay_status": "unsafe_unmodified",
+      "review_reasons": [
+        "baseline_sql_not_authorized_in_this_phase",
+        "contains_historical_data_mutation",
+        "contains_personal_or_public_person_data",
+        "contains_environment_specific_reference"
+      ]
+    },
+    {
+      "version": "20260710002949",
+      "name": "create_panel_memberships",
+      "statement_count": 1,
+      "byte_length": 2647,
+      "registered_md5": "96535e5a3feec97dc1a395def1e58f12",
+      "captured_md5": "96535e5a3feec97dc1a395def1e58f12",
+      "fingerprint_match": true,
+      "classifications": [
+        "DDL",
+        "DML"
+      ],
+      "safety_scan": {
+        "credential_signals": {
+          "jwt": false,
+          "secret_key": false,
+          "private_key": false,
+          "credential_uri": false,
+          "password_literal": false
+        },
+        "personal_data_signals": {
+          "email": false,
+          "public_person_names": true,
+          "cpr_candidate": false
+        },
+        "environment_signals": {
+          "supabase_roles": false,
+          "project_ref": false,
+          "urls": false,
+          "extensions": false
+        },
+        "contains_dml": true,
+        "contains_destructive_sql": false,
+        "contains_dynamic_sql": false,
+        "contains_id_referencing_dml": true
+      },
+      "commit_status": "hold_raw_private",
+      "replay_status": "unsafe_unmodified",
+      "review_reasons": [
+        "baseline_sql_not_authorized_in_this_phase",
+        "contains_historical_data_mutation",
+        "contains_personal_or_public_person_data"
+      ]
+    },
+    {
+      "version": "20260710003009",
+      "name": "create_companies_from_deals",
+      "statement_count": 1,
+      "byte_length": 1003,
+      "registered_md5": "429a3729e5621739b9364c526605efe4",
+      "captured_md5": "429a3729e5621739b9364c526605efe4",
+      "fingerprint_match": true,
+      "classifications": [
+        "DDL",
+        "DML"
+      ],
+      "safety_scan": {
+        "credential_signals": {
+          "jwt": false,
+          "secret_key": false,
+          "private_key": false,
+          "credential_uri": false,
+          "password_literal": false
+        },
+        "personal_data_signals": {
+          "email": false,
+          "public_person_names": false,
+          "cpr_candidate": false
+        },
+        "environment_signals": {
+          "supabase_roles": false,
+          "project_ref": false,
+          "urls": false,
+          "extensions": false
+        },
+        "contains_dml": true,
+        "contains_destructive_sql": false,
+        "contains_dynamic_sql": false,
+        "contains_id_referencing_dml": true
+      },
+      "commit_status": "hold_raw_private",
+      "replay_status": "unsafe_unmodified",
+      "review_reasons": [
+        "baseline_sql_not_authorized_in_this_phase",
+        "contains_historical_data_mutation"
+      ]
+    },
+    {
+      "version": "20260710003022",
+      "name": "add_deals_company_fk",
+      "statement_count": 1,
+      "byte_length": 282,
+      "registered_md5": "f3844286bc7a53291969c7050b13709c",
+      "captured_md5": "f3844286bc7a53291969c7050b13709c",
+      "fingerprint_match": true,
+      "classifications": [
+        "DDL",
+        "DML"
+      ],
+      "safety_scan": {
+        "credential_signals": {
+          "jwt": false,
+          "secret_key": false,
+          "private_key": false,
+          "credential_uri": false,
+          "password_literal": false
+        },
+        "personal_data_signals": {
+          "email": false,
+          "public_person_names": false,
+          "cpr_candidate": false
+        },
+        "environment_signals": {
+          "supabase_roles": false,
+          "project_ref": false,
+          "urls": false,
+          "extensions": false
+        },
+        "contains_dml": true,
+        "contains_destructive_sql": false,
+        "contains_dynamic_sql": false,
+        "contains_id_referencing_dml": true
+      },
+      "commit_status": "hold_raw_private",
+      "replay_status": "unsafe_unmodified",
+      "review_reasons": [
+        "baseline_sql_not_authorized_in_this_phase",
+        "contains_historical_data_mutation"
+      ]
+    },
+    {
+      "version": "20260710003040",
+      "name": "create_deal_investors",
+      "statement_count": 1,
+      "byte_length": 1046,
+      "registered_md5": "fc5d8cb227ec432648045deafd5e2901",
+      "captured_md5": "fc5d8cb227ec432648045deafd5e2901",
+      "fingerprint_match": true,
+      "classifications": [
+        "DDL",
+        "DML"
+      ],
+      "safety_scan": {
+        "credential_signals": {
+          "jwt": false,
+          "secret_key": false,
+          "private_key": false,
+          "credential_uri": false,
+          "password_literal": false
+        },
+        "personal_data_signals": {
+          "email": false,
+          "public_person_names": true,
+          "cpr_candidate": false
+        },
+        "environment_signals": {
+          "supabase_roles": false,
+          "project_ref": false,
+          "urls": false,
+          "extensions": false
+        },
+        "contains_dml": true,
+        "contains_destructive_sql": false,
+        "contains_dynamic_sql": false,
+        "contains_id_referencing_dml": true
+      },
+      "commit_status": "hold_raw_private",
+      "replay_status": "unsafe_unmodified",
+      "review_reasons": [
+        "baseline_sql_not_authorized_in_this_phase",
+        "contains_historical_data_mutation",
+        "contains_personal_or_public_person_data"
+      ]
+    },
+    {
+      "version": "20260710003102",
+      "name": "create_investor_status_view_and_policies",
+      "statement_count": 1,
+      "byte_length": 1913,
+      "registered_md5": "acdd8db55c3a22778f8d58e7809c7289",
+      "captured_md5": "acdd8db55c3a22778f8d58e7809c7289",
+      "fingerprint_match": true,
+      "classifications": [
+        "DDL",
+        "permissions",
+        "policy",
+        "function/view"
+      ],
+      "safety_scan": {
+        "credential_signals": {
+          "jwt": false,
+          "secret_key": false,
+          "private_key": false,
+          "credential_uri": false,
+          "password_literal": false
+        },
+        "personal_data_signals": {
+          "email": false,
+          "public_person_names": false,
+          "cpr_candidate": false
+        },
+        "environment_signals": {
+          "supabase_roles": true,
+          "project_ref": false,
+          "urls": false,
+          "extensions": false
+        },
+        "contains_dml": false,
+        "contains_destructive_sql": false,
+        "contains_dynamic_sql": false,
+        "contains_id_referencing_dml": false
+      },
+      "commit_status": "hold_raw_private",
+      "replay_status": "blocked_until_dependency_review",
+      "review_reasons": [
+        "baseline_sql_not_authorized_in_this_phase",
+        "contains_environment_specific_reference"
+      ]
+    },
+    {
+      "version": "20260710003313",
+      "name": "fix_view_invoker_and_function_grants",
+      "statement_count": 1,
+      "byte_length": 380,
+      "registered_md5": "003606345f78b52c2999100592cf0194",
+      "captured_md5": "003606345f78b52c2999100592cf0194",
+      "fingerprint_match": true,
+      "classifications": [
+        "permissions",
+        "function/view"
+      ],
+      "safety_scan": {
+        "credential_signals": {
+          "jwt": false,
+          "secret_key": false,
+          "private_key": false,
+          "credential_uri": false,
+          "password_literal": false
+        },
+        "personal_data_signals": {
+          "email": false,
+          "public_person_names": false,
+          "cpr_candidate": false
+        },
+        "environment_signals": {
+          "supabase_roles": true,
+          "project_ref": false,
+          "urls": false,
+          "extensions": false
+        },
+        "contains_dml": false,
+        "contains_destructive_sql": false,
+        "contains_dynamic_sql": false,
+        "contains_id_referencing_dml": false
+      },
+      "commit_status": "hold_raw_private",
+      "replay_status": "blocked_until_dependency_review",
+      "review_reasons": [
+        "baseline_sql_not_authorized_in_this_phase",
+        "contains_environment_specific_reference"
+      ]
+    },
+    {
+      "version": "20260710182227",
+      "name": "soak_cleanup_drop_investor_text_and_backups",
+      "statement_count": 1,
+      "byte_length": 494,
+      "registered_md5": "546344d738cc6fdb9d67c4864fca5b3b",
+      "captured_md5": "546344d738cc6fdb9d67c4864fca5b3b",
+      "fingerprint_match": true,
+      "classifications": [
+        "DDL"
+      ],
+      "safety_scan": {
+        "credential_signals": {
+          "jwt": false,
+          "secret_key": false,
+          "private_key": false,
+          "credential_uri": false,
+          "password_literal": false
+        },
+        "personal_data_signals": {
+          "email": false,
+          "public_person_names": false,
+          "cpr_candidate": false
+        },
+        "environment_signals": {
+          "supabase_roles": false,
+          "project_ref": false,
+          "urls": false,
+          "extensions": false
+        },
+        "contains_dml": false,
+        "contains_destructive_sql": true,
+        "contains_dynamic_sql": false,
+        "contains_id_referencing_dml": false
+      },
+      "commit_status": "hold_raw_private",
+      "replay_status": "unsafe_unmodified",
+      "review_reasons": [
+        "baseline_sql_not_authorized_in_this_phase",
+        "contains_destructive_sql"
+      ]
+    },
+    {
+      "version": "20260711161231",
+      "name": "create_company_events",
+      "statement_count": 1,
+      "byte_length": 1061,
+      "registered_md5": "58b1f908ec6bed744b7acfdd0e06ccf2",
+      "captured_md5": "58b1f908ec6bed744b7acfdd0e06ccf2",
+      "fingerprint_match": true,
+      "classifications": [
+        "DDL",
+        "policy"
+      ],
+      "safety_scan": {
+        "credential_signals": {
+          "jwt": false,
+          "secret_key": false,
+          "private_key": false,
+          "credential_uri": false,
+          "password_literal": false
+        },
+        "personal_data_signals": {
+          "email": false,
+          "public_person_names": false,
+          "cpr_candidate": false
+        },
+        "environment_signals": {
+          "supabase_roles": false,
+          "project_ref": false,
+          "urls": false,
+          "extensions": false
+        },
+        "contains_dml": false,
+        "contains_destructive_sql": false,
+        "contains_dynamic_sql": false,
+        "contains_id_referencing_dml": false
+      },
+      "commit_status": "hold_raw_private",
+      "replay_status": "blocked_until_dependency_review",
+      "review_reasons": [
+        "baseline_sql_not_authorized_in_this_phase"
+      ]
+    },
+    {
+      "version": "20260711161251",
+      "name": "create_sources",
+      "statement_count": 1,
+      "byte_length": 885,
+      "registered_md5": "4d4cbb6b64df78aef27929b9e2ae6c98",
+      "captured_md5": "4d4cbb6b64df78aef27929b9e2ae6c98",
+      "fingerprint_match": true,
+      "classifications": [
+        "DDL",
+        "policy"
+      ],
+      "safety_scan": {
+        "credential_signals": {
+          "jwt": false,
+          "secret_key": false,
+          "private_key": false,
+          "credential_uri": false,
+          "password_literal": false
+        },
+        "personal_data_signals": {
+          "email": false,
+          "public_person_names": false,
+          "cpr_candidate": false
+        },
+        "environment_signals": {
+          "supabase_roles": false,
+          "project_ref": false,
+          "urls": false,
+          "extensions": false
+        },
+        "contains_dml": false,
+        "contains_destructive_sql": false,
+        "contains_dynamic_sql": false,
+        "contains_id_referencing_dml": false
+      },
+      "commit_status": "hold_raw_private",
+      "replay_status": "blocked_until_dependency_review",
+      "review_reasons": [
+        "baseline_sql_not_authorized_in_this_phase"
+      ]
+    },
+    {
+      "version": "20260712034247",
+      "name": "updated_at_triggers_and_source_url_check",
+      "statement_count": 1,
+      "byte_length": 725,
+      "registered_md5": "f82384ee6adae184d8b758a115460175",
+      "captured_md5": "f82384ee6adae184d8b758a115460175",
+      "fingerprint_match": true,
+      "classifications": [
+        "DDL",
+        "DML"
+      ],
+      "safety_scan": {
+        "credential_signals": {
+          "jwt": false,
+          "secret_key": false,
+          "private_key": false,
+          "credential_uri": false,
+          "password_literal": false
+        },
+        "personal_data_signals": {
+          "email": false,
+          "public_person_names": true,
+          "cpr_candidate": false
+        },
+        "environment_signals": {
+          "supabase_roles": false,
+          "project_ref": false,
+          "urls": false,
+          "extensions": true
+        },
+        "contains_dml": true,
+        "contains_destructive_sql": false,
+        "contains_dynamic_sql": false,
+        "contains_id_referencing_dml": false
+      },
+      "commit_status": "hold_raw_private",
+      "replay_status": "unsafe_unmodified",
+      "review_reasons": [
+        "baseline_sql_not_authorized_in_this_phase",
+        "contains_historical_data_mutation",
+        "contains_personal_or_public_person_data",
+        "contains_environment_specific_reference"
+      ]
+    },
+    {
+      "version": "20260712035152",
+      "name": "fk_indexes_and_index_cleanup",
+      "statement_count": 1,
+      "byte_length": 362,
+      "registered_md5": "f640fd3fae099365cdf8b118fb2b71da",
+      "captured_md5": "f640fd3fae099365cdf8b118fb2b71da",
+      "fingerprint_match": true,
+      "classifications": [
+        "DDL"
+      ],
+      "safety_scan": {
+        "credential_signals": {
+          "jwt": false,
+          "secret_key": false,
+          "private_key": false,
+          "credential_uri": false,
+          "password_literal": false
+        },
+        "personal_data_signals": {
+          "email": false,
+          "public_person_names": false,
+          "cpr_candidate": false
+        },
+        "environment_signals": {
+          "supabase_roles": false,
+          "project_ref": false,
+          "urls": false,
+          "extensions": false
+        },
+        "contains_dml": false,
+        "contains_destructive_sql": true,
+        "contains_dynamic_sql": false,
+        "contains_id_referencing_dml": false
+      },
+      "commit_status": "hold_raw_private",
+      "replay_status": "unsafe_unmodified",
+      "review_reasons": [
+        "baseline_sql_not_authorized_in_this_phase",
+        "contains_destructive_sql"
+      ]
+    },
+    {
+      "version": "20260712035501",
+      "name": "drop_redundant_deals_columns",
+      "statement_count": 1,
+      "byte_length": 446,
+      "registered_md5": "c497b6d108b419731e5a1f24dde25607",
+      "captured_md5": "c497b6d108b419731e5a1f24dde25607",
+      "fingerprint_match": true,
+      "classifications": [
+        "DDL"
+      ],
+      "safety_scan": {
+        "credential_signals": {
+          "jwt": false,
+          "secret_key": false,
+          "private_key": false,
+          "credential_uri": false,
+          "password_literal": false
+        },
+        "personal_data_signals": {
+          "email": false,
+          "public_person_names": false,
+          "cpr_candidate": false
+        },
+        "environment_signals": {
+          "supabase_roles": false,
+          "project_ref": false,
+          "urls": false,
+          "extensions": false
+        },
+        "contains_dml": false,
+        "contains_destructive_sql": true,
+        "contains_dynamic_sql": false,
+        "contains_id_referencing_dml": false
+      },
+      "commit_status": "hold_raw_private",
+      "replay_status": "unsafe_unmodified",
+      "review_reasons": [
+        "baseline_sql_not_authorized_in_this_phase",
+        "contains_destructive_sql"
+      ]
+    },
+    {
+      "version": "20260714210037",
+      "name": "apply_category_taxonomy",
+      "statement_count": 1,
+      "byte_length": 2433,
+      "registered_md5": "1080385b101a8d3a70ee5f23e600c14e",
+      "captured_md5": "1080385b101a8d3a70ee5f23e600c14e",
+      "fingerprint_match": true,
+      "classifications": [
+        "DDL",
+        "DML"
+      ],
+      "safety_scan": {
+        "credential_signals": {
+          "jwt": false,
+          "secret_key": false,
+          "private_key": false,
+          "credential_uri": false,
+          "password_literal": false
+        },
+        "personal_data_signals": {
+          "email": false,
+          "public_person_names": false,
+          "cpr_candidate": false
+        },
+        "environment_signals": {
+          "supabase_roles": false,
+          "project_ref": false,
+          "urls": false,
+          "extensions": false
+        },
+        "contains_dml": true,
+        "contains_destructive_sql": false,
+        "contains_dynamic_sql": false,
+        "contains_id_referencing_dml": true
+      },
+      "commit_status": "hold_raw_private",
+      "replay_status": "unsafe_unmodified",
+      "review_reasons": [
+        "baseline_sql_not_authorized_in_this_phase",
+        "contains_historical_data_mutation"
+      ]
+    },
+    {
+      "version": "20260714212928",
+      "name": "allow_unknown_episode",
+      "statement_count": 1,
+      "byte_length": 314,
+      "registered_md5": "aa49ba2073408cc1acea42145acd606b",
+      "captured_md5": "aa49ba2073408cc1acea42145acd606b",
+      "fingerprint_match": true,
+      "classifications": [
+        "DDL"
+      ],
+      "safety_scan": {
+        "credential_signals": {
+          "jwt": false,
+          "secret_key": false,
+          "private_key": false,
+          "credential_uri": false,
+          "password_literal": false
+        },
+        "personal_data_signals": {
+          "email": false,
+          "public_person_names": false,
+          "cpr_candidate": false
+        },
+        "environment_signals": {
+          "supabase_roles": false,
+          "project_ref": false,
+          "urls": false,
+          "extensions": false
+        },
+        "contains_dml": false,
+        "contains_destructive_sql": false,
+        "contains_dynamic_sql": false,
+        "contains_id_referencing_dml": false
+      },
+      "commit_status": "hold_raw_private",
+      "replay_status": "blocked_until_dependency_review",
+      "review_reasons": [
+        "baseline_sql_not_authorized_in_this_phase"
+      ]
+    }
+  ]
+}

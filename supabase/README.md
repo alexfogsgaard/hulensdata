@@ -7,6 +7,8 @@ live Supabase og indeholder ingen credentials eller produktionsdata.
 
 - `migration-inventory.json` er et read-only inventar af den eksterne
   migrationshistorik pr. 2026-07-22.
+- `baseline-capture-review.json` er sanitiseret metadata fra den private
+  read-only capture; den indeholder fingerprints og sikkerhedsflag, ikke SQL.
 - `migrations/` indeholder endnu ingen SQL-migrationer.
 - Baseline er derfor **ikke replaybar** fra repository'et endnu.
 
@@ -41,6 +43,8 @@ for restore-flowet.
 ```bash
 npm run check:database-foundation
 npm run test:database-foundation
+npm run check:baseline-capture
+npm run test:baseline-capture
 ```
 
 Kontrollerne er filbaserede. De forbinder ikke til Supabase og kan ikke skrive
