@@ -14,11 +14,17 @@ import {
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { compareToSchemaDumpReview } from './lib/project-baseline-draft.mjs';
+import { compareToPromotionInventory } from './lib/project-baseline-promotion.mjs';
 import { parsePgDump, sha256 } from './lib/schema-dump-review.mjs';
 
 const root = process.cwd();
-const baselinePath = join(root, 'supabase/baseline/project-schema-baseline.draft.sql');
-const baselineInventoryPath = join(root, 'supabase/baseline/project-schema-baseline.draft.inventory.json');
+const promotionMode = process.argv.includes('--promotion');
+const baselinePath = join(root, promotionMode
+  ? 'supabase/baseline/project-schema-baseline.promotion-candidate.sql'
+  : 'supabase/baseline/project-schema-baseline.draft.sql');
+const baselineInventoryPath = join(root, promotionMode
+  ? 'supabase/baseline/project-schema-baseline.promotion-candidate.inventory.json'
+  : 'supabase/baseline/project-schema-baseline.draft.inventory.json');
 const reviewPath = join(root, 'supabase/schema-dump-review.json');
 const preconditionPath = join(root, 'tools/sql/local-baseline-preconditions.sql');
 const aclPath = join(root, 'supabase/baseline/project-schema-acl.contract.draft.sql');
@@ -155,6 +161,71 @@ function functionSecurity(toolchain, socketDir, port) {
     JOIN pg_namespace n ON n.oid = p.pronamespace
     JOIN pg_language l ON l.oid = p.prolang
     WHERE n.nspname = 'public' AND p.proname = 'rls_auto_enable';
+  `);
+}
+
+function promotionFunctions(toolchain, socketDir, port) {
+  return queryJson(toolchain, socketDir, port, `
+    SELECT COALESCE(json_agg(json_build_object(
+      'name', n.nspname || '.' || p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ')',
+      'security_definer', p.prosecdef,
+      'public_execute', has_function_privilege('public', p.oid, 'EXECUTE'),
+      'anon_execute', has_function_privilege('anon', p.oid, 'EXECUTE'),
+      'authenticated_execute', has_function_privilege('authenticated', p.oid, 'EXECUTE')
+    ) ORDER BY p.proname), '[]'::json)
+    FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public';
+  `);
+}
+
+function defaultFunctionPrivilegeProbe(toolchain, socketDir, port) {
+  psql(toolchain, socketDir, port, [
+    '--quiet', '--set', 'ON_ERROR_STOP=1', '--command',
+    "CREATE FUNCTION public.__acl_probe() RETURNS integer LANGUAGE sql AS 'SELECT 1';",
+  ]);
+  try {
+    return queryJson(toolchain, socketDir, port, `
+      SELECT json_build_object(
+        'public_execute', has_function_privilege('public', 'public.__acl_probe()', 'EXECUTE'),
+        'anon_execute', has_function_privilege('anon', 'public.__acl_probe()', 'EXECUTE'),
+        'authenticated_execute', has_function_privilege('authenticated', 'public.__acl_probe()', 'EXECUTE')
+      );
+    `);
+  } finally {
+    psql(toolchain, socketDir, port, ['--quiet', '--set', 'ON_ERROR_STOP=1', '--command', 'DROP FUNCTION public.__acl_probe();']);
+  }
+}
+
+function promotionPrivilegeMatrix(toolchain, socketDir, port) {
+  const relations = makeValues(SELECT_RELATIONS);
+  const sequences = makeValues(SEQUENCES);
+  return queryJson(toolchain, socketDir, port, `
+    WITH roles(role_name) AS (VALUES ('anon'), ('authenticated')),
+    relations(relation_name) AS (VALUES ${relations}),
+    sequences(sequence_name) AS (VALUES ${sequences}),
+    table_matrix AS (
+      SELECT role_name, relation_name,
+        has_table_privilege(role_name, 'public.' || relation_name, 'SELECT') AS can_select,
+        has_table_privilege(role_name, 'public.' || relation_name, 'INSERT') AS can_insert,
+        has_table_privilege(role_name, 'public.' || relation_name, 'UPDATE') AS can_update,
+        has_table_privilege(role_name, 'public.' || relation_name, 'DELETE') AS can_delete
+      FROM roles CROSS JOIN relations
+    ), sequence_matrix AS (
+      SELECT role_name, sequence_name,
+        has_sequence_privilege(role_name, 'public.' || sequence_name, 'USAGE') AS can_use,
+        has_sequence_privilege(role_name, 'public.' || sequence_name, 'SELECT') AS can_select,
+        has_sequence_privilege(role_name, 'public.' || sequence_name, 'UPDATE') AS can_update
+      FROM roles CROSS JOIN sequences
+    )
+    SELECT json_build_object(
+      'tables', (SELECT json_agg(row_to_json(t) ORDER BY role_name, relation_name) FROM table_matrix t),
+      'sequences', (SELECT json_agg(row_to_json(s) ORDER BY role_name, sequence_name) FROM sequence_matrix s),
+      'schema', (SELECT json_agg(json_build_object(
+        'role_name', role_name,
+        'usage', has_schema_privilege(role_name, 'public', 'USAGE'),
+        'create', has_schema_privilege(role_name, 'public', 'CREATE')
+      ) ORDER BY role_name) FROM roles)
+    );
   `);
 }
 
@@ -389,8 +460,12 @@ function replayRun({ runNumber, toolchain, workDir, review, baselineInventory })
     ]);
     const rawDump = readFileSync(dumpPath, 'utf8');
     const parsed = parsePgDump(rawDump);
-    const comparison = compareToSchemaDumpReview(parsed.public_objects, review);
-    assert.equal(comparison.all_match, true, 'Lokal schemaflade matcher ikke schema-dump-review.json');
+    const comparison = promotionMode
+      ? compareToPromotionInventory(parsed.public_objects, review)
+      : compareToSchemaDumpReview(parsed.public_objects, review);
+    assert.equal(comparison.all_match, true, promotionMode
+      ? 'Lokal schemaflade matcher ikke forventet promotion-inventory'
+      : 'Lokal schemaflade matcher ikke schema-dump-review.json');
     assert.equal(Object.values(parsed.safety_scan.data_signals).every(value => value === 0), true, 'Schema-only dump indeholder data');
     assert.equal(Object.values(parsed.safety_scan.credential_signals).every(value => value === 0), true, 'Schema-only dump indeholder credentialmønster');
     assert.equal(parsed.safety_scan.role_and_acl_signals.owner_statements, 0);
@@ -398,26 +473,41 @@ function replayRun({ runNumber, toolchain, workDir, review, baselineInventory })
     assert.equal(parsed.safety_scan.role_and_acl_signals.revoke_statements, 0);
 
     const owners = projectOwners(toolchain, socketDir, port);
-    assert.equal(owners.length, 15, 'Uventet antal project owners');
+    assert.equal(owners.length, promotionMode ? 14 : 15, 'Uventet antal project owners');
     assert.equal(owners.every(item => item.owner === 'postgres'), true, 'Uventet lokal project owner');
-    const functionBeforeAcl = functionSecurity(toolchain, socketDir, port);
-    const aclBefore = privilegeMatrix(toolchain, socketDir, port);
-    assert.equal(aclBefore.tables.every(item => !item.can_select && !item.can_insert && !item.can_update && !item.can_delete), true, 'Baseline-only må ikke indføre table grants');
-    assert.equal(aclBefore.sequences.every(item => !item.can_use && !item.can_select && !item.can_update), true, 'Baseline-only må ikke indføre sequence grants');
-    assert.deepEqual(aclBefore.function, { public_execute: true, anon_execute: true, authenticated_execute: true });
-    const directFunctionCall = psql(toolchain, socketDir, port, [
-      '--quiet', '--set', 'ON_ERROR_STOP=1', '--command', 'SET ROLE anon; SELECT public.rls_auto_enable();',
-    ], { allowFailure: true });
-    const directFunctionError = `${directFunctionCall.stdout || ''}${directFunctionCall.stderr || ''}`;
-    assert.notEqual(directFunctionCall.status, 0, 'Default EXECUTE må ikke give en succesfuld direkte event-trigger-funktionskørsel');
-    assert.match(directFunctionError, /event trigger|trigger functions can only be called/i, 'Direkte funktionsprobe fejlede af ukendt årsag');
-
-    applySql(toolchain, socketDir, port, aclPath);
-    const acl = privilegeMatrix(toolchain, socketDir, port);
+    let functionBeforeAcl = null;
+    let aclBefore = null;
+    let directFunctionProbe = null;
+    let acl;
+    if (promotionMode) {
+      const functions = promotionFunctions(toolchain, socketDir, port);
+      assert.deepEqual(functions, [], 'Promotion candidate må ikke oprette project-funktioner');
+      acl = promotionPrivilegeMatrix(toolchain, socketDir, port);
+      directFunctionProbe = defaultFunctionPrivilegeProbe(toolchain, socketDir, port);
+      assert.deepEqual(directFunctionProbe, { public_execute: false, anon_execute: false, authenticated_execute: false });
+    } else {
+      functionBeforeAcl = functionSecurity(toolchain, socketDir, port);
+      aclBefore = privilegeMatrix(toolchain, socketDir, port);
+      assert.equal(aclBefore.tables.every(item => !item.can_select && !item.can_insert && !item.can_update && !item.can_delete), true, 'Baseline-only må ikke indføre table grants');
+      assert.equal(aclBefore.sequences.every(item => !item.can_use && !item.can_select && !item.can_update), true, 'Baseline-only må ikke indføre sequence grants');
+      assert.deepEqual(aclBefore.function, { public_execute: true, anon_execute: true, authenticated_execute: true });
+      const directFunctionCall = psql(toolchain, socketDir, port, [
+        '--quiet', '--set', 'ON_ERROR_STOP=1', '--command', 'SET ROLE anon; SELECT public.rls_auto_enable();',
+      ], { allowFailure: true });
+      const directFunctionError = `${directFunctionCall.stdout || ''}${directFunctionCall.stderr || ''}`;
+      assert.notEqual(directFunctionCall.status, 0, 'Default EXECUTE må ikke give en succesfuld direkte event-trigger-funktionskørsel');
+      assert.match(directFunctionError, /event trigger|trigger functions can only be called/i, 'Direkte funktionsprobe fejlede af ukendt årsag');
+      directFunctionProbe = {
+        attempted_as: 'anon', execute_privilege_present: true, statement_succeeded: false,
+        failure_class: 'event_trigger_context_required', write_performed: false,
+      };
+      applySql(toolchain, socketDir, port, aclPath);
+      acl = privilegeMatrix(toolchain, socketDir, port);
+    }
     assert.equal(acl.tables.every(item => item.can_select && !item.can_insert && !item.can_update && !item.can_delete), true, 'ACL-matrix afviger');
     assert.equal(acl.sequences.every(item => !item.can_use && !item.can_select && !item.can_update), true, 'Sequence-ACL afviger');
     assert.equal(acl.schema.every(item => item.usage && !item.create), true, 'Schema-ACL afviger');
-    assert.deepEqual(acl.function, { public_execute: false, anon_execute: false, authenticated_execute: false });
+    if (!promotionMode) assert.deepEqual(acl.function, { public_execute: false, anon_execute: false, authenticated_execute: false });
 
     applySql(toolchain, socketDir, port, fixturePath);
     const fixture = fixtureAssertions(toolchain, socketDir, port);
@@ -451,14 +541,14 @@ function replayRun({ runNumber, toolchain, workDir, review, baselineInventory })
     const deniedWrites = negativeWriteProbes(toolchain, socketDir, port);
     assert.equal(deniedWrites.length, 48);
 
-    const functionAfterAcl = functionSecurity(toolchain, socketDir, port);
+    const functionAfterAcl = promotionMode ? promotionFunctions(toolchain, socketDir, port) : functionSecurity(toolchain, socketDir, port);
     run(binary(toolchain, 'pg_dump'), [
       ...connectionArgs(socketDir, port), '--schema-only', '--no-owner', '--no-privileges', '--schema', 'public', '--file', finalDumpPath,
     ]);
     const normalizedBeforeAcl = normalizeDump(rawDump);
     const normalizedAfterAcl = normalizeDump(readFileSync(finalDumpPath, 'utf8'));
     assert.equal(normalizedAfterAcl, normalizedBeforeAcl, 'ACL/fixture ændrede project schema-definitionerne');
-    assert.equal(sha256(readFileSync(baselinePath)), baselineInventory.draft.sha256, 'Baseline-SQL blev ændret');
+    assert.equal(sha256(readFileSync(baselinePath)), promotionMode ? baselineInventory.candidate.sha256 : baselineInventory.draft.sha256, 'Baseline-SQL blev ændret');
 
     return {
       run: runNumber,
@@ -477,13 +567,7 @@ function replayRun({ runNumber, toolchain, workDir, review, baselineInventory })
       positive_selects: selects,
       negative_write_probes: { attempted: deniedWrites.length, denied: deniedWrites.filter(item => item.denied).length },
       function_before_acl: functionBeforeAcl,
-      function_direct_call_before_acl: {
-        attempted_as: 'anon',
-        execute_privilege_present: true,
-        statement_succeeded: false,
-        failure_class: 'event_trigger_context_required',
-        write_performed: false,
-      },
+      function_direct_call_before_acl: directFunctionProbe,
       function_after_acl: functionAfterAcl,
       normalized_schema_sha256: sha256(normalizedBeforeAcl),
       raw_artifacts: [artifact(logPath), artifact(dumpPath), artifact(finalDumpPath)],
@@ -498,7 +582,9 @@ function replayRun({ runNumber, toolchain, workDir, review, baselineInventory })
 
 const toolchainArg = arg('--toolchain', process.env.HULENSDATA_PG17_TOOLCHAIN || null);
 const workDirArg = arg('--work-dir', join(tmpdir(), 'hulensdata-local-baseline-replay'));
-const outputArg = arg('--output', join(root, 'supabase/baseline/local-replay-result.json'));
+const outputArg = arg('--output', join(root, promotionMode
+  ? 'supabase/baseline/promotion-candidate-local-replay-result.json'
+  : 'supabase/baseline/local-replay-result.json'));
 if (!toolchainArg) throw new Error('Angiv --toolchain eller HULENSDATA_PG17_TOOLCHAIN');
 const toolchain = resolve(toolchainArg);
 const workDir = resolve(workDirArg);
@@ -510,12 +596,12 @@ const baseline = readFileSync(baselinePath, 'utf8');
 const baselineInventoryText = readFileSync(baselineInventoryPath, 'utf8');
 const reviewText = readFileSync(reviewPath, 'utf8');
 const precondition = readFileSync(preconditionPath, 'utf8');
-const acl = readFileSync(aclPath, 'utf8');
+const acl = promotionMode ? '' : readFileSync(aclPath, 'utf8');
 const fixture = readFileSync(fixturePath, 'utf8');
 for (const [label, value] of [['baseline', baseline], ['precondition', precondition], ['ACL', acl], ['fixture', fixture]]) assertNoRemoteMaterial(label, value);
 const baselineInventory = JSON.parse(baselineInventoryText);
 const review = JSON.parse(reviewText);
-assert.equal(sha256(baseline), baselineInventory.draft.sha256, 'Baselinehash matcher ikke inventory');
+assert.equal(sha256(baseline), promotionMode ? baselineInventory.candidate.sha256 : baselineInventory.draft.sha256, 'Baselinehash matcher ikke inventory');
 
 const versions = {
   postgres: toolVersion(toolchain, 'postgres'),
@@ -539,7 +625,7 @@ assert.deepEqual(runs[0].object_inventory, runs[1].object_inventory, 'De to tomm
 
 const source = readFileSync(baselinePath, 'utf8');
 const functionBody = source.match(/CREATE FUNCTION public\.rls_auto_enable\(\)[\s\S]*?\n\$\$;/)?.[0] || '';
-const result = {
+const draftResult = {
   format_version: 1,
   status: 'local_replay_passed_with_review_findings',
   source_commit: 'd6cfebae23b13022cd5c5cd5cf4671a845acb3f0',
@@ -657,6 +743,114 @@ const result = {
   ],
 };
 
+const result = promotionMode ? {
+  format_version: 1,
+  status: 'promotion_candidate_local_replay_passed_not_applied',
+  source_commit: 'bd15a8a24403599271908efe16245807b6afed99',
+  provenance: {
+    method: 'two independent empty initdb clusters; Unix sockets only; integrated candidate ACL',
+    database_layer: 'PostgreSQL 17 with Supabase-compatible anon/authenticated roles and moddatetime',
+    full_supabase_service_stack_tested: false,
+    production_connections: 0,
+    remote_supabase_writes: false,
+    forbidden_commands_run: [],
+    credentials_required: false,
+    linked_project_state_used: false,
+    local_clusters_created: 2,
+    local_clusters_destroyed: 2,
+    private_artifacts_committed: false,
+    production_applied: false,
+    migration_history_changed: false,
+  },
+  toolchain: {
+    versions,
+    major_version: 17,
+    extension: { name: 'moddatetime', version: '1.0', schema: 'extensions' },
+  },
+  inputs: {
+    candidate_file: 'supabase/baseline/project-schema-baseline.promotion-candidate.sql',
+    candidate_sha256: sha256(baseline),
+    candidate_modified_during_replay: false,
+    candidate_inventory_file: 'supabase/baseline/project-schema-baseline.promotion-candidate.inventory.json',
+    candidate_inventory_sha256: sha256(baselineInventoryText),
+    source_draft_sha256: baselineInventory.provenance.source_draft_sha256,
+    schema_review_file: 'supabase/schema-dump-review.json',
+    schema_review_sha256: sha256(reviewText),
+    precondition_file: 'tools/sql/local-baseline-preconditions.sql',
+    precondition_sha256: sha256(precondition),
+    synthetic_fixture_file: 'tools/sql/local-baseline-replay-fixture.sql',
+    synthetic_fixture_sha256: sha256(fixture),
+  },
+  replay: {
+    independent_empty_clusters: 2,
+    successful_replays: 2,
+    empty_before_replay: runs.every(item => item.isolation.public_relations_before_precondition === 0),
+    empty_after_candidate: runs.every(item => item.empty_baseline_row_count === 0),
+    normalized_schema_sha256: runs[0].normalized_schema_sha256,
+    run_schema_sha256: runs.map(item => item.normalized_schema_sha256),
+    deterministic_final_schema: runs[0].normalized_schema_sha256 === runs[1].normalized_schema_sha256,
+    promotion_inventory_all_match: runs.every(item => item.object_comparison.all_match),
+    expected_difference_from_production_capture: {
+      functions_removed: ['rls_auto_enable'],
+      other_object_differences: [],
+    },
+    object_comparison: runs[0].object_comparison,
+    object_inventory: runs[0].object_inventory,
+    schema_only_data_signals: runs[0].schema_only_scan.data_signals,
+    schema_only_credential_signals: runs[0].schema_only_scan.credential_signals,
+    schema_only_owner_statements: runs[0].schema_only_scan.role_and_acl_signals.owner_statements,
+  },
+  security_tests: {
+    rls_enabled_tables: runs[0].rls.tables.filter(item => item.enabled).map(item => item.table),
+    policies: runs[0].rls.policies,
+    project_functions: runs[0].function_after_acl,
+    security_definer_functions: runs[0].function_after_acl.filter(item => item.security_definer).length,
+    default_function_privilege_probe: runs[0].function_direct_call_before_acl,
+    select_statements_attempted: runs[0].positive_selects.length,
+    select_statements_succeeded: runs[0].positive_selects.filter(item => item.statement_succeeded).length,
+    anon_relations_with_visible_fixture: runs[0].positive_selects.filter(item => item.role === 'anon' && item.visible_rows === 1).length,
+    authenticated_relations_with_visible_fixture: runs[0].positive_selects.filter(item => item.role === 'authenticated' && item.visible_rows === 1).length,
+    authenticated_deals_visible_rows: runs[0].positive_selects.find(item => item.role === 'authenticated' && item.relation === 'deals').visible_rows,
+    negative_writes_attempted: runs[0].negative_write_probes.attempted,
+    negative_writes_denied: runs[0].negative_write_probes.denied,
+    unexpected_table_privileges: runs[0].acl.tables.filter(item => !item.can_select || item.can_insert || item.can_update || item.can_delete).length,
+    unexpected_sequence_privileges: runs[0].acl.sequences.filter(item => item.can_use || item.can_select || item.can_update).length,
+    unexpected_schema_privileges: runs[0].acl.schema.filter(item => !item.usage || item.create).length,
+    privilege_matrix: runs[0].acl,
+    owner_inventory: runs[0].owners,
+    owner_statements_in_candidate: 0,
+    fixture_contract: runs[0].fixture,
+    catalog_integrity: runs[0].catalog,
+  },
+  acl_contract: {
+    status: 'integrated_in_promotion_candidate_locally_replayed_not_applied',
+    production_applied: false,
+    runtime_roles: ['anon', 'authenticated'],
+    relation_select_grants_per_role: 9,
+    table_write_grants_per_role: 0,
+    sequence_grants_per_role: 0,
+    schema_usage: true,
+    schema_create: false,
+    project_function_count: 0,
+    public_execute_on_future_project_functions: false,
+  },
+  deals_policy_review: {
+    status: 'open_product_decision_current_behavior_retained',
+    captured_policy: 'FOR SELECT TO anon USING (true)',
+    anon_fixture_rows: 1,
+    authenticated_fixture_rows: 0,
+    proven: 'production capture and migration evidence target anon; repository runtime uses the public anon client path',
+    not_proven: 'that excluding authenticated was an intentional product requirement rather than historical inconsistency',
+    candidate_action: 'retain current policy without guessing; require explicit product/security decision before change',
+  },
+  blockers_before_promotion: [
+    'Resolve the authenticated/deals policy role as an explicit product and security decision.',
+    'Run an independent review of the candidate and ACL contract.',
+    'Test the candidate in an unlinked full Supabase service stack before any remote migration plan.',
+    'Design and approve migration-history alignment separately; this candidate does not perform it.',
+  ],
+} : draftResult;
+
 assertNoRemoteMaterial('sanitiseret resultat', JSON.stringify(result));
 mkdirSync(dirname(outputPath), { recursive: true });
 writeFileSync(outputPath, `${JSON.stringify(result, null, 2)}\n`);
@@ -672,5 +866,5 @@ const manifestPath = join(workDir, 'private-manifest.json');
 writeFileSync(manifestPath, `${JSON.stringify(privateManifest, null, 2)}\n`);
 chmodSync(manifestPath, 0o600);
 
-console.log(`Lokal baseline-replay: 2/2 grønne · schema ${result.replay.normalized_schema_sha256} · 48/48 writes afvist · clusters slettet`);
+console.log(`${promotionMode ? 'Promotion-candidate-replay' : 'Lokal baseline-replay'}: 2/2 grønne · schema ${result.replay.normalized_schema_sha256} · 48/48 writes afvist · clusters slettet`);
 console.log(`Privat manifest: ${manifestPath}`);
