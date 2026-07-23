@@ -37,7 +37,7 @@ projekt-ejet DDL og platform-ejet schema.
 | `company_events` | PK/identity, FK `ON DELETE CASCADE`, event-/præcisions-CHECK, trigger og indeks |
 | `sources` | PK/identity, entity-/confidence-/URL-CHECK og entityindeks; polymorf `entity_id` uden FK |
 | `investor_status` | View med invoker-rettigheder |
-| `rls_auto_enable()` / `ensure_rls` | SECURITY DEFINER med `search_path=pg_catalog`; anon/authenticated har ikke EXECUTE |
+| `rls_auto_enable()` / `ensure_rls` | Findes i production-capturen; funktionen er bevidst fjernet fra den lokalt replayede promotion candidate, og event triggeren var allerede udeladt |
 
 Alle otte tabeller har en permissiv SELECT-policy. `deals`-policyen er målrettet
 `anon`; de øvrige syv bruger rollen `public`. Kataloget viser samtidig alle
@@ -157,6 +157,10 @@ capture, men er hverken replayet, promoveret til migration eller afstemt med
 remote historik. Metode, eksklusioner og stopgrænse står i
 [`database-project-baseline-draft.md`](database-project-baseline-draft.md).
 
+Den historiske draft er bevaret uændret. En særskilt promotion candidate er nu
+udledt fra den og markeret `not applied`; kandidaten er fortsat ikke en
+migrationsfil og ændrer ikke den eksterne historik.
+
 ### Gate 3 — isoleret replay og schema-paritet (database-lag gennemført 2026-07-23)
 
 Kør migrationerne på en tom lokal Postgres/Supabase-stack. Sammenlign et
@@ -171,10 +175,17 @@ med identisk normaliseret schemahash, fuld objektparitet, 8/8 RLS-tabeller og
 lokale `public`-schema. Se
 [`database-local-baseline-replay.md`](database-local-baseline-replay.md).
 
+En efterfølgende promotion candidate er desuden replayet i to nye tomme clusters
+med identisk hash. Den fjerner `rls_auto_enable()`, integrerer project-only ACL,
+beviser nul project-/SECURITY DEFINER-funktioner, 18/18 SELECT-statements og
+48/48 afviste writes. Se
+[`database-baseline-promotion-candidate.md`](database-baseline-promotion-candidate.md).
+
 Gate 3 er kun færdig for database-laget. Docker/Supabase CLI var ikke
 tilgængelig, så Auth, REST/PostgREST, Storage, Realtime og gateway mangler et
-separat full-service-smoketest. Baselinepromotion afventer desuden beslutning om
-`rls_auto_enable()`, `deals`-policyen og den endelige ACL-kontrakt.
+separat full-service-smoketest. Baselinepromotion afventer desuden en eksplicit
+beslutning om `deals`-policyens authenticated-adfærd, uafhængigt review,
+owner-/migration-runner-afklaring og migrationshistorikafstemning.
 
 ### Gate 4 — autoriseret historikafstemning
 
@@ -211,6 +222,10 @@ npm run check:project-baseline-draft
 npm run test:project-baseline-draft
 npm run check:local-baseline-replay
 npm run test:local-baseline-replay
+npm run check:baseline-promotion-candidate
+npm run test:baseline-promotion-candidate
+npm run check:baseline-promotion-replay
+npm run test:baseline-promotion-replay
 ```
 
 De validerer inventarformat, streng versionsorden, remote head, eksplicit
@@ -238,16 +253,15 @@ Forbudt i disse checks: produktionscredentials, `--linked` reset, `db push`,
 | Risiko | Konsekvens | Næste beslutning |
 |---|---|---|
 | Historisk SQL er privat fanget, men kæden mangler det oprindelige `deals`-schema | Repo kan ikke genskabe schemaet fra de 16 statements | Byg squashed current-state baseline efter officielt schema-only dump |
-| Schema-dump er fanget, men endnu ikke replayet | Capture-paritet beviser ikke restore eller portabel DDL | Udled en project-only baseline og bevis replay isoleret |
-| Brede anon/auth grants | Større blast radius ved fremtidig policy/RLS-fejl | Separat privilege-hardening-migration efter baseline |
+| Promotion candidate er kun testet på database-laget | PostgREST/Auth-rolleovergang og øvrige Supabase-services er ikke bevist | Kør en unlinked full-service-gate før migrationspromotion |
+| `deals` har anon-only policy, mens øvrige policies er public | Authenticated kan ikke se deals; intentionen er ikke dokumenteret | Tag eksplicit produkt-/sikkerhedsbeslutning uden at gætte |
 | Polymorf `sources.entity_id` | Orphans kan omgå database-FK | Bevar build-check og tilføj restore-integritetsquery |
 | `ON DELETE CASCADE` for events | Company-delete kan fjerne historik | Ingen delete uden dependency-preview og recovery-gate |
 | Ét produktionsmiljø | Restore-test kan ramme live ved operatørfejl | Kræv unlinked lokal/throwaway target og target-ID-check |
 | Platform-/project-DDL blandes | Baseline kan blive støjende eller skrøbelig | Reviewet allowlist og normaliseret schema-diff |
 | Credentials i dump/log | Hemmeligheder kan havne i git/CI | Privat temp, secret scan, sanitering og manuel review |
 
-Den første anbefalede efterfølgende branch er nu en isoleret, lokal replay-gate
-for project-only draften. Den må ikke forbinde til produktion eller markere
-remote historik som afstemt. Baseline-SQL må først blive migrationskandidat efter
-normaliseret diff og særskilt review af `SECURITY DEFINER`, event trigger,
-`moddatetime` og ACL.
+Den næste anbefalede gate er uafhængigt review af promotion-kandidaten og derefter
+et unlinked full-service Supabase-smoketest. Ingen af dem må forbinde til
+produktion eller markere remote historik som afstemt. Først derefter kan en
+separat, autoriseret migrationspromotion planlægges.

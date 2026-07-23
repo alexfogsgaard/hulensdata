@@ -7,9 +7,9 @@
 
 **Dokumenteret fakta:** Produktionen har ét Supabase-projekt og en statisk
 Trykpresse-publicering. Private JSON-eksporter bevarer public-data. Repository'et
-har nu en project-only SQL-draft, men fortsat ingen replay-testet eller promoveret
-SQL-baseline og ingen dokumenteret isoleret restore rehearsal. RPO og RTO er ikke
-målt eller besluttet.
+har nu en lokalt replayet project-only promotion candidate, men fortsat ingen
+productiongodkendt migrationsbaseline eller dokumenteret fuld datarestore-
+rehearsal. RPO og RTO er ikke målt eller besluttet.
 
 **Anbefalet mål:** Recovery skal bevise fire uafhængige egenskaber:
 
@@ -30,6 +30,7 @@ målt eller besluttet.
 | Read-only baselinegates | 16 statementfingeraftryk, katalogcapture og privat schema-only dump med objektparitet | En replaybevist/promoveret baseline eller restore rehearsal |
 | Project-only baseline-draft | Deterministisk SQL-draft og inventory med fuld project-objectparitet | Replaybevis, ACL-kontrakt, migrationspromotion og restore rehearsal |
 | Lokal database-replay | To tomme PostgreSQL 17.10-clusters, identisk schemahash, RLS/ACL-/write-tests og syntetisk fixture | Full-service Supabase-test, productiongodkendt ACL, datarestore og migrationspromotion |
+| Promotion candidate | To nye tomme clusters, identisk hash, integreret ACL, nul project-/SECURITY DEFINER-funktioner og 48/48 afviste writes | Auth/PostgREST-test, `deals`-rollebeslutning, uafhængigt review og migrationshistorikafstemning |
 
 Hvis Storage senere tages i brug, skal objekter og metadata have en særskilt
 backup-/restore-plan; databasebackup alene gendanner ikke objekterne.
@@ -95,7 +96,8 @@ unlinked-target-kontrol.
 - normaliseret schema-diff har ingen uforklarede forskelle;
 - alle otte public-tabeller har RLS aktiveret;
 - `investor_status` er `security_invoker`;
-- `rls_auto_enable()` har fast `search_path`, og anon/auth har ikke EXECUTE;
+- promotion-inventoryet har nul project- og SECURITY DEFINER-funktioner, og en
+  ny function-probe får ikke default PUBLIC/anon/auth EXECUTE;
 - SELECT virker med offentlig rolle på tilsigtede objekter;
 - INSERT, UPDATE, DELETE og TRUNCATE afvises med anon/auth;
 - policies og grants matcher den godkendte baseline, ikke platformdefaults;
@@ -131,8 +133,8 @@ fundamentet ikke påstår replayability. Det beviser **ikke** database-restore.
 
 ### Bevis B — syntetisk lokal schema-replay (database-lag udført; ingen production-credentials)
 
-Brug en arbejdskopi af den nuværende draft i en unlinked lokal stack, replay fra
-tom database og indlæs en lille syntetisk fixture, der dækker:
+Promotion-kandidaten er nu replayet fra tom database i en unlinked lokal
+PostgreSQL-stack med en lille syntetisk fixture, der dækker:
 
 - virksomhed med to pitches og flere investorer;
 - no-deal med legitime NULL-felter og ukendt afsnit;
@@ -145,9 +147,10 @@ forkert row count/hash, afkortet fil, dublet-ID, falsk `complete`, disabled RLS,
 for bred write-policy/grant og sekvens bag max-ID. Hver mutation skal give
 non-zero exit og altid gendannes i tempområdet.
 
-Schema-, RLS-, SELECT-, trigger-, view- og negative write-delen er nu bevist i
-to lokale PostgreSQL 17.10-clusters. En fuld datarestore med sekvensmutationer,
-manifest/corruption-fixtures og hele Supabase-service-stacken mangler fortsat.
+Schema-, ACL-, RLS-, SELECT-, trigger-, view-, function-default- og negative
+write-delen er nu bevist i to promotion-clusters ud over de to tidligere
+draft-clusters. En fuld datarestore med sekvensmutationer, manifest/corruption-
+fixtures og hele Supabase-service-stacken mangler fortsat.
 
 ### Bevis C — privat snapshot-restore (**MANUEL/KRÆVER CREDENTIALS**)
 

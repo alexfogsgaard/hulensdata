@@ -275,3 +275,12 @@ Næste afgrænsede gate bør:
    separat full-service Supabase API/Auth/PostgREST-smoketest;
 5. stoppe igen før migrationspromotion, `db push`, `migration repair` eller
    remote historikafstemning.
+
+## Senere opfølgning — promotion candidate 2026-07-23
+
+Den afgrænsede gate er nu gennemført i en separat kandidat uden at ændre denne
+historiske draft eller dens replayresultat. Kandidaten udelader
+`rls_auto_enable()`, integrerer den eksplicitte project-only ACL og er replayet
+to gange med identisk schemahash. `deals`-policyen er bevaret uændret, fordi en
+intention om at udelukke `authenticated` ikke kunne bevises. Se
+[`database-baseline-promotion-candidate.md`](database-baseline-promotion-candidate.md).
